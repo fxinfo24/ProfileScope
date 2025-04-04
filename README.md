@@ -1,4 +1,4 @@
-# SocialInsight: Social Media Profile Analyzer
+# ProfileScope: Social Media Profile Analyzer
 
 A comprehensive tool for analyzing publicly available social media profiles to generate detailed timelines and personality analyses.
 

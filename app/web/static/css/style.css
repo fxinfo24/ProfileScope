@@ -1,0 +1,143 @@
+/* SocialInsight CSS Styles */
+:root {
+    --primary: #4a6fa5;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Sidebar styles */
+.sidebar {
+    margin-bottom: 20px;
+}
+
+.sidebar .card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sidebar .card-header {
+    font-weight: bold;
+}
+
+.sidebar .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 0.75rem 1.25rem;
+}
+
+.sidebar .list-group-item:first-child {
+    border-top: none;
+}
+
+.sidebar .sticky-top {
+    top: 20px;
+}
+
+/* Card styles */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: none;
+}
+
+.card-header {
+    font-weight: bold;
+    border-bottom: none;
+}
+
+.card-header.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Progress bars */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 10px;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+/* Timeline styles */
+.timeline-container {
+    position: relative;
+    padding-left: 50px;
+}
+
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--primary);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -50px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    border: 3px solid white;
+}
+
+.timeline-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer styles */
+footer {
+    background-color: #f8f9fa;
+    color: var(--secondary);
+    padding: 20px 0;
+    margin-top: 50px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .sidebar {
+        margin-bottom: 30px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}

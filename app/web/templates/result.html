@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results - SocialInsight{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-xl-2 d-none d-lg-block sidebar">
+            <div class="card sticky-top">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Navigation</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#summary" class="list-group-item list-group-item-action">Summary</a>
+                    <a href="#timeline" class="list-group-item list-group-item-action">Timeline</a>
+                    <a href="#personality" class="list-group-item list-group-item-action">Personality & Interests</a>
+                    <a href="#writing" class="list-group-item list-group-item-action">Writing Style</a>
+                    <a href="#authenticity" class="list-group-item list-group-item-action">Authenticity</a>
+                    <a href="#predictions" class="list-group-item list-group-item-action">Predictions</a>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid gap-2">
+                        <a href="/api/tasks/{{ task.task_id }}/download" class="btn btn-sm btn-primary">
+                            <i class="bi bi-download"></i> Download JSON
+                        </a>
+                        <a href="/" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> New Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-lg-9 col-xl-10">
+            <!-- Summary Section -->
+            <section id="summary" class="mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Analysis Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Summary content would go here -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Other sections would go here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // JavaScript for initializing charts would go here
+</script>
+{% endblock %}

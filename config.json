@@ -1,0 +1,19 @@
+{
+    "rate_limits": {
+        "twitter": 100,
+        "facebook": 100
+    },
+    "analysis": {
+        "nlp_model": "default",
+        "sentiment_analysis": true,
+        "confidence_threshold": 0.65
+    },
+    "output": {
+        "save_raw_data": true,
+        "export_format": "json"
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "socialinsight.log"
+    }
+}

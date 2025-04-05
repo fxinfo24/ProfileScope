@@ -6,12 +6,12 @@ Flask-based web interface for social media profile analysis
 import os
 from pathlib import Path
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 from ..core.analyzer import SocialMediaAnalyzer
 from .models import db
 from .routes import register_blueprints
+from .error_handlers import register_error_handlers
 
 
 def create_app(config_path=None):
@@ -46,15 +46,8 @@ def create_app(config_path=None):
     # Register blueprints
     register_blueprints(app)
 
-    # Error handlers
-    @app.errorhandler(404)
-    def not_found_error(error):
-        return render_template("error.html", error=error), 404
-
-    @app.errorhandler(500)
-    def internal_error(error):
-        db.session.rollback()
-        return render_template("error.html", error=error), 500
+    # Register error handlers
+    register_error_handlers(app)
 
     return app
 

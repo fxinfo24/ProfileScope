@@ -422,237 +422,71 @@ class AnalyzerApp(tk.Tk):
             ax1.set_xticks(angles[:-1])
             ax1.set_xticklabels([c.capitalize() for c in categories[:-1]])
             
-            chart1 = FigureCanvasTkAgg(fig1, traits_frame)
-            chart1.get_tk_widget().pack(pady=10)
+            ax1.set_title("Personality Traits")
             
-            # Traits details
-            traits_details = ttk.Frame(traits_frame)
-            traits_details.pack(fill=tk.X, pady=10)
-            
-            # Sort traits by value
-            sorted_traits = sorted(traits.items(), key=lambda x: x[1], reverse=True)
-            
-            for trait, value in sorted_traits:
-                trait_frame = ttk.Frame(traits_details)
-                trait_frame.pack(fill=tk.X, pady=2)
-                
-                trait_label = ttk.Label(trait_frame, text=trait.capitalize(), width=20, anchor=tk.W)
-                trait_label.pack(side=tk.LEFT)
-                
-                # Progress bar representing value
-                trait_bar = ttk.Progressbar(trait_frame, value=int(value*100), length=100)
-                trait_bar.pack(side=tk.LEFT, padx=5)
-                
-                trait_value = ttk.Label(trait_frame, text=f"{value:.0%}")
-                trait_value.pack(side=tk.LEFT)
+            chart1 = FigureCanvasTkAgg(fig1, charts_grid)
+            chart1.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
         
-        # Right column - Interests
-        if "interests" in content_analysis:
-            interests_frame = ttk.LabelFrame(main_grid, text="Interests & Preferences", padding=10)
-            interests_frame.grid(row=0, column=1, padx=10, pady=10, sticky=tk.NSEW)
+        # Interests bar chart
+        if "content_analysis" in self.analysis_results and "interests" in self.analysis_results["content_analysis"]:
+            interests = self.analysis_results["content_analysis"]["interests"]
             
-            interests = content_analysis["interests"]
-            
-            # Bar chart
-            fig2 = plt.Figure(figsize=(6, 5), dpi=100)
+            fig2 = plt.Figure(figsize=(5, 4), dpi=100)
             ax2 = fig2.add_subplot(111)
             
             # Sort by value
-            sorted_interests = dict(sorted(interests.items(), key=lambda x: x[1], reverse=True))
+            interests = dict(sorted(interests.items(), key=lambda x: x[1], reverse=True))
             
-            categories = list(sorted_interests.keys())
-            values = list(sorted_interests.values())
+            categories = list(interests.keys())
+            values = list(interests.values())
+            
+            # Limit to top 6
+            if len(categories) > 6:
+                categories = categories[:6]
+                values = values[:6]
             
             ax2.barh([c.capitalize() for c in categories], values, color=self.colors["primary"])
-            ax2.set_title("Interests Analysis")
+            ax2.set_title("Top Interests")
             ax2.set_xlim(0, 1)
             
-            chart2 = FigureCanvasTkAgg(fig2, interests_frame)
-            chart2.get_tk_widget().pack(pady=10)
-            
-            # Add list of interests with scores
-            interests_details = ttk.Frame(interests_frame)
-            interests_details.pack(fill=tk.X, pady=10)
-            
-            for interest, value in sorted_interests.items():
-                interest_frame = ttk.Frame(interests_details)
-                interest_frame.pack(fill=tk.X, pady=2)
-                
-                interest_label = ttk.Label(interest_frame, text=interest.capitalize(), width=20, anchor=tk.W)
-                interest_label.pack(side=tk.LEFT)
-                
-                # Progress bar representing value
-                interest_bar = ttk.Progressbar(interest_frame, value=int(value*100), length=100)
-                interest_bar.pack(side=tk.LEFT, padx=5)
-                
-                interest_value = ttk.Label(interest_frame, text=f"{value:.0%}")
-                interest_value.pack(side=tk.LEFT)
+            chart2 = FigureCanvasTkAgg(fig2, charts_grid)
+            chart2.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
         
-        # Bottom left - Beliefs analysis
-        if "beliefs" in content_analysis:
-            beliefs_frame = ttk.LabelFrame(main_grid, text="Beliefs & Values Analysis", padding=10)
-            beliefs_frame.grid(row=1, column=0, padx=10, pady=10, sticky=tk.NSEW)
+        # Add sentiment trend if available
+        if ("content_analysis" in self.analysis_results and 
+            "sentiment_trends" in self.analysis_results["content_analysis"] and
+            self.analysis_results["content_analysis"]["sentiment_trends"]):
             
-            beliefs = content_analysis["beliefs"]
+            sentiment = self.analysis_results["content_analysis"]["sentiment_trends"]
             
-            # Political leaning
-            if "political_leaning" in beliefs:
-                political_frame = ttk.Frame(beliefs_frame)
-                political_frame.pack(fill=tk.X, pady=10)
+            if "trend" in sentiment and sentiment["trend"]:
+                fig3 = plt.Figure(figsize=(10, 4), dpi=100)
+                ax3 = fig3.add_subplot(111)
                 
-                pol_label = ttk.Label(political_frame, text="Political Leaning:", style="Subheader.TLabel")
-                pol_label.pack(anchor=tk.W)
+                periods = [item["period"] for item in sentiment["trend"]]
+                values = [item["average_sentiment"] for item in sentiment["trend"]]
                 
-                pol_scale_frame = ttk.Frame(political_frame)
-                pol_scale_frame.pack(fill=tk.X, pady=5)
+                ax3.plot(periods, values, marker='o', linestyle='-', color=self.colors["info"])
+                ax3.set_title("Sentiment Trend Over Time")
+                ax3.set_ylim(-1, 1)
+                ax3.axhline(y=0, color='gray', linestyle='--', alpha=0.7)
                 
-                pol_left = ttk.Label(pol_scale_frame, text="Liberal")
-                pol_left.pack(side=tk.LEFT)
+                # Rotate x labels if many periods
+                if len(periods) > 6:
+                    plt.setp(ax3.get_xticklabels(), rotation=45, ha='right')
                 
-                # Scale from -1 to 1
-                pol_value = beliefs["political_leaning"]["value"]
-                scale_value = 50 + int(pol_value * 50)  # Convert to 0-100 scale
+                fig3.tight_layout()
                 
-                pol_bar = ttk.Scale(pol_scale_frame, from_=0, to=100, value=scale_value)
-                pol_bar.state(['disabled'])
-                pol_bar.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=10)
-                
-                pol_right = ttk.Label(pol_scale_frame, text="Conservative")
-                pol_right.pack(side=tk.RIGHT)
-                
-                # Confidence and evidence
-                pol_details = ttk.Label(political_frame, 
-                                     text=f"Confidence: {beliefs['political_leaning']['confidence']:.0%} • Evidence: {beliefs['political_leaning']['evidence_count']} instances")
-                pol_details.pack(anchor=tk.W, pady=5)
-            
-            # Religious indicators
-            if "religious_indicators" in beliefs:
-                religious_frame = ttk.Frame(beliefs_frame)
-                religious_frame.pack(fill=tk.X, pady=10)
-                
-                rel_label = ttk.Label(religious_frame, text="Religious Indicators:", style="Subheader.TLabel")
-                rel_label.pack(anchor=tk.W)
-                
-                rel_indicators = beliefs["religious_indicators"]
-                
-                rel_details = ttk.Label(religious_frame, 
-                                     text=f"Present: {'Yes' if rel_indicators['has_indicators'] else 'No'} • Confidence: {rel_indicators['confidence']:.0%} • Evidence: {rel_indicators['evidence_count']} instances")
-                rel_details.pack(anchor=tk.W, pady=5)
-            
-            # Values indicators
-            if "value_indicators" in beliefs:
-                values_frame = ttk.Frame(beliefs_frame)
-                values_frame.pack(fill=tk.X, pady=10)
-                
-                values_label = ttk.Label(values_frame, text="Value Indicators:", style="Subheader.TLabel")
-                values_label.pack(anchor=tk.W)
-                
-                value_indicators = beliefs["value_indicators"]
-                
-                # Create bars for each value
-                for value_name, value_score in value_indicators.items():
-                    value_row = ttk.Frame(values_frame)
-                    value_row.pack(fill=tk.X, pady=2)
-                    
-                    value_label = ttk.Label(value_row, text=value_name.capitalize(), width=15, anchor=tk.W)
-                    value_label.pack(side=tk.LEFT)
-                    
-                    value_bar = ttk.Progressbar(value_row, value=int(value_score*100), length=100)
-                    value_bar.pack(side=tk.LEFT, padx=5)
-                    
-                    value_score_label = ttk.Label(value_row, text=f"{value_score:.0%}")
-                    value_score_label.pack(side=tk.LEFT)
-        
-        # Bottom right - Personal markers
-        if "identity_markers" in content_analysis:
-            markers_frame = ttk.LabelFrame(main_grid, text="Identity & Preference Markers", padding=10)
-            markers_frame.grid(row=1, column=1, padx=10, pady=10, sticky=tk.NSEW)
-            
-            markers = content_analysis["identity_markers"]
-            
-            # Location indicators
-            if "location_indicators" in markers:
-                location_frame = ttk.Frame(markers_frame)
-                location_frame.pack(fill=tk.X, pady=10)
-                
-                loc_label = ttk.Label(location_frame, text="Location Information:", style="Subheader.TLabel")
-                loc_label.pack(anchor=tk.W)
-                
-                loc_info = markers["location_indicators"]
-                
-                # Mentioned locations
-                if "mentioned_locations" in loc_info and loc_info["mentioned_locations"]:
-                    loc_list = ", ".join(loc_info["mentioned_locations"])
-                    loc_mentions = ttk.Label(location_frame, text=f"Mentioned locations: {loc_list}")
-                    loc_mentions.pack(anchor=tk.W, pady=2)
-                
-                # Hometown confidence
-                if "hometown_confidence" in loc_info:
-                    hometown = ttk.Label(location_frame, 
-                                       text=f"Hometown confidence: {loc_info['hometown_confidence']:.0%}")
-                    hometown.pack(anchor=tk.W, pady=2)
-            
-            # Food preferences
-            if "food_preferences" in markers:
-                food_frame = ttk.Frame(markers_frame)
-                food_frame.pack(fill=tk.X, pady=10)
-                
-                food_label = ttk.Label(food_frame, text="Food Preferences:", style="Subheader.TLabel")
-                food_label.pack(anchor=tk.W)
-                
-                food_info = markers["food_preferences"]
-                
-                # Mentioned foods
-                if "mentioned_foods" in food_info and food_info["mentioned_foods"]:
-                    food_list = ", ".join(food_info["mentioned_foods"])
-                    food_mentions = ttk.Label(food_frame, text=f"Mentioned foods: {food_list}")
-                    food_mentions.pack(anchor=tk.W, pady=2)
-                
-                # Potential preferences
-                if "potential_preferences" in food_info and food_info["potential_preferences"]:
-                    pref_list = ", ".join(food_info["potential_preferences"])
-                    pref_label = ttk.Label(food_frame, text=f"Inferred preferences: {pref_list}")
-                    pref_label.pack(anchor=tk.W, pady=2)
-                
-                # Restrictions if any
-                if "potential_restrictions" in food_info and food_info["potential_restrictions"]:
-                    rest_list = ", ".join(food_info["potential_restrictions"])
-                    rest_label = ttk.Label(food_frame, text=f"Potential restrictions: {rest_list}")
-                    rest_label.pack(anchor=tk.W, pady=2)
-                
-                # Confidence
-                if "confidence" in food_info:
-                    conf_label = ttk.Label(food_frame, 
-                                        text=f"Analysis confidence: {food_info['confidence']:.0%}")
-                    conf_label.pack(anchor=tk.W, pady=2)
-            
-            # Activity preferences
-            if "activity_preferences" in markers:
-                activity_frame = ttk.Frame(markers_frame)
-                activity_frame.pack(fill=tk.X, pady=10)
-                
-                act_label = ttk.Label(activity_frame, text="Activity Preferences:", style="Subheader.TLabel")
-                act_label.pack(anchor=tk.W)
-                
-                act_info = markers["activity_preferences"]
-                
-                # Mentioned activities
-                if "mentioned_activities" in act_info and act_info["mentioned_activities"]:
-                    act_list = ", ".join(act_info["mentioned_activities"])
-                    act_mentions = ttk.Label(activity_frame, text=f"Mentioned activities: {act_list}")
-                    act_mentions.pack(anchor=tk.W, pady=2)
-                
-                # Potential hobbies
-                if "potential_hobbies" in act_info and act_info["potential_hobbies"]:
-                    hobby_list = ", ".join(act_info["potential_hobbies"])
-                    hobby_label = ttk.Label(activity_frame, text=f"Inferred hobbies: {hobby_list}")
-                    hobby_label.pack(anchor=tk.W, pady=2)
-                
-                # Confidence
-                if "confidence" in act_info:
-                    conf_label = ttk.Label(activity_frame, 
-                                        text=f"Analysis confidence: {act_info['confidence']:.0%}")
-                    conf_label.pack(anchor=tk.W, pady=2)
+                chart3 = FigureCanvasTkAgg(fig3, charts_grid)
+                chart3.get_tk_widget().grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+    
+    def _setup_timeline_tab(self):
+        """Set up the timeline visualization tab"""
+        pass  # Timeline implementation will go here
+    
+    def _setup_traits_tab(self):
+        """Set up the personality traits and interests tab"""
+        pass  # Traits implementation will go here
     
     def _setup_writing_tab(self):
         """Set up the writing style analysis tab"""
@@ -1572,273 +1406,3 @@ if __name__ == "__main__":
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     
     main()
-1]])
-            
-            ax1.set_title("Personality Traits")
-            
-            chart1 = FigureCanvasTkAgg(fig1, charts_grid)
-            chart1.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
-        
-        # Interests bar chart
-        if "content_analysis" in self.analysis_results and "interests" in self.analysis_results["content_analysis"]:
-            interests = self.analysis_results["content_analysis"]["interests"]
-            
-            fig2 = plt.Figure(figsize=(5, 4), dpi=100)
-            ax2 = fig2.add_subplot(111)
-            
-            # Sort by value
-            interests = dict(sorted(interests.items(), key=lambda x: x[1], reverse=True))
-            
-            categories = list(interests.keys())
-            values = list(interests.values())
-            
-            # Limit to top 6
-            if len(categories) > 6:
-                categories = categories[:6]
-                values = values[:6]
-            
-            ax2.barh([c.capitalize() for c in categories], values, color=self.colors["primary"])
-            ax2.set_title("Top Interests")
-            ax2.set_xlim(0, 1)
-            
-            chart2 = FigureCanvasTkAgg(fig2, charts_grid)
-            chart2.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
-        
-        # Add sentiment trend if available
-        if ("content_analysis" in self.analysis_results and 
-            "sentiment_trends" in self.analysis_results["content_analysis"] and
-            self.analysis_results["content_analysis"]["sentiment_trends"]):
-            
-            sentiment = self.analysis_results["content_analysis"]["sentiment_trends"]
-            
-            if "trend" in sentiment and sentiment["trend"]:
-                fig3 = plt.Figure(figsize=(10, 4), dpi=100)
-                ax3 = fig3.add_subplot(111)
-                
-                periods = [item["period"] for item in sentiment["trend"]]
-                values = [item["average_sentiment"] for item in sentiment["trend"]]
-                
-                ax3.plot(periods, values, marker='o', linestyle='-', color=self.colors["info"])
-                ax3.set_title("Sentiment Trend Over Time")
-                ax3.set_ylim(-1, 1)
-                ax3.axhline(y=0, color='gray', linestyle='--', alpha=0.7)
-                
-                # Rotate x labels if many periods
-                if len(periods) > 6:
-                    plt.setp(ax3.get_xticklabels(), rotation=45, ha='right')
-                
-                fig3.tight_layout()
-                
-                chart3 = FigureCanvasTkAgg(fig3, charts_grid)
-                chart3.get_tk_widget().grid(row=1, column=0, columnspan=2, padx=10, pady=10)
-    
-    def _setup_timeline_tab(self):
-        """Set up the timeline visualization tab"""
-        # Clear existing widgets
-        for widget in self.timeline_frame.winfo_children():
-            widget.destroy()
-        
-        if not self.analysis_results or "content_analysis" not in self.analysis_results or "timeline" not in self.analysis_results["content_analysis"]:
-            label = ttk.Label(self.timeline_frame, text="No timeline data available")
-            label.pack(pady=50)
-            return
-        
-        timeline = self.analysis_results["content_analysis"]["timeline"]
-        
-        if not timeline:
-            label = ttk.Label(self.timeline_frame, text="Timeline is empty")
-            label.pack(pady=50)
-            return
-        
-        # Create scrollable frame for timeline
-        timeline_canvas = tk.Canvas(self.timeline_frame)
-        timeline_scrollbar = ttk.Scrollbar(self.timeline_frame, orient="vertical", 
-                                         command=timeline_canvas.yview)
-        scrollable_timeline = ttk.Frame(timeline_canvas)
-        
-        scrollable_timeline.bind(
-            "<Configure>",
-            lambda e: timeline_canvas.configure(scrollregion=timeline_canvas.bbox("all"))
-        )
-        
-        timeline_canvas.create_window((0, 0), window=scrollable_timeline, anchor="nw")
-        timeline_canvas.configure(yscrollcommand=timeline_scrollbar.set)
-        
-        timeline_canvas.pack(side="left", fill="both", expand=True)
-        timeline_scrollbar.pack(side="right", fill="y")
-        
-        # Title
-        title = ttk.Label(scrollable_timeline, 
-                        text="Profile Activity Timeline",
-                        style="TitleLabel.TLabel")
-        title.pack(pady=20)
-        
-        # Sort timeline by date
-        timeline.sort(key=lambda x: datetime.datetime.strptime(x["date"], "%Y-%m-%d"))
-        
-        # Create timeline visualization
-        timeline_frame = ttk.Frame(scrollable_timeline, padding=20)
-        timeline_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Group by year and month
-        timeline_by_month = {}
-        for event in timeline:
-            event_date = datetime.datetime.strptime(event["date"], "%Y-%m-%d")
-            year_month = event_date.strftime("%Y-%m")
-            
-            if year_month not in timeline_by_month:
-                timeline_by_month[year_month] = []
-            
-            timeline_by_month[year_month].append(event)
-        
-        # Create timeline entries
-        row = 0
-        for year_month, events in sorted(timeline_by_month.items()):
-            # Month header
-            month_date = datetime.datetime.strptime(year_month, "%Y-%m")
-            month_label = ttk.Label(timeline_frame, 
-                                  text=month_date.strftime("%B %Y"),
-                                  style="Header.TLabel")
-            month_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=(20, 10))
-            row += 1
-            
-            # Individual events
-            for event in events:
-                event_date = datetime.datetime.strptime(event["date"], "%Y-%m-%d")
-                
-                # Date bubble
-                date_frame = ttk.Frame(timeline_frame, width=80)
-                date_frame.grid(row=row, column=0, padx=10)
-                date_frame.grid_propagate(False)
-                
-                date_label = ttk.Label(date_frame, 
-                                     text=event_date.strftime("%d"),
-                                     font=("Helvetica", 14, "bold"))
-                date_label.pack(anchor=tk.CENTER)
-                
-                # Vertical line
-                line_canvas = tk.Canvas(timeline_frame, width=20, height=80)
-                line_canvas.grid(row=row, column=1)
-                line_canvas.create_line(10, 0, 10, 80, fill=self.colors["secondary"])
-                
-                # Create dot on the line
-                line_canvas.create_oval(5, 5, 15, 15, fill=self.colors["primary"], outline="")
-                
-                # Event details
-                event_frame = ttk.Frame(timeline_frame, padding=5)
-                event_frame.grid(row=row, column=2, sticky=tk.W, pady=5)
-                
-                # Event type badge
-                event_type = event.get("type", "event")
-                bg_color = self.colors["primary"]
-                
-                if "popular" in event_type:
-                    bg_color = self.colors["success"]
-                elif "video" in event_type:
-                    bg_color = self.colors["info"]
-                elif "image" in event_type:
-                    bg_color = self.colors["warning"]
-                
-                type_badge = tk.Label(event_frame, 
-                                    text=event_type.replace("_", " ").title(),
-                                    bg=bg_color,
-                                    fg=self.colors["white"],
-                                    font=("Helvetica", 9),
-                                    padx=5,
-                                    pady=2,
-                                    borderwidth=0)
-                type_badge.pack(anchor=tk.W)
-                
-                # Event description
-                description = event.get("description", "No description")
-                desc_label = ttk.Label(event_frame, 
-                                     text=description,
-                                     wraplength=500)
-                desc_label.pack(anchor=tk.W, pady=5)
-                
-                # Additional details
-                details_text = ""
-                
-                if "engagement" in event:
-                    details_text += f"Engagement: {event['engagement']} • "
-                
-                if "url" in event:
-                    details_text += f"Media URL: {event['url']}"
-                
-                if details_text:
-                    details_label = ttk.Label(event_frame, 
-                                           text=details_text,
-                                           font=("Helvetica", 9),
-                                           foreground=self.colors["secondary"])
-                    details_label.pack(anchor=tk.W)
-                
-                row += 1
-    
-    def _setup_traits_tab(self):
-        """Set up the traits and interests tab"""
-        # Clear existing widgets
-        for widget in self.traits_frame.winfo_children():
-            widget.destroy()
-            
-        if not self.analysis_results or "content_analysis" not in self.analysis_results:
-            label = ttk.Label(self.traits_frame, text="No traits data available")
-            label.pack(pady=50)
-            return
-        
-        content_analysis = self.analysis_results["content_analysis"]
-        
-        # Create scrollable frame
-        traits_canvas = tk.Canvas(self.traits_frame)
-        traits_scrollbar = ttk.Scrollbar(self.traits_frame, orient="vertical", 
-                                       command=traits_canvas.yview)
-        scrollable_traits = ttk.Frame(traits_canvas)
-        
-        scrollable_traits.bind(
-            "<Configure>",
-            lambda e: traits_canvas.configure(scrollregion=traits_canvas.bbox("all"))
-        )
-        
-        traits_canvas.create_window((0, 0), window=scrollable_traits, anchor="nw")
-        traits_canvas.configure(yscrollcommand=traits_scrollbar.set)
-        
-        traits_canvas.pack(side="left", fill="both", expand=True)
-        traits_scrollbar.pack(side="right", fill="y")
-        
-        # Title
-        title = ttk.Label(scrollable_traits, 
-                        text="Personality Traits & Interests Analysis",
-                        style="TitleLabel.TLabel")
-        title.pack(pady=20)
-        
-        # Create a grid layout
-        main_grid = ttk.Frame(scrollable_traits, padding=20)
-        main_grid.pack(fill=tk.BOTH, expand=True)
-        
-        # Left column - Personality traits
-        if "personality_traits" in content_analysis:
-            traits_frame = ttk.LabelFrame(main_grid, text="Personality Traits", padding=10)
-            traits_frame.grid(row=0, column=0, padx=10, pady=10, sticky=tk.NSEW)
-            
-            traits = content_analysis["personality_traits"]
-            
-            # Radar chart
-            fig1 = plt.Figure(figsize=(5, 4), dpi=100)
-            ax1 = fig1.add_subplot(111, polar=True)
-            
-            categories = list(traits.keys())
-            values = list(traits.values())
-            
-            # Close the polygon by appending the first value to the end
-            values.append(values[0])
-            categories.append(categories[0])
-            
-            # Compute angle for each category
-            angles = [n / float(len(categories)-1) * 2 * 3.14159 for n in range(len(categories))]
-            angles += angles[:1]  # Close the loop
-            
-            ax1.plot(angles, values, linewidth=2, linestyle='solid')
-            ax1.fill(angles, values, alpha=0.3)
-            
-            # Set category labels
-            ax1.set_xticks(angles[:-1])
-            ax1.set_xticklabels([c.capitalize() for c in categories[:-

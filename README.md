@@ -27,6 +27,17 @@ python -m venv venv
 source venv/bin/activate  # On Windows use: venv\Scripts\activate
 ```
 
+2.1. Create a virtual environment with specific Python version and activate it:
+```bash
+python3.12 -m venv venv --prompt="ProfileScope"
+# For bash/zsh shells
+source venv/bin/activate
+
+# Or using . shortcut
+. venv/bin/activate
+```
+
+
 3. Install dependencies:
 ```bash
 pip install -r requirements.txt

@@ -1,7 +1,11 @@
-# app/core/data_collector.py
-import datetime
+"""
+ProfileScope: Data Collection Module
+Handles collection of social media profile data
+"""
+
 import logging
-from typing import Dict, List, Any
+from typing import Dict, Any, List
+from datetime import datetime, timedelta
 
 
 class DataCollector:
@@ -10,22 +14,19 @@ class DataCollector:
     def __init__(self, platform: str, rate_limit: int = 100):
         """
         Initialize data collector for specific platform
-
         Args:
             platform: Social media platform (e.g., 'twitter', 'facebook')
             rate_limit: Maximum requests per minute to avoid API throttling
         """
         self.platform = platform
         self.rate_limit = rate_limit
-        self.logger = logging.getLogger(f"DataCollector.{platform}")
+        self.logger = logging.getLogger(f"ProfileScope.DataCollector.{platform}")
 
     def collect_profile_data(self, profile_id: str) -> Dict[str, Any]:
         """
         Collect all available public data from a profile
-
         Args:
             profile_id: Username or profile identifier
-
         Returns:
             Dictionary containing profile data
         """
@@ -39,14 +40,11 @@ class DataCollector:
 
     def _collect_twitter_data(self, username: str) -> Dict[str, Any]:
         """Implementation for Twitter/X data collection"""
-        # This would use Twitter API or web scraping techniques
-        # For demo purposes, returning mock structure
         self.logger.info(f"Collecting Twitter data for {username}")
-
         return {
             "profile": {
                 "username": username,
-                "bio": "Mock bio for demonstration",
+                "bio": self._get_mock_bio(),
                 "join_date": "2020-01-01",
                 "location": "Example City",
             },
@@ -57,14 +55,12 @@ class DataCollector:
 
     def _collect_facebook_data(self, profile_id: str) -> Dict[str, Any]:
         """Implementation for Facebook data collection"""
-        # Similar implementation for Facebook
         self.logger.info(f"Collecting Facebook data for {profile_id}")
-
         return {
             "profile": {
                 "id": profile_id,
                 "name": "Example User",
-                "bio": "Mock Facebook bio",
+                "bio": self._get_mock_bio(),
                 "join_date": "2015-03-15",
             },
             "posts": self._generate_mock_posts(30),
@@ -72,11 +68,15 @@ class DataCollector:
             "links": self._generate_mock_links(25),
         }
 
+    def _get_mock_bio(self) -> str:
+        """Generate a mock bio for demonstration"""
+        return "This is a mock bio for ProfileScope demonstration purposes"
+
     def _generate_mock_posts(self, count: int) -> List[Dict[str, Any]]:
         """Generate mock posts for demonstration"""
         posts = []
         for i in range(count):
-            date = datetime.datetime.now() - datetime.timedelta(days=i * 3)
+            date = datetime.now() - timedelta(days=i * 3)
             posts.append(
                 {
                     "id": f"post{i}",
@@ -92,7 +92,7 @@ class DataCollector:
         """Generate mock media items for demonstration"""
         media = []
         for i in range(count):
-            date = datetime.datetime.now() - datetime.timedelta(days=i * 7)
+            date = datetime.now() - timedelta(days=i * 7)
             media.append(
                 {
                     "id": f"media{i}",
@@ -109,7 +109,7 @@ class DataCollector:
         links = []
         domains = ["news.example.com", "blog.example.com", "example.org", "example.edu"]
         for i in range(count):
-            date = datetime.datetime.now() - datetime.timedelta(days=i * 5)
+            date = datetime.now() - timedelta(days=i * 5)
             domain = domains[i % len(domains)]
             links.append(
                 {

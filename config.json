@@ -6,14 +6,49 @@
     "analysis": {
         "nlp_model": "default",
         "sentiment_analysis": true,
-        "confidence_threshold": 0.65
+        "confidence_threshold": 0.65,
+        "language": "en",
+        "cache_results": true,
+        "cache_duration": 3600
     },
     "output": {
         "save_raw_data": true,
-        "export_format": "json"
+        "export_format": "json",
+        "results_dir": "data/results"
     },
     "logging": {
         "level": "INFO",
-        "file": "socialinsight.log"
+        "file": "data/logs/profilescope.log",
+        "max_size": 10485760,
+        "backup_count": 5
+    },
+    "web": {
+        "host": "localhost",
+        "port": 5000,
+        "debug": false,
+        "secret_key": "change-this-in-production",
+        "database_url": "sqlite:///data/profilescope.db"
+    },
+    "desktop": {
+        "theme": "light",
+        "window_size": {
+            "width": 1200,
+            "height": 800
+        },
+        "auto_save": true,
+        "save_location": "data/results"
+    },
+    "api": {
+        "twitter": {
+            "api_key": "",
+            "api_secret": "",
+            "access_token": "",
+            "access_token_secret": ""
+        },
+        "facebook": {
+            "app_id": "",
+            "app_secret": "",
+            "access_token": ""
+        }
     }
 }

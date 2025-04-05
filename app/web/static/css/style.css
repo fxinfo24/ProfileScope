@@ -1,4 +1,5 @@
 /* SocialInsight CSS Styles */
+/* Global styles */
 :root {
     --primary: #4a6fa5;
     --secondary: #6c757d;
@@ -8,15 +9,32 @@
     --info: #17a2b8;
     --light: #f8f9fa;
     --dark: #343a40;
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+    --light-bg: #f8f9fa;
+    --dark-bg: #343a40;
 }
 
 body {
     background-color: #f5f5f5;
     color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 .navbar-brand {
     font-weight: bold;
+    font-weight: 600;
+    font-size: 1.5rem;
 }
 
 /* Sidebar styles */
@@ -53,6 +71,12 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
     border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -64,11 +88,16 @@ body {
     background-color: var(--primary) !important;
 }
 
+.card-title {
+    color: var(--primary-color);
+}
+
 /* Chart containers */
 .chart-container {
     position: relative;
     height: 300px;
     width: 100%;
+    margin: auto;
 }
 
 /* Progress bars */
@@ -77,11 +106,13 @@ body {
     border-radius: 10px;
     height: 10px;
     margin-bottom: 10px;
+    border-radius: 1rem;
 }
 
 .progress-bar {
     background-color: var(--primary);
     border-radius: 10px;
+    border-radius: 1rem;
 }
 
 /* Timeline styles */
@@ -121,6 +152,35 @@ body {
     border-radius: 10px;
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-left: 2rem;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+.timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-date {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
 }
 
 /* Footer styles */
@@ -131,10 +191,136 @@ footer {
     margin-top: 50px;
 }
 
+/* Status badges */
+.badge.bg-pending {
+    background-color: var(--warning-color);
+}
+
+.badge.bg-processing {
+    background-color: var(--accent-color);
+}
+
+.badge.bg-completed {
+    background-color: var(--success-color);
+}
+
+.badge.bg-failed {
+    background-color: var(--danger-color);
+}
+
+/* Dashboard cards */
+.stats-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.stats-card .stats-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+.stats-card .stats-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.stats-card .stats-label {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Task list */
+.table th {
+    border-top: none;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--secondary-color);
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Forms */
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* Analysis Results */
+.insight-card {
+    height: 100%;
+}
+
+.insight-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.insight-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+.trend-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.trend-indicator.positive {
+    color: var(--success-color);
+}
+
+.trend-indicator.negative {
+    color: var(--danger-color);
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) {
     .sidebar {
         margin-bottom: 30px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .timeline::before {
+        left: 1rem;
+    }
+    
+    .timeline-content {
+        margin-left: 3rem;
+    }
+    
+    .stats-card {
+        margin-bottom: 1rem;
     }
     
     .chart-container {

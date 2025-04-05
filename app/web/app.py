@@ -1,55 +1,75 @@
-# app/web/app.py
-from flask import Flask
+"""
+ProfileScope Web Application
+Flask-based web interface for social media profile analysis
+"""
+
 import os
-import logging
+from pathlib import Path
+from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    filename="socialinsight_web.log",
-)
-logger = logging.getLogger("SocialInsightWeb")
-
-# Initialize Flask app
-app = Flask(__name__, static_url_path="/static", template_folder="templates")
-
-# Configure app
-app.config["SECRET_KEY"] = "your_secret_key_here"  # Change in production
-app.config["UPLOAD_FOLDER"] = "uploads"
-app.config["RESULTS_FOLDER"] = "results"
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload
-
-# Create necessary directories
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-os.makedirs(app.config["RESULTS_FOLDER"], exist_ok=True)
-
-# Import routes
-from app.web.routes import api, views
+from ..core.analyzer import SocialMediaAnalyzer
+from .models import db
+from .routes import register_blueprints
 
 
-# Create static files if they don't exist
-def create_static_files():
-    """Create static files for the web interface if they don't exist"""
-    os.makedirs("app/web/static/css", exist_ok=True)
-    os.makedirs("app/web/static/js", exist_ok=True)
-    os.makedirs("app/web/static/img", exist_ok=True)
+def create_app(config_path=None):
+    """Create and configure the Flask application"""
+    app = Flask(__name__)
 
-    # Check if style.css exists, create if not
-    css_file = "app/web/static/css/style.css"
-    if not os.path.exists(css_file):
-        with open(css_file, "w") as f:
-            f.write("/* SocialInsight CSS will go here */")
+    # Load default configuration
+    app.config.update(
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            "DATABASE_URL",
+            "sqlite:///"
+            + str(Path(__file__).parent.parent.parent / "data" / "profilescope.db"),
+        ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        UPLOAD_FOLDER=str(Path(__file__).parent.parent.parent / "data" / "uploads"),
+        MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
+        ALLOWED_EXTENSIONS={"json"},
+    )
 
-    # Check if main.js exists, create if not
-    js_file = "app/web/static/js/main.js"
-    if not os.path.exists(js_file):
-        with open(js_file, "w") as f:
-            f.write("// SocialInsight JavaScript will go here")
+    # Override with custom config if provided
+    if config_path:
+        app.config.from_json(config_path)
+
+    # Ensure upload directory exists
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+    # Initialize database
+    db.init_app(app)
+    Migrate(app, db)
+
+    # Register blueprints
+    register_blueprints(app)
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template("error.html", error=error), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template("error.html", error=error), 500
+
+    return app
 
 
-# Create static files when app is initialized
-create_static_files()
+def main():
+    """Run the application"""
+    app = create_app()
+
+    # Get configuration from environment or use defaults
+    host = os.environ.get("FLASK_HOST", "localhost")
+    port = int(os.environ.get("FLASK_PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+
+    app.run(host=host, port=port, debug=debug)
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    main()

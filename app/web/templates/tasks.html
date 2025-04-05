@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Tasks - ProfileScope{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3 class="card-title h5">Filters</h3>
+                <form action="{{ url_for('views.tasks') }}" method="GET">
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">Platform</label>
+                        <select class="form-select" id="platform" name="platform">
+                            <option value="">All Platforms</option>
+                            <option value="twitter" {% if platform == 'twitter' %}selected{% endif %}>
+                                Twitter/X
+                            </option>
+                            <option value="facebook" {% if platform == 'facebook' %}selected{% endif %}>
+                                Facebook
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            {% for status_option in ['pending', 'processing', 'completed', 'failed'] %}
+                                <option value="{{ status_option }}" 
+                                        {% if status == status_option %}selected{% endif %}>
+                                    {{ status_option|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Apply Filters
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Analysis Tasks</h2>
+            <a href="{{ url_for('views.index') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> New Analysis
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Platform</th>
+                            <th>Profile</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Duration</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks.items %}
+                        <tr>
+                            <td>{{ task.id }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ task.platform|title }}
+                                </span>
+                            </td>
+                            <td>{{ task.profile_id }}</td>
+                            <td>
+                                <span class="badge bg-{{ task.status.value|status_badge }}">
+                                    {{ task.status.value|title }}
+                                </span>
+                            </td>
+                            <td>{{ task.created_at|datetime }}</td>
+                            <td>{{ task.duration|duration if task.duration else '-' }}</td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="{{ url_for('views.task', task_id=task.id) }}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Details
+                                    </a>
+                                    {% if task.status.value == 'completed' %}
+                                    <a href="{{ url_for('views.result', task_id=task.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        Results
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    No tasks found matching the current filters.
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if tasks.pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Task list pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if tasks.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('views.tasks', page=tasks.prev_num, platform=platform, status=status) }}">
+                                Previous
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                        {% endif %}
+
+                        {% for page_num in tasks.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                            {% if page_num %}
+                                {% if page_num == tasks.page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="{{ url_for('views.tasks', page=page_num, platform=platform, status=status) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if tasks.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="{{ url_for('views.tasks', page=tasks.next_num, platform=platform, status=status) }}">
+                                Next
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

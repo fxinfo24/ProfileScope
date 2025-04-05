@@ -1,103 +1,107 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}SocialInsight - Social Media Profile Analyzer{% endblock %}
+{% block title %}ProfileScope - Social Media Analysis{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">Analyze Social Media Profile</h3>
-                </div>
-                <div class="card-body">
-                    {% if error %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                    {% endif %}
-                    
-                    <form action="/analyze" method="post">
-                        <div class="mb-3">
-                            <label for="platform" class="form-label">Social Media Platform
-                                <label for="platform" class="form-label">Social Media Platform</label>
-                            <select class="form-select" id="platform" name="platform" required>
-                                <option value="" selected disabled>Select a platform</option>
-                                <option value="twitter">Twitter / X</option>
-                                <option value="facebook">Facebook</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="profile_id" class="form-label">Profile ID / Username</label>
-                            <input type="text" class="form-control" id="profile_id" name="profile_id" 
-                                   placeholder="Enter profile username or ID" required>
-                            <div class="form-text">Enter the username or profile ID you want to analyze.</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Collection Method</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="method" id="method_api" value="api" checked>
-                                <label class="form-check-label" for="method_api">API Access (Recommended)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="method" id="method_web" value="web">
-                                <label class="form-check-label" for="method_web">Web Scraping</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="method" id="method_manual" value="manual">
-                                <label class="form-check-label" for="method_manual">Manual Input</label>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Analysis Options</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="include_sentiment" id="include_sentiment" value="true" checked>
-                                <label class="form-check-label" for="include_sentiment">Include sentiment analysis</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="include_authenticity" id="include_authenticity" value="true" checked>
-                                <label class="form-check-label" for="include_authenticity">Include authenticity analysis</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="include_predictions" id="include_predictions" value="true" checked>
-                                <label class="form-check-label" for="include_predictions">Include predictions</label>
-                            </div>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Start Analysis</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h4 class="mb-0">About SocialInsight</h4>
-                </div>
-                <div class="card-body">
-                    <p>SocialInsight is an open-source tool designed to analyze publicly available social media profiles
-                    and generate insights about personality traits, interests, writing style, and more.</p>
-                    
-                    <p><strong>Key Features:</strong></p>
-                    <ul>
-                        <li>Collection of public profile data (posts, images, links)</li>
-                        <li>Personality trait analysis based on content</li>
-                        <li>Interest and preference identification</li>
-                        <li>Timeline generation and visualization</li>
-                        <li>Writing style analysis</li>
-                        <li>Authenticity evaluation and fake profile detection</li>
-                        <li>Predictive analysis based on patterns</li>
-                    </ul>
-                    
-                    <div class="alert alert-info mt-3">
-                        <strong>Privacy Notice:</strong> SocialInsight only analyzes publicly available information.
-                        No private data is accessed or stored without explicit permission.
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-5">
+            <h1 class="display-4">ProfileScope</h1>
+            <p class="lead">Advanced Social Media Profile Analysis</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Start New Analysis</h2>
+                <form id="analysisForm" action="{{ url_for('views.start_analysis') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">Social Media Platform</label>
+                        <select class="form-select" id="platform" name="platform" required>
+                            <option value="" selected disabled>Select a platform</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="facebook">Facebook</option>
+                        </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="profile_id" class="form-label">Profile ID / Username</label>
+                        <input type="text" class="form-control" id="profile_id" name="profile_id" 
+                               required placeholder="Enter profile ID or username">
+                        <div class="form-text">Enter the username or profile ID from the selected platform</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="advanced_analysis" name="advanced_analysis">
+                            <label class="form-check-label" for="advanced_analysis">
+                                Enable advanced analysis (may take longer)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        Start Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h3>Recent Analyses</h3>
+            <div class="list-group" id="recentAnalyses">
+                {% for task in recent_tasks %}
+                <a href="{{ url_for('views.task', task_id=task.id) }}" 
+                   class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ task.platform|title }}: {{ task.profile_id }}</h5>
+                        <small class="text-muted">
+                            {{ task.created_at|datetime }}
+                        </small>
+                    </div>
+                    <p class="mb-1">Status: 
+                        <span class="badge bg-{{ task.status.value|status_badge }}">
+                            {{ task.status.value|title }}
+                        </span>
+                    </p>
+                </a>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    No recent analyses found
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('analysisForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Starting Analysis...';
+    
+    const formData = new FormData(this);
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            window.location.href = `{{ url_for('views.task', task_id='') }}${data.task_id}`;
+        } else {
+            throw new Error(data.error || 'Failed to start analysis');
+        }
+    })
+    .catch(error => {
+        alert(error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Start Analysis';
+    });
+});
+</script>
 {% endblock %}

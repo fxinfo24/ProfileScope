@@ -1,79 +1,145 @@
-# app/web/routes/views.py
-from flask import render_template, redirect, url_for, request
-from app.web import app
-from app.web.models.task import analysis_tasks
+"""
+View routes for the web interface
+Handles page rendering and form submissions
+"""
+
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    current_app,
+    jsonify,
+)
+from ..models import db, Task, TaskStatus
+from sqlalchemy import desc
+from datetime import datetime, timedelta
+
+views_bp = Blueprint("views", __name__)
 
 
-@app.route("/")
-def home():
-    """Homepage with analysis form"""
-    return render_template("index.html")
+@views_bp.route("/")
+def index():
+    """Render homepage with analysis form"""
+    # Get recent tasks
+    recent_tasks = Task.query.order_by(Task.created_at.desc()).limit(5).all()
+
+    return render_template("index.html", recent_tasks=recent_tasks)
 
 
-@app.route("/analyze", methods=["POST"])
-def web_analyze():
-    """Web form handler to start analysis"""
-    platform = request.form.get("platform", "").lower()
-    profile_id = request.form.get("profile_id", "")
+@views_bp.route("/start-analysis", methods=["POST"])
+def start_analysis():
+    """Handle new analysis submission"""
+    platform = request.form.get("platform")
+    profile_id = request.form.get("profile_id")
+    advanced = request.form.get("advanced_analysis") == "on"
 
-    # Validate inputs
     if not platform or not profile_id:
-        return render_template(
-            "index.html", error="Please provide both platform and profile ID"
-        )
+        flash("Please provide both platform and profile ID.", "danger")
+        return redirect(url_for("views.index"))
 
-    if platform not in ["twitter", "facebook"]:
-        return render_template("index.html", error=f"Unsupported platform: {platform}")
+    # Create new task
+    task = Task(platform=platform, profile_id=profile_id)
+    db.session.add(task)
+    db.session.commit()
 
-    # Create analysis task (same as API)
-    task_id = str(uuid.uuid4())
-    task = AnalysisTask(task_id, platform, profile_id)
-    analysis_tasks[task_id] = task
+    # Return task ID for AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"task_id": task.id})
 
-    # Start analysis in background
-    thread = threading.Thread(target=run_analysis, args=(task_id, platform, profile_id))
-    thread.daemon = True
-    thread.start()
-
-    # Redirect to monitoring page
-    return redirect(url_for("task_monitor", task_id=task_id))
+    # Redirect to task page for regular form submissions
+    return redirect(url_for("views.task", task_id=task.id))
 
 
-@app.route("/tasks/<task_id>")
-def task_monitor(task_id):
-    """Page to monitor task progress"""
-    if task_id not in analysis_tasks:
-        return render_template("error.html", error="Task not found")
+@views_bp.route("/tasks")
+def tasks():
+    """List all analysis tasks with filtering and pagination"""
+    # Get filter parameters
+    platform = request.args.get("platform")
+    status = request.args.get("status")
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
 
-    task = analysis_tasks[task_id]
+    # Build query
+    query = Task.query
+
+    if platform:
+        query = query.filter_by(platform=platform.lower())
+    if status:
+        try:
+            task_status = TaskStatus(status.lower())
+            query = query.filter_by(status=task_status)
+        except ValueError:
+            flash(f"Invalid status filter: {status}", "warning")
+
+    # Order by creation date, newest first
+    query = query.order_by(desc(Task.created_at))
+
+    # Paginate results
+    tasks = query.paginate(page=page, per_page=per_page)
+
+    return render_template("tasks.html", tasks=tasks, platform=platform, status=status)
+
+
+@views_bp.route("/tasks/<int:task_id>")
+def task(task_id):
+    """Show details for a specific task"""
+    task = Task.query.get_or_404(task_id)
     return render_template("task.html", task=task)
 
 
-@app.route("/results/<task_id>")
-def view_result(task_id):
-    """Page to view analysis results"""
-    if task_id not in analysis_tasks:
-        return render_template("error.html", error="Task not found")
+@views_bp.route("/results/<int:task_id>")
+def result(task_id):
+    """Show analysis results for a completed task"""
+    task = Task.query.get_or_404(task_id)
 
-    task = analysis_tasks[task_id]
+    if task.status != TaskStatus.COMPLETED:
+        flash("Results are only available for completed tasks.", "warning")
+        return redirect(url_for("views.task", task_id=task_id))
 
-    if task.status != "completed":
-        return redirect(url_for("task_monitor", task_id=task_id))
-
-    # Load result if not in memory
-    if not task.result:
-        result_path = os.path.join(app.config["RESULTS_FOLDER"], f"{task_id}.json")
-        if os.path.exists(result_path):
-            with open(result_path, "r") as f:
-                task.result = json.load(f)
-        else:
-            return render_template("error.html", error="Result not found")
-
-    return render_template("result.html", task=task, result=task.result)
+    try:
+        return render_template("result.html", task=task)
+    except Exception as e:
+        current_app.logger.error(f"Error displaying results for task {task_id}: {e}")
+        flash("Error loading analysis results.", "error")
+        return redirect(url_for("views.task", task_id=task_id))
 
 
-@app.route("/dashboard")
+@views_bp.route("/dashboard")
 def dashboard():
-    """Admin dashboard to see all tasks"""
-    tasks = {tid: task.to_dict() for tid, task in analysis_tasks.items()}
-    return render_template("dashboard.html", tasks=tasks)
+    """Show dashboard with analytics"""
+    # Get task statistics
+    total_tasks = Task.query.count()
+    completed_tasks = Task.query.filter_by(status=TaskStatus.COMPLETED).count()
+    failed_tasks = Task.query.filter_by(status=TaskStatus.FAILED).count()
+
+    # Get platform distribution
+    platform_stats = (
+        db.session.query(Task.platform, db.func.count(Task.id))
+        .group_by(Task.platform)
+        .all()
+    )
+
+    # Get recent activity (last 10 tasks)
+    recent_activity = Task.query.order_by(desc(Task.created_at)).limit(10).all()
+
+    # Get average duration trend (last 7 days)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    duration_trend = (
+        db.session.query(db.func.date(Task.created_at), db.func.avg(Task.duration))
+        .filter(Task.status == TaskStatus.COMPLETED, Task.created_at >= seven_days_ago)
+        .group_by(db.func.date(Task.created_at))
+        .all()
+    )
+
+    return render_template(
+        "dashboard.html",
+        total_tasks=total_tasks,
+        completed_tasks=completed_tasks,
+        failed_tasks=failed_tasks,
+        platform_stats=platform_stats,
+        recent_activity=recent_activity,
+        duration_trend=duration_trend,
+    )

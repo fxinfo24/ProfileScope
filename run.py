@@ -1,39 +1,70 @@
 #!/usr/bin/env python3
+"""
+ProfileScope CLI
+Command line interface for ProfileScope social media analysis
+"""
+
 import argparse
 import sys
-import os
-import logging
+from pathlib import Path
+from app.core.analyzer import SocialMediaAnalyzer
+
 
 def main():
-    parser = argparse.ArgumentParser(description="SocialInsight: Social Media Profile Analyzer")
-    parser.add_argument("--mode", choices=["desktop", "web"], default="desktop",
-                      help="Run mode: desktop or web application")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    parser.add_argument("--port", type=int, default=5000, help="Port for web server")
-    parser.add_argument("--config", help="Path to configuration file")
-    
-    args = parser.parse_args()
-    
-    # Configure logging
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    """Command line entry point"""
+    parser = argparse.ArgumentParser(
+        description="ProfileScope: Social Media Profile Analysis Tool"
     )
-    
-    # Run the selected application mode
-    if args.mode == "desktop":
-        from app.desktop.app import AnalyzerApp
-        app = AnalyzerApp(config_path=args.config)
-        app.mainloop()
-    elif args.mode == "web":
-        from app.web.app import app as flask_app
-        flask_app.run(host='0.0.0.0', port=args.port, debug=args.debug)
-    else:
-        print(f"Unknown mode: {args.mode}")
-        return 1
-    
-    return 0
+
+    parser.add_argument(
+        "--platform",
+        required=True,
+        choices=["twitter", "facebook"],
+        help="Social media platform to analyze",
+    )
+
+    parser.add_argument(
+        "--profile", required=True, help="Profile ID or username to analyze"
+    )
+
+    parser.add_argument("--config", type=Path, help="Path to configuration file (JSON)")
+
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/results/analysis.json"),
+        help="Output file path for analysis results",
+    )
+
+    parser.add_argument(
+        "--verbose", action="store_true", help="Enable verbose logging output"
+    )
+
+    args = parser.parse_args()
+
+    try:
+        # Create output directory if it doesn't exist
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+
+        # Create analyzer instance
+        analyzer = SocialMediaAnalyzer(
+            config_path=str(args.config) if args.config else None
+        )
+
+        # Run analysis
+        print(f"Analyzing {args.profile} on {args.platform}...")
+        results = analyzer.analyze_profile(args.platform, args.profile)
+
+        # Export results
+        analyzer.export_results(results, str(args.output))
+        print(f"Analysis complete! Results saved to {args.output}")
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        if args.verbose:
+            raise
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

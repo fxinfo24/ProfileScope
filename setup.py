@@ -1,27 +1,51 @@
+"""
+ProfileScope setup configuration
+"""
+
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+with open("requirements.txt", "r", encoding="utf-8") as fh:
+    requirements = [
+        line.strip() for line in fh if line.strip() and not line.startswith("#")
+    ]
+
 setup(
-    name="socialinsight",
+    name="profilescope",
     version="1.0.0",
+    author="ProfileScope Team",
+    description="A comprehensive social media profile analysis tool",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/yourusername/profilescope",
     packages=find_packages(),
-    install_requires=[
-        "flask>=2.0.0",
-        "matplotlib>=3.4.0",
-        "numpy>=1.20.0",
-        "requests>=2.25.0",
-        "beautifulsoup4>=4.9.0",
-        "pandas>=1.2.0",
-    ],
-    author="Your Name",
-    author_email="your.email@example.com",
-    description="A tool for analyzing social media profiles",
-    keywords="social media, analysis, profile, AI",
-    url="https://github.com/yourusername/socialinsight",
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Intended Audience :: End Users/Desktop",
-        "Programming Language :: Python :: 3",
+        "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
+    install_requires=requirements,
+    entry_points={
+        "console_scripts": [
+            "profilescope=app.run:main",
+        ],
+    },
+    include_package_data=True,
+    package_data={
+        "profilescope": [
+            "app/web/static/*",
+            "app/web/templates/*",
+            "app/desktop/assets/*/*",
+        ],
+    },
 )

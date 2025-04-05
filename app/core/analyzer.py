@@ -1,14 +1,17 @@
-# app/core/analyzer.py
-import os
-import json
-import datetime
-import logging
-from typing import Dict, List, Any, Optional
+"""
+ProfileScope: Core Analyzer Module
+Main orchestrator for social media profile analysis
+"""
 
-from app.core.data_collector import DataCollector
-from app.core.content_analyzer import ContentAnalyzer
-from app.core.authenticity import ProfileAuthenticityAnalyzer
-from app.core.prediction import PredictionEngine
+import json
+import logging
+from typing import Dict, Any, Optional
+from datetime import datetime
+
+from .data_collector import DataCollector
+from .content_analyzer import ContentAnalyzer
+from .authenticity import ProfileAuthenticityAnalyzer
+from .prediction import PredictionEngine
 
 
 class SocialMediaAnalyzer:
@@ -17,13 +20,12 @@ class SocialMediaAnalyzer:
     def __init__(self, config_path: Optional[str] = None):
         """
         Initialize the analyzer with optional configuration
-
         Args:
             config_path: Path to configuration file
         """
         self.config = self._load_config(config_path)
-        self.setup_logging()
-        self.logger = logging.getLogger("SocialMediaAnalyzer")
+        self._setup_logging()
+        self.logger = logging.getLogger("ProfileScope.Analyzer")
 
         # Initialize components
         self.collectors = {
@@ -44,65 +46,12 @@ class SocialMediaAnalyzer:
             confidence_threshold=self.config["analysis"]["confidence_threshold"]
         )
 
-    def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
-        """Load configuration from file or use defaults"""
-        default_config = {
-            "rate_limits": {"twitter": 100, "facebook": 100},
-            "analysis": {
-                "nlp_model": "default",
-                "sentiment_analysis": True,
-                "confidence_threshold": 0.65,
-            },
-            "output": {"save_raw_data": True, "export_format": "json"},
-            "logging": {"level": "INFO", "file": "social_analyzer.log"},
-        }
-
-        if not config_path:
-            return default_config
-
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-
-            # Merge with defaults for any missing values
-            merged_config = default_config.copy()
-            for section, values in config.items():
-                if section in merged_config:
-                    if isinstance(merged_config[section], dict):
-                        merged_config[section].update(values)
-                    else:
-                        merged_config[section] = values
-                else:
-                    merged_config[section] = values
-
-            return merged_config
-        except Exception as e:
-            print(f"Error loading config: {e}")
-            return default_config
-
-    def setup_logging(self):
-        """Configure logging based on settings"""
-        log_level = getattr(logging, self.config["logging"]["level"])
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-        logging.basicConfig(
-            level=log_level, format=log_format, filename=self.config["logging"]["file"]
-        )
-
-        # Also log to console
-        console = logging.StreamHandler()
-        console.setLevel(log_level)
-        console.setFormatter(logging.Formatter(log_format))
-        logging.getLogger("").addHandler(console)
-
     def analyze_profile(self, platform: str, profile_id: str) -> Dict[str, Any]:
         """
         Perform complete analysis of a social media profile
-
         Args:
             platform: Social platform name (e.g., 'twitter', 'facebook')
             profile_id: Username or ID of the profile
-
         Returns:
             Complete analysis results
         """
@@ -133,7 +82,7 @@ class SocialMediaAnalyzer:
             "metadata": {
                 "profile_id": profile_id,
                 "platform": platform,
-                "analysis_date": datetime.datetime.now().isoformat(),
+                "analysis_date": datetime.now().isoformat(),
                 "analyzer_version": "1.0.0",
             },
             "content_analysis": content_analysis,
@@ -151,19 +100,68 @@ class SocialMediaAnalyzer:
     def export_results(self, results: Dict[str, Any], output_path: str) -> None:
         """
         Export analysis results to file
-
         Args:
             results: Analysis results to export
             output_path: Path to save results
         """
-        format = self.config["output"]["export_format"].lower()
+        format_type = self.config["output"]["export_format"].lower()
+        self.logger.info(f"Exporting results to {output_path} in {format_type} format")
 
-        self.logger.info(f"Exporting results to {output_path} in {format} format")
-
-        if format == "json":
+        if format_type == "json":
             with open(output_path, "w") as f:
                 json.dump(results, f, indent=2)
         else:
-            raise ValueError(f"Unsupported export format: {format}")
+            raise ValueError(f"Unsupported export format: {format_type}")
 
         self.logger.info(f"Results exported to {output_path}")
+
+    def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
+        """Load configuration from file or use defaults"""
+        default_config = {
+            "rate_limits": {"twitter": 100, "facebook": 100},
+            "analysis": {
+                "nlp_model": "default",
+                "sentiment_analysis": True,
+                "confidence_threshold": 0.65,
+            },
+            "output": {"save_raw_data": True, "export_format": "json"},
+            "logging": {"level": "INFO", "file": "profilescope.log"},
+        }
+
+        if not config_path:
+            return default_config
+
+        try:
+            with open(config_path, "r") as f:
+                config = json.load(f)
+
+            # Merge with defaults for any missing values
+            merged_config = default_config.copy()
+            for section, values in config.items():
+                if section in merged_config:
+                    if isinstance(merged_config[section], dict):
+                        merged_config[section].update(values)
+                    else:
+                        merged_config[section] = values
+                else:
+                    merged_config[section] = values
+
+            return merged_config
+        except Exception as e:
+            self.logger.error(f"Error loading config: {e}")
+            return default_config
+
+    def _setup_logging(self) -> None:
+        """Configure logging based on settings"""
+        log_level = getattr(logging, self.config["logging"]["level"])
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+        logging.basicConfig(
+            level=log_level, format=log_format, filename=self.config["logging"]["file"]
+        )
+
+        # Also log to console
+        console = logging.StreamHandler()
+        console.setLevel(log_level)
+        console.setFormatter(logging.Formatter(log_format))
+        logging.getLogger("").addHandler(console)

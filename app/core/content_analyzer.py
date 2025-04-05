@@ -129,28 +129,35 @@ class DataCollector:
         return links
 
 
+"""
+ProfileScope: Content Analysis Module
+Analyzes collected social media content to extract insights
+"""
+
+import logging
+from typing import Dict, Any, List
+from datetime import datetime
+
+
 class ContentAnalyzer:
     """Module for analyzing collected content to extract insights"""
 
     def __init__(self, nlp_model: str = "default", sentiment_analyzer: bool = True):
         """
         Initialize content analyzer with specified models
-
         Args:
             nlp_model: Name of NLP model to use
             sentiment_analyzer: Whether to include sentiment analysis
         """
         self.nlp_model = nlp_model
         self.sentiment_analyzer = sentiment_analyzer
-        self.logger = logging.getLogger("ContentAnalyzer")
+        self.logger = logging.getLogger("ProfileScope.ContentAnalyzer")
 
     def analyze_profile(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze all profile data and generate insights
-
         Args:
             profile_data: Dictionary of profile data from DataCollector
-
         Returns:
             Dictionary containing analysis results
         """
@@ -160,19 +167,19 @@ class ContentAnalyzer:
         text_content = self._extract_text_content(profile_data)
 
         # Run different types of analysis
-        return {
+        analysis = {
             "personality_traits": self._analyze_personality(text_content),
             "interests": self._analyze_interests(text_content, profile_data),
             "beliefs": self._analyze_beliefs(text_content),
             "writing_style": self._analyze_writing_style(text_content),
             "timeline": self._generate_timeline(profile_data),
-            "sentiment_trends": (
-                self._analyze_sentiment_trends(profile_data)
-                if self.sentiment_analyzer
-                else None
-            ),
             "identity_markers": self._identify_personal_markers(profile_data),
         }
+
+        if self.sentiment_analyzer:
+            analysis["sentiment_trends"] = self._analyze_sentiment_trends(profile_data)
+
+        return analysis
 
     def _extract_text_content(self, profile_data: Dict[str, Any]) -> str:
         """Combine all text content for analysis"""
@@ -198,10 +205,8 @@ class ContentAnalyzer:
 
     def _analyze_personality(self, text_content: str) -> Dict[str, float]:
         """Analyze text to infer personality traits"""
-        # This would use NLP models to infer traits like openness, extroversion, etc.
-        # For demo, returning mock data
         self.logger.info("Analyzing personality traits")
-
+        # TODO: Implement real NLP-based personality analysis
         return {
             "openness": 0.75,
             "conscientiousness": 0.62,
@@ -216,10 +221,8 @@ class ContentAnalyzer:
         self, text_content: str, profile_data: Dict[str, Any]
     ) -> Dict[str, float]:
         """Analyze content to determine interests and preferences"""
-        # This would analyze text, shared links, etc. to determine interests
         self.logger.info("Analyzing interests and preferences")
-
-        # For demo purposes
+        # TODO: Implement real interest analysis
         return {
             "technology": 0.85,
             "politics": 0.62,
@@ -232,13 +235,11 @@ class ContentAnalyzer:
         }
 
     def _analyze_beliefs(self, text_content: str) -> Dict[str, Any]:
-        """Analyze text to infer beliefs (political, religious, etc.)"""
-        # This would use more sophisticated NLP for belief analysis
+        """Analyze text to infer beliefs"""
         self.logger.info("Analyzing belief indicators")
-
         return {
             "political_leaning": {
-                "value": 0.2,  # -1 to 1 scale (liberal to conservative)
+                "value": 0.2,  # -1 to 1 scale
                 "confidence": 0.65,
                 "evidence_count": 12,
             },
@@ -257,10 +258,7 @@ class ContentAnalyzer:
 
     def _analyze_writing_style(self, text_content: str) -> Dict[str, Any]:
         """Analyze writing style characteristics"""
-        # Would use NLP to extract style features
         self.logger.info("Analyzing writing style")
-
-        # Word count and basic statistics would be calculated
         word_count = len(text_content.split())
 
         return {
@@ -269,11 +267,9 @@ class ContentAnalyzer:
             "emotional_tone": 0.73,
             "vocabulary_diversity": 0.64,
             "average_sentence_length": 15.3,
-            "frequent_words": ["example", "would", "content", "analysis"],
-            "distinctive_phrases": ["in my opinion", "to be fair", "actually"],
             "word_count": word_count,
             "stylistic_fingerprint": {
-                "hash": "mock_hash_value_for_style_comparison",
+                "hash": self._generate_style_fingerprint(text_content),
                 "signature_features": [
                     "sentence_structure",
                     "word_choice",
@@ -284,9 +280,7 @@ class ContentAnalyzer:
 
     def _generate_timeline(self, profile_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate a timeline of significant events and trends"""
-        # This would organize all time-based data into a timeline
         self.logger.info("Generating activity timeline")
-
         timeline = []
 
         # Add join date
@@ -302,14 +296,12 @@ class ContentAnalyzer:
         # Add posts with significant engagement
         if "posts" in profile_data:
             for post in profile_data["posts"]:
-                if (
-                    "likes" in post and post["likes"] > 20
-                ):  # Threshold for "significant"
+                if "likes" in post and post["likes"] > 20:
                     timeline.append(
                         {
                             "date": post["date"],
                             "type": "popular_post",
-                            "description": f"Popular post: {post['content'][:50]}...",
+                            "description": (f"Popular post: {post['content'][:50]}..."),
                             "engagement": post["likes"],
                         }
                     )
@@ -321,31 +313,30 @@ class ContentAnalyzer:
                     {
                         "date": media["date"],
                         "type": f"{media['type']}_shared",
-                        "description": f"Shared {media['type']}: {media.get('caption', 'No caption')}",
+                        "description": (
+                            f"Shared {media['type']}: "
+                            f"{media.get('caption', 'No caption')}"
+                        ),
                         "url": media["url"],
                     }
                 )
 
         # Sort timeline by date
-        timeline.sort(key=lambda x: datetime.datetime.strptime(x["date"], "%Y-%m-%d"))
-
+        timeline.sort(key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"))
         return timeline
 
     def _analyze_sentiment_trends(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze sentiment trends over time"""
-        # Would track sentiment in posts over time
         self.logger.info("Analyzing sentiment trends")
-
-        # For demo, generate mock sentiment data
         sentiment_by_month = {}
 
         if "posts" in profile_data:
             for post in profile_data["posts"]:
-                date = datetime.datetime.strptime(post["date"], "%Y-%m-%d")
+                date = datetime.strptime(post["date"], "%Y-%m-%d")
                 month_key = date.strftime("%Y-%m")
-
-                # Mock sentiment score between -1 and 1
-                sentiment = ((int(post["id"].replace("post", "")) % 10) - 5) / 5
+                # TODO: Implement real sentiment analysis
+                post_id = int(post["id"].replace("post", ""))
+                sentiment = (post_id % 10 - 5) / 5
 
                 if month_key not in sentiment_by_month:
                     sentiment_by_month[month_key] = []
@@ -366,23 +357,24 @@ class ContentAnalyzer:
         # Sort by month
         sentiment_trends.sort(key=lambda x: x["period"])
 
+        # Calculate overall sentiment
+        overall = (
+            sum(item["average_sentiment"] for item in sentiment_trends)
+            / len(sentiment_trends)
+            if sentiment_trends
+            else 0
+        )
+
         return {
             "trend": sentiment_trends,
-            "overall_sentiment": (
-                sum(item["average_sentiment"] for item in sentiment_trends)
-                / len(sentiment_trends)
-                if sentiment_trends
-                else 0
-            ),
+            "overall_sentiment": overall,
         }
 
     def _identify_personal_markers(
         self, profile_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Identify personal identity markers and preferences"""
-        # This would identify explicit and implicit identity markers
         self.logger.info("Identifying personal markers")
-
         return {
             "location_indicators": {
                 "mentioned_locations": ["Example City", "Downtown"],
@@ -401,6 +393,11 @@ class ContentAnalyzer:
             },
             "self_descriptions": ["Mock self description", "Another mock description"],
         }
+
+    def _generate_style_fingerprint(self, text_content: str) -> str:
+        """Generate a unique hash for writing style comparison"""
+        # TODO: Implement sophisticated style fingerprinting
+        return "mock_hash_value_for_style_comparison"
 
 
 class ProfileAuthenticityAnalyzer:

@@ -1,12 +1,12 @@
 *** 
 
-*** Let me continue with the architecture diagram for the SocialInsight system:
+*** Let me continue with the architecture diagram for the ProfileScope system:
 
-Let me provide an overview of the SocialInsight system I've designed based on our requirements:
+Let me provide an overview of the ProfileScope system I've designed based on our requirements:
 
-## SocialInsight: Social Media Profile Analyzer
+## ProfileScope: Social Media Profile Analyzer
 
-SocialInsight is a comprehensive application for analyzing publicly available social media profiles. The system includes both a desktop application (built with Tkinter) and a web interface (built with Flask) to provide flexibility in how users interact with the tool.
+ProfileScope is a comprehensive application for analyzing publicly available social media profiles. The system includes both a desktop application (built with Tkinter) and a web interface (built with Flask) to provide flexibility in how users interact with the tool.
 
 ### Core Functionality
 
@@ -61,11 +61,11 @@ The application is structured around four main analysis components:
 
 The system is designed to be open-source and adaptable, with technical and non-technical interfaces to make it accessible to a wide range of users. All analysis is performed only on publicly available information, and the tool includes appropriate disclaimers about the speculative nature of certain analyses. ***
 
-## SocialInsight Project Structure for VSCode
-Here's a comprehensive project structure for organizing the SocialInsight codebase in VSCode. This structure follows best practices for Python projects, separating concerns and making the project maintainable and scalable:
+## ProfileScope Project Structure for VSCode
+Here's a comprehensive project structure for organizing the ProfileScope codebase in VSCode. This structure follows best practices for Python projects, separating concerns and making the project maintainable and scalable:
 
 
-socialinsight/
+ProfileScope/
 │
 ├── app/                        # Main application directory
 │   ├── __init__.py             # Initialize app package
@@ -600,9 +600,9 @@ import logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='socialinsight_web.log'
+    filename='ProfileScope_web.log'
 )
-logger = logging.getLogger('SocialInsightWeb')
+logger = logging.getLogger('ProfileScopeWeb')
 
 # Initialize Flask app
 app = Flask(__name__, 
@@ -633,13 +633,13 @@ def create_static_files():
     css_file = 'app/web/static/css/style.css'
     if not os.path.exists(css_file):
         with open(css_file, 'w') as f:
-            f.write('/* SocialInsight CSS will go here */')
+            f.write('/* ProfileScope CSS will go here */')
     
     # Check if main.js exists, create if not
     js_file = 'app/web/static/js/main.js'
     if not os.path.exists(js_file):
         with open(js_file, 'w') as f:
-            f.write('// SocialInsight JavaScript will go here')
+            f.write('// ProfileScope JavaScript will go here')
 
 # Create static files when app is initialized
 create_static_files()
@@ -979,7 +979,7 @@ This would be the base template that other templates extend:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SocialInsight - Social Media Profile Analyzer{% endblock %}</title>
+    <title>{% block title %}ProfileScope - Social Media Profile Analyzer{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -989,8 +989,8 @@ This would be the base template that other templates extend:
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SocialInsight Logo" height="30">
-                SocialInsight
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ProfileScope Logo" height="30">
+                ProfileScope
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -1017,12 +1017,12 @@ This would be the base template that other templates extend:
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p>&copy; 2023 SocialInsight. Open-source software.</p>
+                    <p>&copy; 2023 ProfileScope. Open-source software.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <a href="/privacy" class="text-decoration-none me-3">Privacy Policy</a>
                     <a href="/terms" class="text-decoration-none me-3">Terms of Use</a>
-                    <a href="https://github.com/socialinsight" class="text-decoration-none">GitHub</a>
+                    <a href="https://github.com/ProfileScope" class="text-decoration-none">GitHub</a>
                 </div>
             </div>
         </div>
@@ -1040,7 +1040,7 @@ The homepage with the analysis form:
 ```html
 {% extends 'base.html' %}
 
-{% block title %}SocialInsight - Social Media Profile Analyzer{% endblock %}
+{% block title %}ProfileScope - Social Media Profile Analyzer{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -1120,10 +1120,10 @@ The homepage with the analysis form:
             
             <div class="card mt-4">
                 <div class="card-header">
-                    <h4 class="mb-0">About SocialInsight</h4>
+                    <h4 class="mb-0">About ProfileScope</h4>
                 </div>
                 <div class="card-body">
-                    <p>SocialInsight is an open-source tool designed to analyze publicly available social media profiles
+                    <p>ProfileScope is an open-source tool designed to analyze publicly available social media profiles
                     and generate insights about personality traits, interests, writing style, and more.</p>
                     
                     <p><strong>Key Features:</strong></p>
@@ -1138,7 +1138,7 @@ The homepage with the analysis form:
                     </ul>
                     
                     <div class="alert alert-info mt-3">
-                        <strong>Privacy Notice:</strong> SocialInsight only analyzes publicly available information.
+                        <strong>Privacy Notice:</strong> ProfileScope only analyzes publicly available information.
                         No private data is accessed or stored without explicit permission.
                     </div>
                 </div>
@@ -1154,7 +1154,7 @@ The task monitoring page:
 ```html
 {% extends 'base.html' %}
 
-{% block title %}Analysis in Progress - SocialInsight{% endblock %}
+{% block title %}Analysis in Progress - ProfileScope{% endblock %}
 
 {% block extra_head %}
 {% if task.status != "completed" and task.status != "failed" %}
@@ -1230,7 +1230,7 @@ The results page (providing a simplified version for brevity):
 ```html
 {% extends 'base.html' %}
 
-{% block title %}Analysis Results - SocialInsight{% endblock %}
+{% block title %}Analysis Results - ProfileScope{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1298,7 +1298,7 @@ The admin dashboard:
 ```html
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - SocialInsight{% endblock %}
+{% block title %}Dashboard - ProfileScope{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -1399,7 +1399,7 @@ The error page:
 ```html
 {% extends 'base.html' %}
 
-{% block title %}Error - SocialInsight{% endblock %}
+{% block title %}Error - ProfileScope{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -1427,7 +1427,7 @@ The error page:
 
 ### 1. `app/web/static/css/style.css`
 ```css
-/* SocialInsight CSS Styles */
+/* ProfileScope CSS Styles */
 :root {
     --primary: #4a6fa5;
     --secondary: #6c757d;
@@ -1574,7 +1574,7 @@ footer {
 
 ### 2. `app/web/static/js/main.js`
 ```javascript
-// SocialInsight main JavaScript file
+// ProfileScope main JavaScript file
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips

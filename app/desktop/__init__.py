@@ -2,6 +2,6 @@
 ProfileScope Desktop Application Package
 """
 
-from .app import DesktopApp
+from .app import AnalyzerApp
 
-__all__ = ["DesktopApp"]
+__all__ = ["AnalyzerApp"]

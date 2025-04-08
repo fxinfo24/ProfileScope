@@ -1,15 +1,12 @@
 """
-ProfileScope Web Interface
-Flask application initialization and configuration
+ProfileScope Web Package
 """
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 import os
-
-# Initialize SQLAlchemy
-db = SQLAlchemy()
+from .models import db
 
 
 def create_app(config=None):

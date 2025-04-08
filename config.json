@@ -40,10 +40,10 @@
     },
     "api": {
         "twitter": {
-            "api_key": "",
-            "api_secret": "",
-            "access_token": "",
-            "access_token_secret": ""
+            "api_key": "XNe4twIfHE7bbaoYo1zCpgTWK",
+            "api_secret": "CNNfItEJjINsENMi0jXdd2EBlYTv56ognQTXhh6y0XdterXXuL",
+            "access_token": "1747579183033896960-7kELLlLmWZVOVqgLzyO9acql4j5aym",
+            "access_token_secret": "jXlwXwKQBp2MmeOrN52Ep6fKj0RiecNZWlJEk5kC9sO8q"
         },
         "facebook": {
             "app_id": "",

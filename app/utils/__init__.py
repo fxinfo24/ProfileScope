@@ -1,15 +1,14 @@
-"""
-ProfileScope Utilities Package
-"""
+"""ProfileScope utility modules"""
 
-from .config import Config
-from .helpers import format_timestamp, export_to_pdf, sanitize_input
+from .config import load_config, ConfigError
 from .logger import setup_logger
+from .helpers import format_date, extract_urls, clean_text
 
 __all__ = [
-    "Config",
-    "format_timestamp",
-    "export_to_pdf",
-    "sanitize_input",
+    "load_config",
+    "ConfigError",
     "setup_logger",
+    "format_date",
+    "extract_urls",
+    "clean_text",
 ]

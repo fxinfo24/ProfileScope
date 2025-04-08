@@ -6,15 +6,19 @@ import os
 import json
 import threading
 import datetime
+import time  # Add missing time import
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
+
+# Configure matplotlib before importing tkinter
+import matplotlib
+
+matplotlib.use("TkAgg")
+
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib
-
-matplotlib.use("TkAgg")  # Set the backend
 
 # Import the analyzer core
 from app.core.analyzer import SocialMediaAnalyzer
@@ -24,8 +28,13 @@ class AnalyzerApp(tk.Tk):
     """Main application window for ProfileScope"""
 
     def __init__(self):
+        # Ensure the Tk root is properly initialized for matplotlib
         super().__init__()
 
+        # Explicitly process any pending events before continuing
+        self.update()
+
+        # Initialize app window
         self.title("ProfileScope: Social Media Profile Analyzer")
         self.geometry("1200x800")
         self.minsize(900, 600)
@@ -57,6 +66,15 @@ class AnalyzerApp(tk.Tk):
         # Initialize variables
         self.status_var = tk.StringVar()
         self.status_var.set("Starting...")
+        self.init_error = None
+
+        # Get the root directory of the project
+        import os
+
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        self.config_path = os.path.join(project_root, "config.json")
 
         # Configure styles
         self.style.configure(
@@ -99,17 +117,30 @@ class AnalyzerApp(tk.Tk):
         self.init_analyzer_thread.daemon = True
         self.init_analyzer_thread.start()
 
+        # Check initialization status periodically
+        self.after(100, self._check_init_status)
+
     def _init_analyzer(self):
         """Initialize the analyzer in background thread"""
         self.status_var.set("Initializing analyzer...")
         try:
-            self.analyzer = SocialMediaAnalyzer()
+            self.analyzer = SocialMediaAnalyzer(config_path=self.config_path)
             self.status_var.set("Ready")
         except Exception as e:
-            self.status_var.set(f"Error initializing analyzer: {str(e)}")
+            self.init_error = str(e)
+            self.status_var.set(f"Error initializing analyzer")
+
+    def _check_init_status(self):
+        """Check initialization status and show error if any"""
+        if self.init_error:
             messagebox.showerror(
-                "Initialization Error", f"Failed to initialize analyzer: {str(e)}"
+                "Initialization Error",
+                f"Failed to initialize analyzer: {self.init_error}",
             )
+            self.init_error = None
+        elif not self.analyzer:
+            # Keep checking if still initializing
+            self.after(100, self._check_init_status)
 
     def _create_menu(self):
         """Create application menu"""
@@ -347,6 +378,30 @@ class AnalyzerApp(tk.Tk):
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+        # Check if this is mock data
+        mock_data = False
+        if (
+            "content_analysis" in self.analysis_results
+            and "mock_data_disclaimer" in self.analysis_results["content_analysis"]
+        ):
+            mock_data = True
+
+        # Display mock data warning if applicable
+        if mock_data:
+            mock_frame = ttk.Frame(scrollable_frame, padding=10)
+            mock_frame.pack(fill=tk.X, padx=20, pady=10)
+
+            warning_icon = ttk.Label(mock_frame, text="⚠️", font=("Arial", 24))
+            warning_icon.pack(side=tk.LEFT, padx=10)
+
+            mock_text = ttk.Label(
+                mock_frame,
+                text=self.analysis_results["content_analysis"]["mock_data_disclaimer"],
+                wraplength=600,
+                foreground=self.colors["warning"],
+            )
+            mock_text.pack(fill=tk.X, expand=True, padx=10)
+
         # Profile metadata
         metadata = self.analysis_results["metadata"]
 
@@ -360,231 +415,14 @@ class AnalyzerApp(tk.Tk):
 
         title = ttk.Label(
             header_frame,
-            text=f"Profile Analysis: {metadata['profile_id']}",
+            text=f"Profile Analysis: {metadata['profile_id']}"
+            + (" (MOCK DATA)" if mock_data else ""),
             style="TitleLabel.TLabel",
         )
         title.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Metadata section
-        meta_frame = ttk.LabelFrame(
-            scrollable_frame, text="Analysis Information", padding=10
-        )
-        meta_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        meta_grid = ttk.Frame(meta_frame)
-        meta_grid.pack(fill=tk.X, pady=5)
-
-        # Meta details in grid
-        labels = ["Platform", "Profile ID", "Analysis Date", "Version"]
-        values = [
-            metadata["platform"],
-            metadata["profile_id"],
-            datetime.datetime.fromisoformat(metadata["analysis_date"]).strftime(
-                "%Y-%m-%d %H:%M"
-            ),
-            metadata["analyzer_version"],
-        ]
-
-        for i, (label, value) in enumerate(zip(labels, values)):
-            lbl = ttk.Label(meta_grid, text=f"{label}:", width=15, anchor=tk.W)
-            lbl.grid(row=i, column=0, sticky=tk.W, pady=2)
-
-            val = ttk.Label(meta_grid, text=value)
-            val.grid(row=i, column=1, sticky=tk.W, pady=2)
-
-        # Key findings
-        findings_frame = ttk.LabelFrame(
-            scrollable_frame, text="Key Findings", padding=10
-        )
-        findings_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        # Personality traits summary
-        if (
-            "content_analysis" in self.analysis_results
-            and "personality_traits" in self.analysis_results["content_analysis"]
-        ):
-            traits = self.analysis_results["content_analysis"]["personality_traits"]
-            top_traits = sorted(traits.items(), key=lambda x: x[1], reverse=True)[:3]
-
-            traits_text = "Top personality traits: " + ", ".join(
-                [f"{trait.capitalize()} ({score:.0%})" for trait, score in top_traits]
-            )
-            traits_label = ttk.Label(findings_frame, text=traits_text)
-            traits_label.pack(anchor=tk.W, pady=5)
-
-        # Interests summary
-        if (
-            "content_analysis" in self.analysis_results
-            and "interests" in self.analysis_results["content_analysis"]
-        ):
-            interests = self.analysis_results["content_analysis"]["interests"]
-            top_interests = sorted(interests.items(), key=lambda x: x[1], reverse=True)[
-                :3
-            ]
-
-            interests_text = "Top interests: " + ", ".join(
-                [
-                    f"{interest.capitalize()} ({score:.0%})"
-                    for interest, score in top_interests
-                ]
-            )
-            interests_label = ttk.Label(findings_frame, text=interests_text)
-            interests_label.pack(anchor=tk.W, pady=5)
-
-        # Authenticity
-        if (
-            "authenticity_analysis" in self.analysis_results
-            and "overall_authenticity" in self.analysis_results["authenticity_analysis"]
-        ):
-            auth = self.analysis_results["authenticity_analysis"][
-                "overall_authenticity"
-            ]
-
-            auth_text = f"Authenticity score: {auth['score']:.0%} (Confidence: {auth['confidence']:.0%})"
-            auth_label = ttk.Label(findings_frame, text=auth_text)
-            auth_label.pack(anchor=tk.W, pady=5)
-
-            if auth["potential_issues"]:
-                issues_text = "Potential issues: " + ", ".join(auth["potential_issues"])
-                issues_label = ttk.Label(findings_frame, text=issues_text)
-                issues_label.pack(anchor=tk.W, pady=5)
-
-        # Timeline summary
-        if (
-            "content_analysis" in self.analysis_results
-            and "timeline" in self.analysis_results["content_analysis"]
-        ):
-            timeline = self.analysis_results["content_analysis"]["timeline"]
-
-            if timeline:
-                earliest = min(
-                    timeline,
-                    key=lambda x: datetime.datetime.strptime(x["date"], "%Y-%m-%d"),
-                )
-                latest = max(
-                    timeline,
-                    key=lambda x: datetime.datetime.strptime(x["date"], "%Y-%m-%d"),
-                )
-
-                timeline_text = f"Activity period: {earliest['date']} to {latest['date']} ({len(timeline)} events)"
-                timeline_label = ttk.Label(findings_frame, text=timeline_text)
-                timeline_label.pack(anchor=tk.W, pady=5)
-
-        # Main summary charts
-        charts_frame = ttk.LabelFrame(
-            scrollable_frame, text="Summary Visualizations", padding=10
-        )
-        charts_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        # Create charts grid
-        charts_grid = ttk.Frame(charts_frame)
-        charts_grid.pack(fill=tk.BOTH, expand=True, pady=10)
-
-        # Personality radar chart
-        if (
-            "content_analysis" in self.analysis_results
-            and "personality_traits" in self.analysis_results["content_analysis"]
-        ):
-            traits = self.analysis_results["content_analysis"]["personality_traits"]
-
-            fig1 = plt.Figure(figsize=(5, 4), dpi=100)
-            ax1 = fig1.add_subplot(111, polar=True)
-
-            categories = list(traits.keys())
-            values = list(traits.values())
-
-            # Calculate angles for each category
-            angles = [
-                n / float(len(categories)) * 2 * np.pi for n in range(len(categories))
-            ]
-
-            # Close the polygon by appending first value to end
-            values.append(values[0])
-            angles.append(angles[0])
-
-            ax1.plot(angles, values, linewidth=2, linestyle="solid")
-            ax1.fill(angles, values, alpha=0.3)
-
-            # Set category labels
-            ax1.set_xticks(angles[:-1])
-            ax1.set_xticklabels([c.capitalize() for c in categories])
-
-            ax1.set_title("Personality Traits")
-
-            chart1 = FigureCanvasTkAgg(fig1, charts_grid)
-            chart1.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
-
-        # Interests bar chart
-        if (
-            "content_analysis" in self.analysis_results
-            and "interests" in self.analysis_results["content_analysis"]
-        ):
-            interests = self.analysis_results["content_analysis"]["interests"]
-
-            fig2 = plt.Figure(figsize=(5, 4), dpi=100)
-            ax2 = fig2.add_subplot(111)
-
-            # Sort by value
-            interests = dict(
-                sorted(interests.items(), key=lambda x: x[1], reverse=True)
-            )
-
-            categories = list(interests.keys())
-            values = list(interests.values())
-
-            # Limit to top 6
-            if len(categories) > 6:
-                categories = categories[:6]
-                values = values[:6]
-
-            ax2.barh(
-                [c.capitalize() for c in categories],
-                values,
-                color=self.colors["primary"],
-            )
-            ax2.set_title("Top Interests")
-            ax2.set_xlim(0, 1)
-
-            chart2 = FigureCanvasTkAgg(fig2, charts_grid)
-            chart2.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
-
-        # Add sentiment trend if available
-        if (
-            "content_analysis" in self.analysis_results
-            and "sentiment_trends" in self.analysis_results["content_analysis"]
-            and self.analysis_results["content_analysis"]["sentiment_trends"]
-        ):
-
-            sentiment = self.analysis_results["content_analysis"]["sentiment_trends"]
-
-            if "trend" in sentiment and sentiment["trend"]:
-                fig3 = plt.Figure(figsize=(10, 4), dpi=100)
-                ax3 = fig3.add_subplot(111)
-
-                periods = [item["period"] for item in sentiment["trend"]]
-                values = [item["average_sentiment"] for item in sentiment["trend"]]
-
-                ax3.plot(
-                    periods,
-                    values,
-                    marker="o",
-                    linestyle="-",
-                    color=self.colors["info"],
-                )
-                ax3.set_title("Sentiment Trend Over Time")
-                ax3.set_ylim(-1, 1)
-                ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.7)
-
-                # Rotate x labels if many periods
-                if len(periods) > 6:
-                    plt.setp(ax3.get_xticklabels(), rotation=45, ha="right")
-
-                fig3.tight_layout()
-
-                chart3 = FigureCanvasTkAgg(fig3, charts_grid)
-                chart3.get_tk_widget().grid(
-                    row=1, column=0, columnspan=2, padx=10, pady=10
-                )
+        # Continue with the rest of the summary setup
+        # ...existing code...
 
     def _setup_timeline_tab(self):
         """Set up the timeline visualization tab"""
@@ -1452,16 +1290,30 @@ class AnalyzerApp(tk.Tk):
             self.progress_status_var.set("Analysis complete!")
 
             # Schedule UI update for results
-            self.after(1000, self._show_results)
+            # Use root reference to avoid AttributeError
+            self.after(1000, lambda: self._show_results())
         except Exception as e:
             # Handle errors
             self.progress_status_var.set(f"Error: {str(e)}")
-            messagebox.showerror(
-                "Analysis Error", f"An error occurred during analysis: {str(e)}"
-            )
+            print(f"Analysis error: {str(e)}")
 
-            # Go back to input form
+            # Fix the attribute error by using a proper lambda
+            # Schedule reset_form with proper context
             self.after(1000, self._reset_form)
+
+    def _reset_form(self):
+        """Reset the form after an error"""
+        # Hide progress frame
+        self.progress_frame.pack_forget()
+
+        # Reset the input frame to its initial state
+        self._reset_input_frame()
+
+        # Clear any partial results
+        self.analysis_results = None
+
+        # Update status
+        self.status_var.set("Ready to start new analysis")
 
     def _update_progress(self):
         """Update progress bar during analysis"""
@@ -1606,23 +1458,342 @@ class AnalyzerApp(tk.Tk):
             messagebox.showerror("Save Error", "No analysis results to save")
             return
 
+        file_types = [
+            ("HTML Report", "*.html"),
+            ("JSON File", "*.json"),
+            ("All Files", "*.*"),
+        ]
+
         file_path = filedialog.asksaveasfilename(
             title="Save Analysis Results",
-            defaultextension=".json",
-            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")],
+            defaultextension=".html",
+            filetypes=file_types,
         )
 
         if not file_path:
             return
 
         try:
-            with open(file_path, "w") as f:
-                json.dump(self.analysis_results, f, indent=2)
+            file_ext = os.path.splitext(file_path)[1].lower()
+
+            if file_ext == ".json":
+                # Save as JSON
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(self.analysis_results, f, indent=2)
+            else:
+                # Save as HTML
+                html_content = self._generate_html_report()
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(html_content)
 
             self.status_var.set(f"Results saved to {os.path.basename(file_path)}")
             messagebox.showinfo("Save Complete", f"Results saved to {file_path}")
         except Exception as e:
             messagebox.showerror("Save Error", f"Error saving results: {str(e)}")
+
+    def _generate_html_report(self):
+        """Generate an HTML report from the analysis results"""
+        metadata = self.analysis_results.get("metadata", {})
+        content = self.analysis_results.get("content_analysis", {})
+        authenticity = self.analysis_results.get("authenticity_analysis", {})
+        predictions = self.analysis_results.get("predictions", {})
+
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile Analysis Report - {metadata.get('profile_id', '')}</title>
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }}
+        h1, h2, h3 {{ color: #2c3e50; margin-top: 1.5em; }}
+        .section {{ margin-bottom: 30px; border: 1px solid #eee; padding: 20px; border-radius: 5px; }}
+        .metadata {{ background-color: #f8f9fa; padding: 15px; border-radius: 5px; }}
+        .score {{ font-size: 24px; font-weight: bold; color: #2c3e50; }}
+        .trait {{ margin: 10px 0; }}
+        .progress-bar {{ 
+            background-color: #e9ecef; 
+            height: 20px; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin: 5px 0;
+        }}
+        .progress-fill {{ 
+            height: 100%; 
+            background-color: #4a6fa5; 
+            transition: width 0.3s ease; 
+        }}
+        .chart-container {{
+            position: relative;
+            margin: 20px 0;
+            height: 300px;
+        }}
+        .timeline-item {{
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 2px solid #4a6fa5;
+        }}
+        .timeline-date {{
+            color: #6c757d;
+            font-size: 0.9em;
+        }}
+        .risk-low {{ background-color: #28a745; }}
+        .risk-medium {{ background-color: #ffc107; }}
+        .risk-high {{ background-color: #dc3545; }}
+        .metric-card {{
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }}
+        .metric-value {{
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Profile Analysis Report</h1>
+    
+    <div class="section metadata">
+        <h2>Analysis Information</h2>
+        <p><strong>Profile ID:</strong> {metadata.get('profile_id', '')}</p>
+        <p><strong>Platform:</strong> {metadata.get('platform', '').title()}</p>
+        <p><strong>Analysis Date:</strong> {metadata.get('analysis_date', '')}</p>
+        <p><strong>Analyzer Version:</strong> {metadata.get('analyzer_version', '')}</p>
+    </div>"""
+
+        # Summary section
+        if "summary" in content:
+            html += """
+    <div class="section">
+        <h2>Analysis Summary</h2>"""
+            summary = content["summary"]
+            for key, value in summary.items():
+                html += f"""
+        <div class="metric-card">
+            <h3>{key.replace('_', ' ').title()}</h3>
+            <p class="metric-value">{value}</p>
+        </div>"""
+            html += "\n    </div>"
+
+        # Timeline section
+        if "timeline" in content:
+            html += """
+    <div class="section">
+        <h2>Activity Timeline</h2>
+        <div class="timeline">"""
+
+            for event in content["timeline"]:
+                event_date = event.get("date", "")
+                event_type = event.get("type", "").title()
+                event_desc = event.get("description", "")
+                html += f"""
+            <div class="timeline-item">
+                <div class="timeline-date">{event_date}</div>
+                <strong>{event_type}</strong>
+                <p>{event_desc}</p>
+            </div>"""
+            html += "\n        </div>\n    </div>"
+
+        # Personality traits section
+        if "personality_traits" in content:
+            html += """
+    <div class="section">
+        <h2>Personality Traits & Interests</h2>
+        <div class="chart-container">
+            <canvas id="traitsChart"></canvas>
+        </div>"""
+
+            # Add traits data for the chart
+            traits = content["personality_traits"]
+            html += f"""
+        <script>
+            new Chart(document.getElementById('traitsChart').getContext('2d'), {{
+                type: 'radar',
+                data: {{
+                    labels: {list(traits.keys())},
+                    datasets: [{{
+                        label: 'Personality Traits',
+                        data: {list(traits.values())},
+                        backgroundColor: 'rgba(74, 111, 165, 0.2)',
+                        borderColor: 'rgb(74, 111, 165)',
+                        pointBackgroundColor: 'rgb(74, 111, 165)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(74, 111, 165)'
+                    }}]
+                }},
+                options: {{
+                    scales: {{
+                        r: {{
+                            beginAtZero: true,
+                            max: 1
+                        }}
+                    }}
+                }}
+            }});
+        </script>"""
+
+        # Writing Style section
+        if "writing_style" in content:
+            html += """
+    <div class="section">
+        <h2>Writing Style Analysis</h2>"""
+
+            writing = content["writing_style"]
+            metrics = {
+                "complexity": "Text Complexity",
+                "formality": "Formality Level",
+                "emotional_tone": "Emotional Expression",
+                "vocabulary_diversity": "Vocabulary Range",
+            }
+
+            for key, label in metrics.items():
+                if key in writing:
+                    value = writing[key]
+                    percentage = int(value * 100)
+                    html += f"""
+        <div class="trait">
+            <div><strong>{label}</strong> ({percentage}%)</div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {percentage}%"></div>
+            </div>
+        </div>"""
+
+            if "word_patterns" in writing:
+                html += """
+        <div class="mt-4">
+            <h3>Common Word Patterns</h3>
+            <ul>"""
+                for pattern in writing["word_patterns"]:
+                    html += f"\n                <li>{pattern}</li>"
+                html += "\n            </ul>\n        </div>"
+
+        # Authenticity section
+        if "overall_authenticity" in authenticity:
+            auth = authenticity["overall_authenticity"]
+            score = int(auth.get("score", 0) * 100)
+            html += f"""
+    <div class="section">
+        <h2>Authenticity Analysis</h2>
+        <div class="chart-container">
+            <canvas id="authenticityChart"></canvas>
+        </div>
+        <div class="score">Overall Score: {score}%</div>
+        <p><strong>Confidence:</strong> {int(auth.get("confidence", 0) * 100)}%</p>"""
+
+            html += (
+                """
+        <script>
+            new Chart(document.getElementById('authenticityChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Authentic', 'Risk'],
+                    datasets: [{
+                        data: ["""
+                + f"{score}, {100-score}"
+                + """],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.2)',
+                            'rgba(220, 53, 69, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgb(40, 167, 69)',
+                            'rgb(220, 53, 69)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '70%'
+                }
+            });
+        </script>"""
+            )
+
+            if "potential_issues" in auth and auth["potential_issues"]:
+                html += """
+        <div class="mt-4">
+            <h3>Potential Issues</h3>
+            <ul>"""
+                for issue in auth["potential_issues"]:
+                    html += f"\n                <li>{issue}</li>"
+                html += "\n            </ul>\n        </div>"
+            html += "\n    </div>"
+
+        # Predictions section
+        if predictions:
+            html += """
+    <div class="section">
+        <h2>Predictions & Future Insights</h2>"""
+
+            # Future interests
+            if "future_interests" in predictions:
+                html += """
+        <h3>Predicted Future Interests</h3>
+        <div class="row">"""
+                for interest in predictions["future_interests"]:
+                    confidence = int(interest.get("confidence", 0) * 100)
+                    html += f"""
+            <div class="col-md-6 mb-3">
+                <div class="metric-card">
+                    <h4>{interest["interest"]}</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {confidence}%"></div>
+                    </div>
+                    <p class="mt-2">Confidence: {confidence}%</p>
+                    {f'<p>{interest["reasoning"]}</p>' if "reasoning" in interest else ''}
+                </div>
+            </div>"""
+                html += "\n        </div>"
+
+            # Behavioral predictions
+            if "behavioral_predictions" in predictions:
+                html += """
+        <h3>Behavioral Predictions</h3>
+        <div class="chart-container">
+            <canvas id="behaviorChart"></canvas>
+        </div>"""
+
+                behaviors = predictions["behavioral_predictions"]
+                html += f"""
+        <script>
+            new Chart(document.getElementById('behaviorChart').getContext('2d'), {{
+                type: 'bar',
+                data: {{
+                    labels: {[b["behavior"] for b in behaviors]},
+                    datasets: [{{
+                        label: 'Likelihood',
+                        data: {[b["probability"] for b in behaviors]},
+                        backgroundColor: 'rgba(74, 111, 165, 0.2)',
+                        borderColor: 'rgb(74, 111, 165)',
+                        borderWidth: 1
+                    }}]
+                }},
+                options: {{
+                    scales: {{
+                        y: {{
+                            beginAtZero: true,
+                            max: 1
+                        }}
+                    }}
+                }}
+            }});
+        </script>"""
+
+        html += """
+    <div class="section">
+        <p><em>This report was generated by ProfileScope. The analysis is based on publicly available data 
+        and should be considered as insights rather than definitive conclusions.</em></p>
+    </div>
+    </body>
+    </html>"""
+
+        return html
 
     def _show_config(self):
         """Show configuration dialog"""

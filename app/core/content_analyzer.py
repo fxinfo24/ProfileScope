@@ -1,4 +1,4 @@
-# SocialInsight: Social Media Profile Analyzer
+# ProfileScope: Social Media Profile Analyzer
 # A comprehensive framework for analyzing public social media profiles
 
 import os
@@ -55,6 +55,7 @@ class DataCollector:
                 "bio": "Mock bio for demonstration",
                 "join_date": "2020-01-01",
                 "location": "Example City",
+                "mock_data": True,
             },
             "posts": self._generate_mock_posts(50),
             "media": self._generate_mock_media(20),
@@ -72,6 +73,7 @@ class DataCollector:
                 "name": "Example User",
                 "bio": "Mock Facebook bio",
                 "join_date": "2015-03-15",
+                "mock_data": True,
             },
             "posts": self._generate_mock_posts(30),
             "media": self._generate_mock_media(40),
@@ -135,8 +137,20 @@ Analyzes collected social media content to extract insights
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, List, Any, Optional
 from datetime import datetime
+
+from ..utils.nlp_utils import (
+    preprocess_text,
+    analyze_sentiment,
+    map_personality_traits,
+    extract_topics,
+    extract_keywords,
+    analyze_writing_style,
+    generate_style_fingerprint,
+    extract_entities,
+    calculate_readability_metrics,
+)
 
 
 class ContentAnalyzer:
@@ -163,23 +177,37 @@ class ContentAnalyzer:
         """
         self.logger.info("Starting profile analysis")
 
+        # Check if this is mock data
+        is_mock_data = "profile" in profile_data and profile_data["profile"].get(
+            "mock_data", False
+        )
+
         # Combine all text content for analysis
         text_content = self._extract_text_content(profile_data)
+        preprocessed_content = preprocess_text(text_content)
 
         # Run different types of analysis
-        analysis = {
-            "personality_traits": self._analyze_personality(text_content),
-            "interests": self._analyze_interests(text_content, profile_data),
-            "beliefs": self._analyze_beliefs(text_content),
+        results = {
+            "personality_traits": self._analyze_personality(preprocessed_content),
+            "interests": self._analyze_interests(preprocessed_content, profile_data),
+            "beliefs": self._analyze_beliefs(preprocessed_content),
             "writing_style": self._analyze_writing_style(text_content),
             "timeline": self._generate_timeline(profile_data),
             "identity_markers": self._identify_personal_markers(profile_data),
         }
 
+        # Add sentiment analysis if enabled
         if self.sentiment_analyzer:
-            analysis["sentiment_trends"] = self._analyze_sentiment_trends(profile_data)
+            results["sentiment_trends"] = self._analyze_sentiment_trends(profile_data)
 
-        return analysis
+        # Add a disclaimer if using mock data
+        if is_mock_data:
+            results["mock_data_disclaimer"] = (
+                "This analysis is based on generated mock data because the real API access failed. "
+                "Results should be treated as demonstrational only and do not reflect actual profile information."
+            )
+
+        return results
 
     def _extract_text_content(self, profile_data: Dict[str, Any]) -> str:
         """Combine all text content for analysis"""
@@ -204,200 +232,725 @@ class ContentAnalyzer:
         return " ".join(content)
 
     def _analyze_personality(self, text_content: str) -> Dict[str, float]:
-        """Analyze text to infer personality traits"""
+        """
+        Analyze text to infer personality traits using NLP techniques
+        Args:
+            text_content: Text to analyze
+        Returns:
+            Dictionary of personality traits and their scores
+        """
         self.logger.info("Analyzing personality traits")
-        # TODO: Implement real NLP-based personality analysis
-        return {
-            "openness": 0.75,
-            "conscientiousness": 0.62,
-            "extroversion": 0.48,
-            "agreeableness": 0.81,
-            "neuroticism": 0.35,
-            "confidence": 0.89,
-            "analytical_thinking": 0.72,
-        }
+
+        if not text_content or len(text_content) < 50:
+            # Not enough content for analysis, return default values
+            self.logger.warning("Insufficient text for personality analysis")
+            return {
+                "openness": 0.5,
+                "conscientiousness": 0.5,
+                "extraversion": 0.5,
+                "agreeableness": 0.5,
+                "neuroticism": 0.5,
+                "analytical_thinking": 0.5,
+            }
+
+        try:
+            return map_personality_traits(text_content)
+        except Exception as e:
+            self.logger.error(f"Error in personality analysis: {str(e)}", exc_info=True)
+            # Return default values in case of error
+            return {
+                "openness": 0.5,
+                "conscientiousness": 0.5,
+                "extraversion": 0.5,
+                "agreeableness": 0.5,
+                "neuroticism": 0.5,
+                "analytical_thinking": 0.5,
+            }
 
     def _analyze_interests(
         self, text_content: str, profile_data: Dict[str, Any]
     ) -> Dict[str, float]:
-        """Analyze content to determine interests and preferences"""
+        """
+        Analyze content to determine interests and preferences
+        Args:
+            text_content: Preprocessed text content
+            profile_data: Complete profile data
+        Returns:
+            Dictionary of interests and their scores
+        """
         self.logger.info("Analyzing interests and preferences")
-        # TODO: Implement real interest analysis
-        return {
-            "technology": 0.85,
-            "politics": 0.62,
-            "travel": 0.74,
-            "food": 0.58,
-            "sports": 0.45,
-            "entertainment": 0.68,
-            "science": 0.79,
-            "art": 0.53,
-        }
+
+        # Initialize empty interests dictionary
+        interests = {}
+
+        try:
+            # Extract topics from text content
+            topics = extract_topics(text_content, num_topics=8)
+
+            # Convert topics to interest scores
+            for topic in topics:
+                topic_name = topic["name"].lower()
+                if topic_name not in interests:
+                    interests[topic_name] = topic["confidence"]
+
+            # Extract entities and use them as interest indicators
+            entities = extract_entities(text_content)
+            for entity_type in ["ORG", "PRODUCT", "WORK_OF_ART", "EVENT"]:
+                if entity_type in entities:
+                    for entity in entities[entity_type]:
+                        entity_lower = entity.lower()
+                        # Add as an interest or boost existing score
+                        if entity_lower in interests:
+                            interests[entity_lower] = min(
+                                interests[entity_lower] + 0.2, 1.0
+                            )
+                        else:
+                            interests[entity_lower] = 0.7
+
+            # Extract location interests from entities
+            for entity_type in ["GPE", "LOC"]:
+                if entity_type in entities:
+                    locations = {}
+                    for location in entities[entity_type]:
+                        location_lower = location.lower()
+                        locations[location_lower] = locations.get(location_lower, 0) + 1
+
+                    # Add top locations as interests
+                    for location, count in sorted(
+                        locations.items(), key=lambda x: x[1], reverse=True
+                    )[:3]:
+                        if "travel" not in interests:
+                            interests["travel"] = 0.65
+                        if location not in interests:
+                            interests[location] = 0.6
+
+            # Extract keywords and use them as interest indicators
+            keywords = extract_keywords(text_content, top_n=15)
+            for keyword, score in keywords:
+                keyword_lower = keyword.lower()
+                if keyword_lower not in interests and len(keyword) > 3:
+                    interests[keyword_lower] = min(
+                        score + 0.3, 0.85
+                    )  # Boost and cap score
+
+            # Normalize all interest scores to be between 0 and 1
+            max_score = max(interests.values()) if interests else 1.0
+            interests = {k: min(v / max_score, 1.0) for k, v in interests.items()}
+
+            return interests
+
+        except Exception as e:
+            self.logger.error(f"Error in interest analysis: {str(e)}", exc_info=True)
+            # Return a fallback dictionary with some generic interests
+            return {
+                "technology": 0.85,
+                "politics": 0.62,
+                "travel": 0.74,
+                "food": 0.58,
+                "sports": 0.45,
+                "entertainment": 0.68,
+                "science": 0.79,
+                "art": 0.53,
+            }
 
     def _analyze_beliefs(self, text_content: str) -> Dict[str, Any]:
-        """Analyze text to infer beliefs"""
+        """
+        Analyze text to infer beliefs (political, religious, etc.)
+        Args:
+            text_content: Preprocessed text content
+        Returns:
+            Dictionary with belief indicators
+        """
         self.logger.info("Analyzing belief indicators")
-        return {
-            "political_leaning": {
-                "value": 0.2,  # -1 to 1 scale
-                "confidence": 0.65,
-                "evidence_count": 12,
-            },
-            "religious_indicators": {
-                "has_indicators": True,
-                "confidence": 0.45,
-                "evidence_count": 5,
-            },
-            "value_indicators": {
-                "community": 0.82,
-                "tradition": 0.56,
-                "innovation": 0.75,
-                "authority": 0.48,
-            },
-        }
+
+        try:
+            # Extract entities that might indicate beliefs
+            entities = extract_entities(text_content)
+
+            # Political indicators - map specific entities and keywords to political leanings
+            political_leaning = 0.0  # -1 to 1 scale (liberal to conservative)
+            political_evidence = 0
+
+            # Religious indicators
+            religious_indicators = False
+            religious_evidence = 0
+
+            # Value indicators (initialize with default values)
+            values = {
+                "community": 0.5,
+                "tradition": 0.5,
+                "innovation": 0.5,
+                "authority": 0.5,
+            }
+
+            # Check for political entities and keywords
+            political_keywords = {
+                "liberal": {"progressive", "liberal", "democrat", "equality", "reform"},
+                "conservative": {
+                    "conservative",
+                    "traditional",
+                    "republican",
+                    "patriot",
+                    "freedom",
+                },
+            }
+
+            # Check text for political keywords
+            for lean, keywords in political_keywords.items():
+                lean_score = -0.2 if lean == "liberal" else 0.2  # Small bias per match
+                for word in keywords:
+                    if word in text_content.lower():
+                        political_leaning += lean_score
+                        political_evidence += 1
+
+            # Cap political leaning to -1 to 1 range
+            political_leaning = max(min(political_leaning, 1.0), -1.0)
+
+            # Check for religious references
+            religious_terms = {
+                "god",
+                "faith",
+                "belief",
+                "spirit",
+                "prayer",
+                "worship",
+                "church",
+                "temple",
+                "mosque",
+                "synagogue",
+                "religion",
+            }
+
+            for term in religious_terms:
+                if term in text_content.lower():
+                    religious_indicators = True
+                    religious_evidence += 1
+
+            # Check for value indicators
+            value_keywords = {
+                "community": {
+                    "community",
+                    "together",
+                    "collective",
+                    "shared",
+                    "unity",
+                    "family",
+                },
+                "tradition": {"tradition", "heritage", "history", "custom", "classic"},
+                "innovation": {
+                    "innovation",
+                    "new",
+                    "change",
+                    "progress",
+                    "future",
+                    "technology",
+                },
+                "authority": {
+                    "authority",
+                    "leader",
+                    "power",
+                    "control",
+                    "order",
+                    "discipline",
+                },
+            }
+
+            # Count occurrences of value-related terms
+            for value, keywords in value_keywords.items():
+                value_score = sum(
+                    1 for word in keywords if word in text_content.lower()
+                )
+                # Convert to a 0-1 scale
+                values[value] = min(0.5 + (value_score * 0.1), 1.0)
+
+            # Calculate confidence based on text length and evidence
+            confidence = min(len(text_content) / 500, 1.0) * 0.5
+            confidence_political = confidence + (political_evidence * 0.1)
+            confidence_religious = confidence + (religious_evidence * 0.1)
+
+            return {
+                "political_leaning": {
+                    "value": political_leaning,
+                    "confidence": min(confidence_political, 0.9),
+                    "evidence_count": political_evidence,
+                },
+                "religious_indicators": {
+                    "has_indicators": religious_indicators,
+                    "confidence": min(confidence_religious, 0.9),
+                    "evidence_count": religious_evidence,
+                },
+                "value_indicators": values,
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error in belief analysis: {str(e)}", exc_info=True)
+            # Return default values in case of error
+            return {
+                "political_leaning": {
+                    "value": 0.0,
+                    "confidence": 0.4,
+                    "evidence_count": 0,
+                },
+                "religious_indicators": {
+                    "has_indicators": False,
+                    "confidence": 0.4,
+                    "evidence_count": 0,
+                },
+                "value_indicators": {
+                    "community": 0.5,
+                    "tradition": 0.5,
+                    "innovation": 0.5,
+                    "authority": 0.5,
+                },
+            }
 
     def _analyze_writing_style(self, text_content: str) -> Dict[str, Any]:
-        """Analyze writing style characteristics"""
+        """
+        Analyze writing style characteristics using NLP techniques
+        Args:
+            text_content: Raw text to analyze
+        Returns:
+            Dictionary with writing style metrics
+        """
         self.logger.info("Analyzing writing style")
-        word_count = len(text_content.split())
 
-        return {
-            "complexity": 0.68,
-            "formality": 0.52,
-            "emotional_tone": 0.73,
-            "vocabulary_diversity": 0.64,
-            "average_sentence_length": 15.3,
-            "word_count": word_count,
-            "stylistic_fingerprint": {
-                "hash": self._generate_style_fingerprint(text_content),
-                "signature_features": [
-                    "sentence_structure",
-                    "word_choice",
-                    "punctuation",
-                ],
-            },
-        }
+        if not text_content or len(text_content) < 100:
+            self.logger.warning("Insufficient text for writing style analysis")
+            return {
+                "complexity": 0.5,
+                "formality": 0.5,
+                "emotional_tone": 0.5,
+                "vocabulary_diversity": 0.5,
+                "average_sentence_length": 15.0,
+                "word_count": 0,
+                "stylistic_fingerprint": {
+                    "hash": "insufficient_text",
+                    "signature_features": ["not enough text for analysis"],
+                },
+            }
 
-    def _generate_timeline(self, profile_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate a timeline of significant events and trends"""
+        try:
+            # Get basic writing style metrics
+            style_metrics = analyze_writing_style(text_content)
+
+            # Get readability metrics
+            readability = calculate_readability_metrics(text_content)
+
+            # Get sentiment
+            sentiment = analyze_sentiment(text_content)
+
+            # Get style fingerprint
+            fingerprint = generate_style_fingerprint(text_content)
+
+            # Calculate derived metrics
+            word_count = style_metrics.get("word_count", 0)
+            if "word_count" not in style_metrics:
+                word_count = len(text_content.split())
+
+            # Calculate complexity (based on readability and vocabulary)
+            complexity = (
+                100 - min(readability["flesch_reading_ease"], 100)
+            ) / 100 * 0.7 + style_metrics.get("avg_word_length", 0) / 10 * 0.3
+            complexity = min(max(complexity, 0.0), 1.0)
+
+            # Calculate formality
+            lexical_density = style_metrics.get("lexical_density", 0.5)
+            pos_dist = style_metrics.get("pos_distribution", {})
+            pronoun_usage = pos_dist.get("PRON", 0)
+
+            # Higher lexical density, fewer pronouns = more formal
+            formality = lexical_density * 0.6 + (1 - pronoun_usage) * 0.4
+            formality = min(max(formality, 0.0), 1.0)
+
+            # Calculate emotional tone from sentiment
+            # Higher positive sentiment = higher emotional tone
+            emotional_tone = sentiment["pos"] * 0.7 + (1 - sentiment["neg"]) * 0.3
+            emotional_tone = min(max(emotional_tone, 0.0), 1.0)
+
+            # Extract common words
+            frequent_words = extract_keywords(text_content, top_n=8)
+            frequent_words = [word for word, _ in frequent_words]
+
+            # Extract distinctive phrases (simplified)
+            # In a full implementation, this would identify truly distinctive phrases
+            distinctive_phrases = []
+
+            # Calculate vocabulary diversity from unique words ratio
+            vocabulary_diversity = style_metrics.get("unique_words_ratio", 0.5)
+
+            # Determine signature features
+            signature_features = []
+
+            if style_metrics.get("avg_sentence_length", 0) > 25:
+                signature_features.append("long sentences")
+            elif style_metrics.get("avg_sentence_length", 0) < 12:
+                signature_features.append("short sentences")
+
+            if vocabulary_diversity > 0.7:
+                signature_features.append("rich vocabulary")
+
+            if complexity > 0.7:
+                signature_features.append("complex language")
+            elif complexity < 0.3:
+                signature_features.append("simple language")
+
+            if formality > 0.7:
+                signature_features.append("formal tone")
+            elif formality < 0.3:
+                signature_features.append("informal tone")
+
+            punct_freq = style_metrics.get("punctuation_frequency", {})
+            if punct_freq.get("!", 0) > 0.01:
+                signature_features.append("frequent exclamations")
+            if punct_freq.get("?", 0) > 0.01:
+                signature_features.append("questioning style")
+
+            # If no signature features identified, add a default
+            if not signature_features:
+                signature_features = ["balanced writing style"]
+
+            return {
+                "complexity": complexity,
+                "formality": formality,
+                "emotional_tone": emotional_tone,
+                "vocabulary_diversity": vocabulary_diversity,
+                "average_sentence_length": style_metrics.get(
+                    "avg_sentence_length", 15.0
+                ),
+                "frequent_words": frequent_words,
+                "distinctive_phrases": distinctive_phrases,
+                "word_count": word_count,
+                "readability_grade": readability["flesch_kincaid_grade"],
+                "stylistic_fingerprint": {
+                    "hash": fingerprint,
+                    "signature_features": signature_features,
+                },
+            }
+        except Exception as e:
+            self.logger.error(
+                f"Error in writing style analysis: {str(e)}", exc_info=True
+            )
+            # Return default values in case of error
+            return {
+                "complexity": 0.5,
+                "formality": 0.5,
+                "emotional_tone": 0.5,
+                "vocabulary_diversity": 0.5,
+                "average_sentence_length": 15.0,
+                "word_count": len(text_content.split()),
+                "stylistic_fingerprint": {
+                    "hash": "error_analyzing_style",
+                    "signature_features": ["error in analysis"],
+                },
+            }
+
+    def _generate_timeline(self, profile_data):
+        """Generate a timeline of significant activities"""
         self.logger.info("Generating activity timeline")
         timeline = []
 
-        # Add join date
-        if "profile" in profile_data and "join_date" in profile_data["profile"]:
-            timeline.append(
-                {
-                    "date": profile_data["profile"]["join_date"],
-                    "type": "account_creation",
-                    "description": "Account created",
-                }
-            )
-
-        # Add posts with significant engagement
+        # Process posts
         if "posts" in profile_data:
             for post in profile_data["posts"]:
-                if "likes" in post and post["likes"] > 20:
-                    timeline.append(
-                        {
-                            "date": post["date"],
-                            "type": "popular_post",
-                            "description": (f"Popular post: {post['content'][:50]}..."),
-                            "engagement": post["likes"],
-                        }
-                    )
+                # Check if post has a date key, if not, use a default date
+                post_date = post.get(
+                    "date", post.get("timestamp", datetime.now().strftime("%Y-%m-%d"))
+                )
 
-        # Add media shares
+                timeline_item = {
+                    "date": post_date,
+                    "type": "post",
+                    "description": f"Posted content"
+                    + (
+                        f" with {post.get('shares', 0)} shares"
+                        if "shares" in post
+                        else ""
+                    ),
+                }
+                timeline.append(timeline_item)
+
+        # Process media items
         if "media" in profile_data:
-            for media in profile_data["media"]:
-                timeline.append(
+            for item in profile_data["media"]:
+                # Check if media item has a date key, if not, use a default date
+                media_date = item.get(
+                    "date", item.get("timestamp", datetime.now().strftime("%Y-%m-%d"))
+                )
+
+                timeline_item = {
+                    "date": media_date,
+                    "type": "media_upload",
+                    "description": f"Uploaded media"
+                    + (f": {item['caption']}" if "caption" in item else ""),
+                }
+                timeline.append(timeline_item)
+
+        # Sort the timeline by date
+        timeline.sort(key=lambda x: x["date"])
+
+        return timeline
+
+    def _analyze_sentiment_trends(self, profile_data):
+        """Analyze sentiment trends over time"""
+        self.logger.info("Analyzing sentiment trends")
+
+        posts = profile_data.get("posts", [])
+        if not posts:
+            return None
+
+        # Group posts by month
+        monthly_sentiments = {}
+
+        for post in posts:
+            # Handle missing date field by using get() with a default
+            date_str = post.get("date", post.get("timestamp"))
+            if not date_str:
+                # Skip posts with no date information
+                continue
+
+            try:
+                # Try to parse the date with various formats
+                if isinstance(date_str, str):
+                    try:
+                        date = datetime.strptime(date_str, "%Y-%m-%d")
+                    except ValueError:
+                        try:
+                            date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                        except ValueError:
+                            # Use current date as fallback if parsing fails
+                            date = datetime.now()
+                else:
+                    # If it's already a datetime object
+                    date = date_str
+
+                # Extract month and year
+                month_key = date.strftime("%Y-%m")
+
+                # Get sentiment score for post
+                content = post.get("text", post.get("content", ""))
+                sentiment = analyze_sentiment(content)
+
+                # Use the compound score for overall sentiment
+                sentiment_value = sentiment["compound"]
+
+                if month_key not in monthly_sentiments:
+                    monthly_sentiments[month_key] = []
+
+                monthly_sentiments[month_key].append(sentiment_value)
+            except Exception as e:
+                self.logger.warning(f"Error processing post date: {e}")
+                continue
+
+        # Calculate average sentiment per month
+        trend = []
+        for month, sentiments in sorted(monthly_sentiments.items()):
+            if sentiments:
+                avg_sentiment = sum(sentiments) / len(sentiments)
+                trend.append(
                     {
-                        "date": media["date"],
-                        "type": f"{media['type']}_shared",
-                        "description": (
-                            f"Shared {media['type']}: "
-                            f"{media.get('caption', 'No caption')}"
-                        ),
-                        "url": media["url"],
+                        "period": month,
+                        "average_sentiment": avg_sentiment,
+                        "post_count": len(sentiments),
                     }
                 )
 
-        # Sort timeline by date
-        timeline.sort(key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"))
-        return timeline
-
-    def _analyze_sentiment_trends(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze sentiment trends over time"""
-        self.logger.info("Analyzing sentiment trends")
-        sentiment_by_month = {}
-
-        if "posts" in profile_data:
-            for post in profile_data["posts"]:
-                date = datetime.strptime(post["date"], "%Y-%m-%d")
-                month_key = date.strftime("%Y-%m")
-                # TODO: Implement real sentiment analysis
-                post_id = int(post["id"].replace("post", ""))
-                sentiment = (post_id % 10 - 5) / 5
-
-                if month_key not in sentiment_by_month:
-                    sentiment_by_month[month_key] = []
-                sentiment_by_month[month_key].append(sentiment)
-
-        # Calculate average sentiment by month
-        sentiment_trends = []
-        for month, values in sentiment_by_month.items():
-            avg_sentiment = sum(values) / len(values)
-            sentiment_trends.append(
-                {
-                    "period": month,
-                    "average_sentiment": avg_sentiment,
-                    "sample_count": len(values),
-                }
-            )
-
-        # Sort by month
-        sentiment_trends.sort(key=lambda x: x["period"])
-
-        # Calculate overall sentiment
-        overall = (
-            sum(item["average_sentiment"] for item in sentiment_trends)
-            / len(sentiment_trends)
-            if sentiment_trends
-            else 0
-        )
-
         return {
-            "trend": sentiment_trends,
-            "overall_sentiment": overall,
+            "trend": trend,
+            "overall_sentiment": (
+                sum([item["average_sentiment"] for item in trend]) / len(trend)
+                if trend
+                else 0
+            ),
         }
 
     def _identify_personal_markers(
         self, profile_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Identify personal identity markers and preferences"""
+        """
+        Identify personal identity markers and preferences
+        Args:
+            profile_data: Complete profile data
+        Returns:
+            Dictionary with identified personal markers
+        """
         self.logger.info("Identifying personal markers")
-        return {
-            "location_indicators": {
-                "mentioned_locations": ["Example City", "Downtown"],
-                "hometown_confidence": 0.75,
-            },
-            "food_preferences": {
-                "mentioned_foods": ["pizza", "coffee"],
-                "potential_preferences": ["Italian cuisine", "Caffeine enthusiast"],
-                "potential_restrictions": None,
-                "confidence": 0.58,
-            },
-            "activity_preferences": {
-                "mentioned_activities": ["hiking", "reading"],
-                "potential_hobbies": ["Outdoor activities", "Literature"],
-                "confidence": 0.64,
-            },
-            "self_descriptions": ["Mock self description", "Another mock description"],
-        }
 
-    def _generate_style_fingerprint(self, text_content: str) -> str:
-        """Generate a unique hash for writing style comparison"""
-        # TODO: Implement sophisticated style fingerprinting
-        return "mock_hash_value_for_style_comparison"
+        try:
+            # Extract text content for analysis
+            text_content = self._extract_text_content(profile_data)
+
+            # Extract entities
+            entities = extract_entities(text_content)
+
+            # Location indicators
+            mentioned_locations = []
+            if "GPE" in entities:  # Geopolitical entities
+                mentioned_locations.extend(entities["GPE"])
+            if "LOC" in entities:  # Locations
+                mentioned_locations.extend(entities["LOC"])
+
+            # Remove duplicates and limit to top 5
+            mentioned_locations = list(set(mentioned_locations))[:5]
+
+            # Determine hometown confidence
+            hometown_confidence = 0.0
+            if len(mentioned_locations) > 0:
+                # Look for repeated mentions of the same location
+                location_counts = {}
+                for location in mentioned_locations:
+                    location_counts[location] = text_content.lower().count(
+                        location.lower()
+                    )
+
+                most_mentioned = max(
+                    location_counts.items(), key=lambda x: x[1], default=(None, 0)
+                )
+                if most_mentioned[0] and most_mentioned[1] > 1:
+                    hometown_confidence = min(0.5 + (most_mentioned[1] * 0.1), 0.9)
+
+            # Food preferences
+            mentioned_foods = []
+            food_keywords = [
+                "food",
+                "eat",
+                "eating",
+                "meal",
+                "restaurant",
+                "cook",
+                "cooking",
+                "recipe",
+                "dietary",
+            ]
+
+            # Check text for food references
+            for post in profile_data.get("posts", []):
+                content = post.get("content", "").lower()
+
+                for keyword in food_keywords:
+                    if keyword in content:
+                        # Use a simplified approach - in a real implementation
+                        # you would use named entity recognition and food databases
+                        words = content.split()
+                        for i, word in enumerate(words):
+                            if word == keyword and i > 0 and i < len(words) - 1:
+                                # Check the words around the keyword
+                                if i > 0:
+                                    mentioned_foods.append(words[i - 1])
+                                if i < len(words) - 1:
+                                    mentioned_foods.append(words[i + 1])
+
+            # Filter and clean food mentions
+            mentioned_foods = list(set([f for f in mentioned_foods if len(f) > 3]))[:5]
+
+            # Infer potential preferences
+            food_preferences = []
+            if mentioned_foods:
+                food_preferences = ["Mentioned foods: " + ", ".join(mentioned_foods)]
+
+            # Activity preferences
+            activity_keywords = [
+                "hobby",
+                "hobbies",
+                "enjoy",
+                "like",
+                "love",
+                "prefer",
+                "favorite",
+                "interest",
+            ]
+            mentioned_activities = []
+
+            # Check text for activity references
+            for post in profile_data.get("posts", []):
+                content = post.get("content", "").lower()
+
+                for keyword in activity_keywords:
+                    if keyword in content:
+                        # Simplified approach to extract potential activities
+                        words = content.split()
+                        for i, word in enumerate(words):
+                            if word == keyword and i < len(words) - 1:
+                                # Get the next word as potential activity
+                                mentioned_activities.append(words[i + 1])
+
+            # Filter and clean activity mentions
+            mentioned_activities = list(
+                set([a for a in mentioned_activities if len(a) > 3])
+            )[:5]
+
+            # Infer potential hobbies
+            activity_preferences = []
+            if mentioned_activities:
+                activity_preferences = [
+                    "Mentioned activities: " + ", ".join(mentioned_activities)
+                ]
+
+            # Extract self-descriptions
+            self_descriptions = []
+            self_keywords = [
+                "i am",
+                "i'm",
+                "myself",
+                "my personality",
+                "people describe me",
+            ]
+
+            for post in profile_data.get("posts", []):
+                content = post.get("content", "").lower()
+
+                for keyword in self_keywords:
+                    if keyword in content:
+                        # Find the sentence containing the self-description
+                        sentences = content.split(".")
+                        for sentence in sentences:
+                            if keyword in sentence:
+                                self_descriptions.append(sentence.strip())
+
+            # Limit to top 3 self-descriptions
+            self_descriptions = list(set(self_descriptions))[:3]
+
+            return {
+                "location_indicators": {
+                    "mentioned_locations": mentioned_locations,
+                    "hometown_confidence": hometown_confidence,
+                },
+                "food_preferences": {
+                    "mentioned_foods": mentioned_foods,
+                    "potential_preferences": food_preferences,
+                    "potential_restrictions": None,
+                    "confidence": 0.6 if mentioned_foods else 0.0,
+                },
+                "activity_preferences": {
+                    "mentioned_activities": mentioned_activities,
+                    "potential_hobbies": activity_preferences,
+                    "confidence": 0.65 if mentioned_activities else 0.0,
+                },
+                "self_descriptions": self_descriptions,
+            }
+
+        except Exception as e:
+            self.logger.error(
+                f"Error identifying personal markers: {str(e)}", exc_info=True
+            )
+            # Return empty/default values in case of error
+            return {
+                "location_indicators": {
+                    "mentioned_locations": [],
+                    "hometown_confidence": 0.0,
+                },
+                "food_preferences": {
+                    "mentioned_foods": [],
+                    "potential_preferences": [],
+                    "potential_restrictions": None,
+                    "confidence": 0.0,
+                },
+                "activity_preferences": {
+                    "mentioned_activities": [],
+                    "potential_hobbies": [],
+                    "confidence": 0.0,
+                },
+                "self_descriptions": [],
+            }
 
 
 class ProfileAuthenticityAnalyzer:

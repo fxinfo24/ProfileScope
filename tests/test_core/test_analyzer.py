@@ -5,20 +5,39 @@ Tests for the ProfileScope core analyzer
 import json
 import pytest
 from pathlib import Path
+from unittest.mock import patch
 from app.core.analyzer import SocialMediaAnalyzer
+from app.core.data_collector import DataCollector
 
 
 @pytest.fixture
 def test_config():
+    """Create test configuration"""
     return {
-        "rate_limits": {"twitter": 50, "facebook": 50},
+        "api": {
+            "twitter": {
+                "api_key": "test_key",
+                "api_secret": "test_secret",
+                "access_token": "test_token",
+                "access_token_secret": "test_token_secret",
+                "mock_responses": True,
+            },
+            "facebook": {
+                "app_id": "test_app_id",
+                "app_secret": "test_app_secret",
+                "access_token": "test_access_token",
+                "mock_responses": True,
+            },
+        },
         "analysis": {
-            "nlp_model": "test_model",
             "sentiment_analysis": True,
             "confidence_threshold": 0.5,
+            "nlp_model": "test_model",
+            "use_mock_data": True,
         },
-        "output": {"save_raw_data": True, "export_format": "json"},
         "logging": {"level": "DEBUG", "file": "test_profilescope.log"},
+        "output": {"export_format": "json", "save_raw_data": True},
+        "rate_limits": {"twitter": 50, "facebook": 50},
     }
 
 
@@ -27,7 +46,18 @@ def analyzer(tmp_path, test_config):
     config_file = tmp_path / "test_config.json"
     with open(config_file, "w") as f:
         json.dump(test_config, f)
-    return SocialMediaAnalyzer(str(config_file))
+
+    # Mock the DataCollector to avoid actual API calls
+    with patch("app.core.analyzer.DataCollector") as mock_collector:
+        # Configure the mock to return a mock instance
+        mock_instance = mock_collector.return_value
+        mock_instance.collect_profile_data.return_value = {
+            "profile": {"username": "test_user", "name": "Test User"},
+            "posts": [],
+        }
+
+        analyzer_instance = SocialMediaAnalyzer(str(config_file))
+        yield analyzer_instance
 
 
 def test_analyzer_initialization(analyzer):

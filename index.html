@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfileScope - Welcome</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #4a6fa5;
+        }
+        .loading {
+            margin-top: 30px;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6fa5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .code {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4a6fa5;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #3d5d8a;
+        }
+    </style>
+</head>
+<body>
+    <h1>ProfileScope</h1>
+    <p>Welcome to the ProfileScope application!</p>
+    
+    <div class="info-section">
+        <h2>Getting Started</h2>
+        <p>It looks like the Flask web application may not be running. Here's how to start it:</p>
+        
+        <ol>
+            <li>Open a terminal window</li>
+            <li>Navigate to the ProfileScope project directory:
+                <div class="code">cd /Volumes/BackUp/Python\ Projects/Profile_Scope_AI/ProfileScope</div>
+            </li>
+            <li>Start the Flask application:
+                <div class="code">python -m app.web.app</div>
+                or
+                <div class="code">python run.py</div>
+            </li>
+            <li>Once the server is running, refresh this page or click the button below</li>
+        </ol>
+        
+        <a class="btn" href="http://127.0.0.1:5000">Open ProfileScope App</a>
+        
+        <h3>Project Structure</h3>
+        <p>ProfileScope is structured as follows:</p>
+        <ul>
+            <li><strong>app/web/app.py</strong> - Main Flask application</li>
+            <li><strong>app/web/templates/</strong> - HTML templates</li>
+            <li><strong>app/web/static/</strong> - Static files (CSS, JavaScript)</li>
+            <li><strong>app/core/</strong> - Core analysis engine</li>
+        </ul>
+    </div>
+</body>
+</html>

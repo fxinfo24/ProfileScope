@@ -4,7 +4,6 @@ Main orchestrator for social media profile analysis
 """
 
 import json
-import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -12,6 +11,7 @@ from .data_collector import DataCollector
 from .content_analyzer import ContentAnalyzer
 from .authenticity import ProfileAuthenticityAnalyzer
 from .prediction import PredictionEngine
+from ..utils.logger import setup_logger
 
 
 class SocialMediaAnalyzer:
@@ -24,8 +24,7 @@ class SocialMediaAnalyzer:
             config_path: Path to configuration file
         """
         self.config = self._load_config(config_path)
-        self._setup_logging()
-        self.logger = logging.getLogger("ProfileScope.Analyzer")
+        self.logger = setup_logger("ProfileScope.Analyzer", self.config["logging"])
 
         # Initialize components
         self.collectors = {
@@ -42,9 +41,8 @@ class SocialMediaAnalyzer:
 
         self.authenticity_analyzer = ProfileAuthenticityAnalyzer()
 
-        self.prediction_engine = PredictionEngine(
-            confidence_threshold=self.config["analysis"]["confidence_threshold"]
-        )
+        threshold = self.config["analysis"]["confidence_threshold"]
+        self.prediction_engine = PredictionEngine(confidence_threshold=threshold)
 
     def analyze_profile(self, platform: str, profile_id: str) -> Dict[str, Any]:
         """
@@ -57,45 +55,52 @@ class SocialMediaAnalyzer:
         """
         self.logger.info(f"Starting analysis of {profile_id} on {platform}")
 
-        # Step 1: Collect profile data
-        if platform.lower() not in self.collectors:
-            raise ValueError(f"Unsupported platform: {platform}")
+        try:
+            # Step 1: Collect profile data
+            if platform.lower() not in self.collectors:
+                raise ValueError(f"Unsupported platform: {platform}")
 
-        collector = self.collectors[platform.lower()]
-        profile_data = collector.collect_profile_data(profile_id)
+            collector = self.collectors[platform.lower()]
+            profile_data = collector.collect_profile_data(profile_id)
 
-        # Step 2: Analyze content
-        content_analysis = self.content_analyzer.analyze_profile(profile_data)
+            # Step 2: Analyze content
+            content_analysis = self.content_analyzer.analyze_profile(profile_data)
 
-        # Step 3: Analyze authenticity
-        authenticity_analysis = self.authenticity_analyzer.analyze_authenticity(
-            profile_data, content_analysis
-        )
+            # Step 3: Analyze authenticity
+            authenticity_analysis = self.authenticity_analyzer.analyze_authenticity(
+                profile_data, content_analysis
+            )
 
-        # Step 4: Generate predictions
-        predictions = self.prediction_engine.generate_predictions(
-            profile_data, content_analysis
-        )
+            # Step 4: Generate predictions
+            predictions = self.prediction_engine.generate_predictions(
+                profile_data, content_analysis
+            )
 
-        # Compile complete results
-        results = {
-            "metadata": {
-                "profile_id": profile_id,
-                "platform": platform,
-                "analysis_date": datetime.now().isoformat(),
-                "analyzer_version": "1.0.0",
-            },
-            "content_analysis": content_analysis,
-            "authenticity_analysis": authenticity_analysis,
-            "predictions": predictions,
-        }
+            # Compile complete results
+            results = {
+                "metadata": {
+                    "profile_id": profile_id,
+                    "platform": platform,
+                    "analysis_date": datetime.now().isoformat(),
+                    "analyzer_version": "1.0.0",
+                },
+                "content_analysis": content_analysis,
+                "authenticity_analysis": authenticity_analysis,
+                "predictions": predictions,
+            }
 
-        # Save raw data if configured
-        if self.config["output"]["save_raw_data"]:
-            results["raw_data"] = profile_data
+            # Save raw data if configured
+            if self.config["output"]["save_raw_data"]:
+                results["raw_data"] = profile_data
 
-        self.logger.info(f"Analysis completed for {profile_id}")
-        return results
+            self.logger.info(f"Analysis completed for {profile_id}")
+            return results
+        except Exception as e:
+            self.logger.error(
+                f"Error analyzing profile {profile_id} on {platform}: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
     def export_results(self, results: Dict[str, Any], output_path: str) -> None:
         """
@@ -148,20 +153,5 @@ class SocialMediaAnalyzer:
 
             return merged_config
         except Exception as e:
-            self.logger.error(f"Error loading config: {e}")
+            print(f"Error loading config: {e}")
             return default_config
-
-    def _setup_logging(self) -> None:
-        """Configure logging based on settings"""
-        log_level = getattr(logging, self.config["logging"]["level"])
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-        logging.basicConfig(
-            level=log_level, format=log_format, filename=self.config["logging"]["file"]
-        )
-
-        # Also log to console
-        console = logging.StreamHandler()
-        console.setLevel(log_level)
-        console.setFormatter(logging.Formatter(log_format))
-        logging.getLogger("").addHandler(console)

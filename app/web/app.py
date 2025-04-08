@@ -1,53 +1,75 @@
 """
 ProfileScope Web Application
-Flask-based web interface for social media profile analysis
+Flask web interface for the ProfileScope analyzer
 """
 
 import os
-from pathlib import Path
-from flask import Flask, render_template
-from flask_migrate import Migrate
+import logging
+from flask import Flask
 
-from ..core.analyzer import SocialMediaAnalyzer
-from .models import db
-from .routes import register_blueprints
-from .error_handlers import register_error_handlers
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="profilescope_web.log",
+)
+logger = logging.getLogger("ProfileScope.Web")
+
+# Import db from models
+from app.web.models import db
 
 
-def create_app(config_path=None):
+def create_app(test_config=None):
     """Create and configure the Flask application"""
-    app = Flask(__name__)
-
-    # Load default configuration
-    app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            "DATABASE_URL",
-            "sqlite:///"
-            + str(Path(__file__).parent.parent.parent / "data" / "profilescope.db"),
-        ),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        UPLOAD_FOLDER=str(Path(__file__).parent.parent.parent / "data" / "uploads"),
-        MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
-        ALLOWED_EXTENSIONS={"json"},
+    # Create Flask app instance
+    app = Flask(
+        __name__,
+        static_url_path="/static",
+        static_folder="static",
+        template_folder="templates",
     )
 
-    # Override with custom config if provided
-    if config_path:
-        app.config.from_json(config_path)
+    # Load default configuration
+    app.config.from_mapping(
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key-for-development-only"),
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            "DATABASE_URI", "sqlite:///profilescope.db"
+        ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        RESULTS_FOLDER=os.path.join(os.path.dirname(app.instance_path), "results"),
+    )
 
-    # Ensure upload directory exists
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # Override default configuration
+    if test_config:
+        app.config.update(test_config)
 
-    # Initialize database
+    # Ensure instance folders exist
+    os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(app.config["RESULTS_FOLDER"], exist_ok=True)
+
+    # Initialize extensions with app
     db.init_app(app)
-    Migrate(app, db)
 
-    # Register blueprints
-    register_blueprints(app)
+    with app.app_context():
+        # Import and register blueprints
+        from .routes.api import api_bp
+        from .routes.views import views_bp
 
-    # Register error handlers
-    register_error_handlers(app)
+        app.register_blueprint(api_bp, url_prefix="/api")
+        app.register_blueprint(views_bp)
+
+        # Import and register error handlers
+        from .error_handlers import register_error_handlers
+
+        register_error_handlers(app)
+
+        # Import and register filters
+        from .filters import register_filters
+
+        register_filters(app)
+
+        # Create database tables
+        db.create_all()
 
     return app
 

@@ -134,6 +134,21 @@ def list_tasks():
     )
 
 
+@api_bp.route("/tasks/<int:task_id>/status", methods=["GET"])
+def get_task_status(task_id):
+    """Get task status only - for polling"""
+    task = Task.query.get_or_404(task_id)
+    return jsonify(
+        {
+            "id": task.id,
+            "status": task.status.value,
+            "progress": task.progress,
+            "message": task.message,
+            "error": task.error,
+        }
+    )
+
+
 @api_bp.route("/tasks/<int:task_id>/cancel", methods=["POST"])
 def cancel_task(task_id):
     """Cancel a pending or processing task"""

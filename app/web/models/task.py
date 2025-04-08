@@ -5,7 +5,7 @@ Task model for handling analysis tasks
 
 from datetime import datetime
 from enum import Enum
-from .. import db
+from app.web.models import db
 
 
 class TaskStatus(str, Enum):

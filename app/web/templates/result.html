@@ -28,6 +28,16 @@
         </div>
     </div>
 
+    {% if results.content_analysis.mock_data_disclaimer is defined %}
+    <div class="col-12 mb-4">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Mock Data Notice:</strong> 
+            {{ results.content_analysis.mock_data_disclaimer }}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-body">

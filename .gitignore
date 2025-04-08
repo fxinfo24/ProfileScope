@@ -55,6 +55,7 @@ data/results/*
 !data/results/.gitkeep
 logs/
 *.log
+temp_working_files/
 
 # OS specific
 .DS_Store

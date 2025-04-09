@@ -14,11 +14,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="ProfileScope: Social Media Profile Analysis Tool"
     )
+    parser.add_argument("--web", action="store_true", help="Run web interface")
     parser.add_argument(
-        "--web", action="store_true", help="Run web interface (default)"
-    )
-    parser.add_argument(
-        "--desktop", action="store_true", help="Run desktop application"
+        "--desktop", action="store_true", help="Run desktop application (default)"
     )
     parser.add_argument("--host", default="127.0.0.1", help="Web interface host")
     parser.add_argument("--port", type=int, default=5000, help="Web interface port")
@@ -26,24 +24,23 @@ def main():
 
     args = parser.parse_args()
 
-    # Default to web interface if no option specified
+    # Default to desktop app if no option specified
     if not args.desktop and not args.web:
-        args.web = True
+        args.desktop = True
 
-    if args.web:
+    if args.desktop:
+        # Run the desktop application
+        print("Starting ProfileScope desktop application")
+        from app.desktop.app import main as desktop_main
+
+        desktop_main()
+    elif args.web:
         # Run the web interface
         print(f"Starting ProfileScope web interface on {args.host}:{args.port}")
         from app.web.app import create_app
 
         app = create_app()
         app.run(host=args.host, port=args.port, debug=args.debug)
-
-    elif args.desktop:
-        # Run the desktop application
-        print("Starting ProfileScope desktop application")
-        from app.desktop.app import main as run_desktop
-
-        run_desktop()
 
 
 if __name__ == "__main__":

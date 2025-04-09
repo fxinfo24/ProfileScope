@@ -76,6 +76,12 @@ Start the web server:
 ```bash
 python -m app.web.app
 ```
+### Shortcut for Both
+
+```bash
+python run.py --desktop  # For desktop app
+python run.py --web      # For web interface
+```
 
 Access the web interface at `http://localhost:5000`
 

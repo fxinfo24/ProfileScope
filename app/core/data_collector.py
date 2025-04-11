@@ -73,6 +73,7 @@ class DataCollector:
         self.last_request_time = 0
         self.use_mock_data = use_mock_data
         self.logger = logging.getLogger(f"ProfileScope.DataCollector.{platform}")
+        self.error_messages = []  # Store error messages
 
         # Initialize API clients if not using mock data
         if not self.use_mock_data:
@@ -84,7 +85,9 @@ class DataCollector:
                     elif platform == "facebook" and "facebook" in config["api"]:
                         self.facebook_client = FacebookClient(config["api"]["facebook"])
             except (ConfigError, ValueError) as e:
-                self.logger.warning(f"Could not initialize API clients: {str(e)}")
+                error_msg = f"Could not initialize API clients: {str(e)}"
+                self.logger.warning(error_msg)
+                self.error_messages.append(error_msg)
                 self.use_mock_data = True
                 self.logger.info("Falling back to mock data generation")
 
@@ -171,9 +174,20 @@ class DataCollector:
                     return profile_data
 
                 # If we got here, real data retrieval failed
-                self.logger.warning("Failed to get real Twitter data, using mock data")
+                error_msg = "Failed to get real Twitter data, using mock data"
+                self.logger.warning(error_msg)
+                self.error_messages.append(error_msg)
         except Exception as e:
-            self.logger.warning(f"Error retrieving real Twitter data: {str(e)}")
+            error_detail = str(e)
+            # Capture specific API error codes and messages if available
+            if hasattr(e, "response") and hasattr(e.response, "status_code"):
+                status_code = e.response.status_code
+                error_msg = f"Twitter API error {status_code}: {error_detail}"
+            else:
+                error_msg = f"Error retrieving real Twitter data: {error_detail}"
+
+            self.logger.warning(error_msg)
+            self.error_messages.append(error_msg)
             self.logger.info("Falling back to mock data generation")
 
         # Generate mock data if real data collection failed or was not requested
@@ -191,6 +205,7 @@ class DataCollector:
                 "platform": "twitter",
                 "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "is_mock_data": True,
+                "api_errors": self.error_messages if self.error_messages else None,
             },
         }
 
@@ -234,9 +249,21 @@ class DataCollector:
                     return profile_data
 
                 # If we got here, real data retrieval failed
-                self.logger.warning("Failed to get real Facebook data, using mock data")
+                error_msg = "Failed to get real Facebook data, using mock data"
+                self.logger.warning(error_msg)
+                self.error_messages.append(error_msg)
         except Exception as e:
-            self.logger.warning(f"Error retrieving real Facebook data: {str(e)}")
+            error_detail = str(e)
+            # Capture specific Facebook API error details if available
+            if isinstance(e, FacebookRequestError):
+                error_msg = (
+                    f"Facebook API error {e.api_error_code()}: {e.api_error_message()}"
+                )
+            else:
+                error_msg = f"Error retrieving real Facebook data: {error_detail}"
+
+            self.logger.warning(error_msg)
+            self.error_messages.append(error_msg)
             self.logger.info("Falling back to mock data generation")
 
         # Generate mock data if real data collection failed or was not requested
@@ -253,6 +280,7 @@ class DataCollector:
                 "platform": "facebook",
                 "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "is_mock_data": True,
+                "api_errors": self.error_messages if self.error_messages else None,
             },
         }
 
@@ -291,9 +319,20 @@ class DataCollector:
                     return formatted_posts
 
                 # If we got here, real posts retrieval failed
-                self.logger.warning("Failed to get real Twitter posts, using mock data")
+                error_msg = "Failed to get real Twitter posts, using mock data"
+                self.logger.warning(error_msg)
+                self.error_messages.append(error_msg)
         except Exception as e:
-            self.logger.warning(f"Error retrieving real Twitter posts: {str(e)}")
+            error_detail = str(e)
+            # Capture specific API error codes and messages if available
+            if hasattr(e, "response") and hasattr(e.response, "status_code"):
+                status_code = e.response.status_code
+                error_msg = f"Twitter API error {status_code} when retrieving posts: {error_detail}"
+            else:
+                error_msg = f"Error retrieving real Twitter posts: {error_detail}"
+
+            self.logger.warning(error_msg)
+            self.error_messages.append(error_msg)
 
         # Generate mock data if real data collection failed or was not requested
         posts = []
@@ -352,11 +391,19 @@ class DataCollector:
                     return formatted_posts
 
                 # If we got here, real posts retrieval failed
-                self.logger.warning(
-                    "Failed to get real Facebook posts, using mock data"
-                )
+                error_msg = "Failed to get real Facebook posts, using mock data"
+                self.logger.warning(error_msg)
+                self.error_messages.append(error_msg)
         except Exception as e:
-            self.logger.warning(f"Error retrieving real Facebook posts: {str(e)}")
+            error_detail = str(e)
+            # Capture specific Facebook API error details if available
+            if isinstance(e, FacebookRequestError):
+                error_msg = f"Facebook API error {e.api_error_code()} when retrieving posts: {e.api_error_message()}"
+            else:
+                error_msg = f"Error retrieving real Facebook posts: {error_detail}"
+
+            self.logger.warning(error_msg)
+            self.error_messages.append(error_msg)
 
         # Generate mock data if real data collection failed or was not requested
         posts = []

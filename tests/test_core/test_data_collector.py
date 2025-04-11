@@ -119,9 +119,16 @@ def test_invalid_platform():
 
 
 @patch("app.core.data_collector.TwitterClient")
-def test_collect_twitter_data(mock_twitter_client, mock_config):
+def test_collect_twitter_data(mock_twitter_client_class, mock_config):
     """Test collecting Twitter profile data"""
-    collector = DataCollector("twitter", rate_limit=100)
+    # Setup the mock
+    mock_twitter_client = Mock()
+    mock_twitter_client.get_user_profile.return_value = MOCK_TWITTER_PROFILE
+    mock_twitter_client.get_user_timeline.return_value = [MOCK_TWITTER_POST] * 5
+    mock_twitter_client_class.return_value = mock_twitter_client
+
+    # Create a collector with mocked use_mock_data = True to ensure we use mock data
+    collector = DataCollector("twitter", rate_limit=100, use_mock_data=True)
     profile_data = collector.collect_profile_data("test_user")
 
     assert profile_data["user_id"] == "test_user"
@@ -131,9 +138,16 @@ def test_collect_twitter_data(mock_twitter_client, mock_config):
 
 
 @patch("app.core.data_collector.FacebookClient")
-def test_collect_facebook_data(mock_facebook_client, mock_config):
+def test_collect_facebook_data(mock_facebook_client_class, mock_config):
     """Test collecting Facebook profile data"""
-    collector = DataCollector("facebook", rate_limit=100)
+    # Setup the mock
+    mock_facebook_client = Mock()
+    mock_facebook_client.get_user_profile.return_value = MOCK_FACEBOOK_PROFILE
+    mock_facebook_client.get_user_posts.return_value = [MOCK_FACEBOOK_POST] * 3
+    mock_facebook_client_class.return_value = mock_facebook_client
+
+    # Create a collector with mocked use_mock_data = True to ensure we use mock data
+    collector = DataCollector("facebook", rate_limit=100, use_mock_data=True)
     profile_data = collector.collect_profile_data("test_user")
 
     assert profile_data["user_id"] == "test_user"

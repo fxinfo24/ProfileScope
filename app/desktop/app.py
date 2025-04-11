@@ -392,6 +392,21 @@ class AnalyzerApp(tk.Tk):
         ):
             mock_data = True
 
+        # Check for API error messages
+        api_errors = None
+        if (
+            "metadata" in self.analysis_results
+            and "platform" in self.analysis_results["metadata"]
+        ):
+            platform = self.analysis_results["metadata"]["platform"]
+            if (
+                f"{platform}_data" in self.analysis_results
+                and "metadata" in self.analysis_results[f"{platform}_data"]
+            ):
+                profile_metadata = self.analysis_results[f"{platform}_data"]["metadata"]
+                if "api_errors" in profile_metadata and profile_metadata["api_errors"]:
+                    api_errors = profile_metadata["api_errors"]
+
         # Display mock data warning if applicable
         if mock_data:
             mock_frame = ttk.Frame(scrollable_frame, padding=10)
@@ -400,13 +415,84 @@ class AnalyzerApp(tk.Tk):
             warning_icon = ttk.Label(mock_frame, text="⚠️", font=("Arial", 24))
             warning_icon.pack(side=tk.LEFT, padx=10)
 
+            disclaimer_text = self.analysis_results["content_analysis"][
+                "mock_data_disclaimer"
+            ]
             mock_text = ttk.Label(
                 mock_frame,
-                text=self.analysis_results["content_analysis"]["mock_data_disclaimer"],
+                text=disclaimer_text,
                 wraplength=600,
                 foreground=self.colors["warning"],
             )
             mock_text.pack(fill=tk.X, expand=True, padx=10)
+
+        # Display API error details if available
+        if api_errors:
+            error_frame = ttk.Frame(scrollable_frame, padding=10)
+            error_frame.pack(fill=tk.X, padx=20, pady=5)
+
+            error_icon = ttk.Label(error_frame, text="❌", font=("Arial", 20))
+            error_icon.pack(side=tk.LEFT, padx=10)
+
+            error_title = ttk.Label(
+                error_frame,
+                text="API Error Details:",
+                font=("Helvetica", 11, "bold"),
+            )
+            error_title.pack(side=tk.LEFT, padx=5)
+
+            errors_container = ttk.Frame(scrollable_frame, padding=(40, 5, 20, 10))
+            errors_container.pack(fill=tk.X, padx=20)
+
+            for error_msg in api_errors:
+                error_detail = ttk.Label(
+                    errors_container,
+                    text=f"• {error_msg}",
+                    wraplength=600,
+                    foreground=self.colors["danger"],
+                )
+                error_detail.pack(anchor=tk.W, pady=2)
+
+        # Display general error message if available in the results
+        elif "error" in self.analysis_results:
+            error_frame = ttk.Frame(scrollable_frame, padding=10)
+            error_frame.pack(fill=tk.X, padx=20, pady=5)
+
+            error_icon = ttk.Label(error_frame, text="❌", font=("Arial", 20))
+            error_icon.pack(side=tk.LEFT, padx=10)
+
+            error_message = self.analysis_results["error"]
+            error_text = ttk.Label(
+                error_frame,
+                text=error_message,
+                wraplength=600,
+                foreground=self.colors["danger"],
+                font=("Helvetica", 11, "bold"),
+            )
+            error_text.pack(side=tk.LEFT, padx=10, fill=tk.X, expand=True)
+
+        # Display success message if analysis was successful and no errors
+        elif (
+            not api_errors
+            and "metadata" in self.analysis_results
+            and "profile_id" in self.analysis_results["metadata"]
+        ):
+            success_frame = ttk.Frame(scrollable_frame, padding=10)
+            success_frame.pack(fill=tk.X, padx=20, pady=5)
+
+            success_icon = ttk.Label(success_frame, text="✅", font=("Arial", 20))
+            success_icon.pack(side=tk.LEFT, padx=10)
+
+            username = self.analysis_results["metadata"]["profile_id"]
+            success_message = f"Analysis for {username} completed successfully!"
+            success_text = ttk.Label(
+                success_frame,
+                text=success_message,
+                wraplength=600,
+                foreground=self.colors["success"],
+                font=("Helvetica", 11),
+            )
+            success_text.pack(side=tk.LEFT, padx=10, fill=tk.X, expand=True)
 
         # Profile metadata
         metadata = self.analysis_results["metadata"]
@@ -1179,41 +1265,26 @@ class AnalyzerApp(tk.Tk):
                 "Vocabulary": writing_style["vocabulary_diversity"],
             }
 
-            categories = list(metrics.keys())
-            values = list(metrics.values())
-
-            # Calculate angles for each category
-            angles = [
-                n / float(len(categories)) * 2 * np.pi for n in range(len(categories))
+            # Define metric_keys before using it
+            metric_keys = [
+                ("complexity", "Complexity"),
+                ("formality", "Formality"),
+                ("emotional_tone", "Emotional Tone"),
+                ("vocabulary_diversity", "Vocabulary Diversity"),
             ]
 
-            # Close the polygon by appending first value
-            values.append(values[0])
-            angles.append(angles[0])
-
-            metrics_ax.plot(angles, values, linewidth=2, linestyle="solid")
-            metrics_ax.fill(angles, values, alpha=0.3)
-
-            # Set category labels
-            metrics_ax.set_xticks(
-                angles[:-1]
-            )  # Don't show the last tick which is same as first
-            metrics_ax.set_xticklabels(categories)
-
-            metrics_chart = FigureCanvasTkAgg(metrics_fig, metrics_frame)
-            metrics_chart.get_tk_widget().pack(pady=10)
-
-        # Style metrics details
+        # Create metrics details
         metrics_details = ttk.Frame(metrics_frame)
         metrics_details.pack(fill=tk.X, pady=10)
 
-        # Key metrics
-        metric_keys = [
-            ("complexity", "Complexity"),
-            ("formality", "Formality"),
-            ("emotional_tone", "Emotional Tone"),
-            ("vocabulary_diversity", "Vocabulary Diversity"),
-        ]
+        # Define metric_keys again in case the above code block didn't execute
+        if not "metric_keys" in locals():
+            metric_keys = [
+                ("complexity", "Complexity"),
+                ("formality", "Formality"),
+                ("emotional_tone", "Emotional Tone"),
+                ("vocabulary_diversity", "Vocabulary Diversity"),
+            ]
 
         for key, label in metric_keys:
             if key in writing_style:
@@ -2131,6 +2202,44 @@ class AnalyzerApp(tk.Tk):
         )
         if save:
             self._save_results()
+
+        # Offer to iterate through tabs
+        iterate = messagebox.askyesno(
+            "View Results",
+            "Do you want to automatically iterate through all result tabs?",
+        )
+        if iterate:
+            self.iterate_tabs()
+
+    def iterate_tabs(self, current_tab=1, delay=3000):
+        """Iterate through result tabs with a delay between each tab
+
+        Args:
+            current_tab: The index of the current tab (default: 1, which is the Summary tab)
+            delay: The delay in milliseconds before switching to the next tab
+        """
+        # Skip the input tab (index 0)
+        if current_tab == 0:
+            current_tab = 1
+
+        # Switch to the current tab
+        self.notebook.select(current_tab)
+
+        # Schedule the next tab switch if not at the last tab
+        if current_tab < self.notebook.index("end") - 1:
+            self.after(delay, lambda: self.iterate_tabs(current_tab + 1, delay))
+        else:
+            # When we reach the last tab, offer to loop back to the summary tab
+            self.after(delay, lambda: self._ask_continue_iteration())
+
+    def _ask_continue_iteration(self):
+        """Ask if the user wants to continue tab iteration"""
+        continue_iteration = messagebox.askyesno(
+            "Continue to iterate?",
+            "Do you want to continue viewing all tabs from the beginning?",
+        )
+        if continue_iteration:
+            self.iterate_tabs(1)  # Start from Summary tab (index 1)
 
     def _reset_input_frame(self):
         """Reset the input frame to initial state"""

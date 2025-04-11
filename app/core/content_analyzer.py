@@ -189,8 +189,22 @@ class ContentAnalyzer:
         # Analyze sentiment trends
         sentiment_trends = self._analyze_sentiment_trends(profile_data)
 
+        # Generate summary of findings
+        summary = self._generate_summary(
+            profile_data, posting_frequency, topics, sentiment, personality_traits
+        )
+
+        # Check if this is mock data
+        if "profile" in profile_data and profile_data["profile"].get(
+            "mock_data", False
+        ):
+            mock_disclaimer = "This analysis is based on mock data generated for demonstration purposes. In a production environment, this would be replaced with actual social media data analysis."
+        else:
+            mock_disclaimer = None
+
         # Compile results
         analysis_results = {
+            "summary": summary,
             "posting_patterns": {
                 "frequency": posting_frequency,
                 "activity_hours": self._identify_activity_hours(posts),
@@ -206,7 +220,88 @@ class ContentAnalyzer:
         if sentiment:
             analysis_results["sentiment"] = sentiment
 
+        if mock_disclaimer:
+            analysis_results["mock_data_disclaimer"] = mock_disclaimer
+
         return analysis_results
+
+    def _generate_summary(
+        self,
+        profile_data: Dict[str, Any],
+        posting_frequency: Dict[str, Any],
+        topics: Dict[str, Any],
+        sentiment: Optional[Dict[str, Any]],
+        personality_traits: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Generate a summary of the profile analysis
+
+        Args:
+            profile_data: Complete profile data
+            posting_frequency: Posting frequency analysis
+            topics: Content topics analysis
+            sentiment: Sentiment analysis results
+            personality_traits: Personality traits analysis
+
+        Returns:
+            Dictionary with summary information
+        """
+        # Get profile basics
+        platform = profile_data.get("metadata", {}).get("platform", "social media")
+        profile_name = profile_data.get("profile", {}).get("username", "this profile")
+
+        # Activity level
+        posts_count = len(profile_data.get("posts", []))
+        daily_avg = posting_frequency.get("daily_average", 0)
+
+        if daily_avg > 3:
+            activity_level = "very active"
+        elif daily_avg > 1:
+            activity_level = "active"
+        elif daily_avg > 0.3:  # About 2-3 times per week
+            activity_level = "moderately active"
+        else:
+            activity_level = "occasionally active"
+
+        # Top topics/interests
+        top_topics = [topic for topic, _ in topics.get("top_topics", [])][:2]
+        top_topics_text = " and ".join(top_topics) if top_topics else "various topics"
+
+        # Sentiment summary
+        sentiment_text = "neutral tone"
+        if sentiment:
+            sentiment_label = sentiment.get("overall_sentiment", {}).get("label")
+            if sentiment_label == "positive":
+                sentiment_text = "generally positive tone"
+            elif sentiment_label == "negative":
+                sentiment_text = "generally critical tone"
+
+        # Create summary text components
+        profile_summary = f"Based on the analysis of {posts_count} posts, {profile_name} appears to be {activity_level} on {platform}."
+        content_summary = (
+            f"Content primarily focuses on {top_topics_text} with a {sentiment_text}."
+        )
+
+        # Extract top personality traits
+        top_traits = []
+        for trait, value in personality_traits.items():
+            if value > 0.7:
+                top_traits.append(trait.replace("_", " "))
+
+        personality_summary = ""
+        if top_traits:
+            traits_text = ", ".join(top_traits)
+            personality_summary = f"Analysis suggests tendencies toward {traits_text}."
+
+        return {
+            "profile_overview": profile_summary,
+            "content_overview": content_summary,
+            "personality_overview": personality_summary,
+            "post_count": posts_count,
+            "activity_level": activity_level,
+            "main_topics": top_topics,
+            "general_sentiment": sentiment_text,
+        }
 
     def _extract_text_content(self, profile_data: Dict[str, Any]) -> str:
         """

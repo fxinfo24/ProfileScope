@@ -31,6 +31,12 @@ class AnalyzerApp(tk.Tk):
         # Ensure the Tk root is properly initialized for matplotlib
         super().__init__()
 
+        # Make sure the window is visible on macOS
+        self.update_idletasks()
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after_idle(self.attributes, "-topmost", False)
+
         # Explicitly process any pending events before continuing
         self.update()
 
@@ -421,16 +427,700 @@ class AnalyzerApp(tk.Tk):
         )
         title.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Continue with the rest of the summary setup
-        # ...existing code...
+        # Summary section - key part that was missing
+        if (
+            "content_analysis" in self.analysis_results
+            and "summary" in self.analysis_results["content_analysis"]
+        ):
+            summary = self.analysis_results["content_analysis"]["summary"]
+
+            # Main summary card
+            summary_frame = ttk.LabelFrame(
+                scrollable_frame, text="Profile Summary", padding=15
+            )
+            summary_frame.pack(fill=tk.X, padx=20, pady=10)
+
+            # Profile overview
+            if "profile_overview" in summary:
+                overview_label = ttk.Label(
+                    summary_frame,
+                    text=summary["profile_overview"],
+                    wraplength=700,
+                    font=("Helvetica", 12),
+                )
+                overview_label.pack(anchor=tk.W, pady=5)
+
+            # Content overview
+            if "content_overview" in summary:
+                content_label = ttk.Label(
+                    summary_frame,
+                    text=summary["content_overview"],
+                    wraplength=700,
+                    font=("Helvetica", 12),
+                )
+                content_label.pack(anchor=tk.W, pady=5)
+
+            # Personality overview
+            if "personality_overview" in summary and summary["personality_overview"]:
+                personality_label = ttk.Label(
+                    summary_frame,
+                    text=summary["personality_overview"],
+                    wraplength=700,
+                    font=("Helvetica", 12),
+                )
+                personality_label.pack(anchor=tk.W, pady=5)
+
+            # Key metrics section
+            metrics_frame = ttk.LabelFrame(
+                scrollable_frame, text="Key Metrics", padding=15
+            )
+            metrics_frame.pack(fill=tk.X, padx=20, pady=10)
+
+            # Create columns for key metrics
+            metrics_columns = ttk.Frame(metrics_frame)
+            metrics_columns.pack(fill=tk.X, pady=5)
+
+            # Left column
+            left_metrics = ttk.Frame(metrics_columns)
+            left_metrics.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            # Post count
+            if "post_count" in summary:
+                post_count_frame = ttk.Frame(left_metrics)
+                post_count_frame.pack(fill=tk.X, pady=5)
+
+                post_count_label = ttk.Label(
+                    post_count_frame, text="Posts Analyzed:", width=18, anchor=tk.W
+                )
+                post_count_label.pack(side=tk.LEFT)
+
+                post_count_value = ttk.Label(
+                    post_count_frame,
+                    text=str(summary["post_count"]),
+                    font=("Helvetica", 11, "bold"),
+                )
+                post_count_value.pack(side=tk.LEFT)
+
+            # Activity level
+            if "activity_level" in summary:
+                activity_frame = ttk.Frame(left_metrics)
+                activity_frame.pack(fill=tk.X, pady=5)
+
+                activity_label = ttk.Label(
+                    activity_frame, text="Activity Level:", width=18, anchor=tk.W
+                )
+                activity_label.pack(side=tk.LEFT)
+
+                activity_value = ttk.Label(
+                    activity_frame,
+                    text=summary["activity_level"].replace("_", " ").title(),
+                    font=("Helvetica", 11, "bold"),
+                )
+                activity_value.pack(side=tk.LEFT)
+
+            # Right column
+            right_metrics = ttk.Frame(metrics_columns)
+            right_metrics.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+            # Main topics
+            if "main_topics" in summary and summary["main_topics"]:
+                topics_frame = ttk.Frame(right_metrics)
+                topics_frame.pack(fill=tk.X, pady=5)
+
+                topics_label = ttk.Label(
+                    topics_frame, text="Main Topics:", width=18, anchor=tk.W
+                )
+                topics_label.pack(side=tk.LEFT)
+
+                topics_value = ttk.Label(
+                    topics_frame,
+                    text=", ".join(summary["main_topics"]),
+                    font=("Helvetica", 11, "bold"),
+                )
+                topics_value.pack(side=tk.LEFT)
+
+            # General sentiment
+            if "general_sentiment" in summary:
+                sentiment_frame = ttk.Frame(right_metrics)
+                sentiment_frame.pack(fill=tk.X, pady=5)
+
+                sentiment_label = ttk.Label(
+                    sentiment_frame, text="General Sentiment:", width=18, anchor=tk.W
+                )
+                sentiment_label.pack(side=tk.LEFT)
+
+                sentiment_value = ttk.Label(
+                    sentiment_frame,
+                    text=summary["general_sentiment"].replace("_", " ").title(),
+                    font=("Helvetica", 11, "bold"),
+                )
+                sentiment_value.pack(side=tk.LEFT)
+        else:
+            # No summary available
+            no_summary_label = ttk.Label(
+                scrollable_frame,
+                text="No summary information available for this profile",
+                font=("Helvetica", 12),
+            )
+            no_summary_label.pack(pady=20)
+
+        # Overview Metrics - Display key metrics from content and authenticity analysis
+        metrics_section = ttk.LabelFrame(
+            scrollable_frame, text="Analysis Overview", padding=15
+        )
+        metrics_section.pack(fill=tk.X, padx=20, pady=10)
+
+        metrics_grid = ttk.Frame(metrics_section)
+        metrics_grid.pack(fill=tk.X, pady=10)
+
+        # Create 2x2 grid for key metrics
+        metrics = []
+
+        # Add authenticity score if available
+        if (
+            "authenticity_analysis" in self.analysis_results
+            and "overall_authenticity" in self.analysis_results["authenticity_analysis"]
+        ):
+            try:
+                auth_score = self.analysis_results["authenticity_analysis"][
+                    "overall_authenticity"
+                ]["score"]
+                metrics.append(
+                    {
+                        "name": "Authenticity Score",
+                        "value": f"{auth_score:.0%}",
+                        "icon": "🔒" if auth_score > 0.7 else "⚠️",
+                        "color": (
+                            self.colors["success"]
+                            if auth_score > 0.7
+                            else self.colors["warning"]
+                        ),
+                    }
+                )
+            except (KeyError, TypeError):
+                pass
+
+        # Add posting frequency
+        if (
+            "content_analysis" in self.analysis_results
+            and "posting_patterns" in self.analysis_results["content_analysis"]
+        ):
+            try:
+                frequency = self.analysis_results["content_analysis"][
+                    "posting_patterns"
+                ]["frequency"]
+                metrics.append(
+                    {
+                        "name": "Posting Frequency",
+                        "value": f"{frequency.get('daily_average', 0):.1f}/day",
+                        "icon": "📊",
+                        "color": self.colors["primary"],
+                    }
+                )
+            except (KeyError, TypeError):
+                pass
+
+        # Add sentiment if available
+        if (
+            "content_analysis" in self.analysis_results
+            and "sentiment" in self.analysis_results["content_analysis"]
+        ):
+            try:
+                sentiment = self.analysis_results["content_analysis"]["sentiment"][
+                    "overall_sentiment"
+                ]
+                if sentiment.get("label") == "positive":
+                    metrics.append(
+                        {
+                            "name": "Overall Sentiment",
+                            "value": "Positive",
+                            "icon": "😊",
+                            "color": self.colors["success"],
+                        }
+                    )
+                elif sentiment.get("label") == "negative":
+                    metrics.append(
+                        {
+                            "name": "Overall Sentiment",
+                            "value": "Negative",
+                            "icon": "😔",
+                            "color": self.colors["danger"],
+                        }
+                    )
+                else:
+                    metrics.append(
+                        {
+                            "name": "Overall Sentiment",
+                            "value": "Neutral",
+                            "icon": "😐",
+                            "color": self.colors["secondary"],
+                        }
+                    )
+            except (KeyError, TypeError):
+                pass
+
+        # Add account age if available
+        if (
+            "authenticity_analysis" in self.analysis_results
+            and "components" in self.analysis_results["authenticity_analysis"]
+        ):
+            try:
+                age_score = self.analysis_results["authenticity_analysis"][
+                    "components"
+                ]["account_age"]
+                account_age_label = (
+                    "New Account" if age_score < 0.5 else "Established Account"
+                )
+                metrics.append(
+                    {
+                        "name": "Account Age",
+                        "value": account_age_label,
+                        "icon": "🗓️",
+                        "color": self.colors["primary"],
+                    }
+                )
+            except (KeyError, TypeError):
+                pass
+
+        # Create metric cards in grid
+        row, col = 0, 0
+        for metric in metrics:
+            metric_card = ttk.Frame(metrics_grid, padding=10, relief=tk.GROOVE)
+            metric_card.grid(row=row, column=col, padx=10, pady=10, sticky=tk.NSEW)
+
+            # Icon
+            icon_label = ttk.Label(metric_card, text=metric["icon"], font=("Arial", 18))
+            icon_label.pack(anchor=tk.CENTER)
+
+            # Metric name
+            name_label = ttk.Label(metric_card, text=metric["name"])
+            name_label.pack(anchor=tk.CENTER)
+
+            # Metric value
+            value_label = ttk.Label(
+                metric_card,
+                text=metric["value"],
+                font=("Helvetica", 14, "bold"),
+                foreground=metric["color"],
+            )
+            value_label.pack(anchor=tk.CENTER, pady=5)
+
+            # Update grid position
+            col += 1
+            if col > 1:
+                col = 0
+                row += 1
+
+        # Configure grid columns to be equal width
+        metrics_grid.columnconfigure(0, weight=1)
+        metrics_grid.columnconfigure(1, weight=1)
 
     def _setup_timeline_tab(self):
         """Set up the timeline visualization tab"""
-        pass  # Timeline implementation will go here
+        # Clear existing widgets
+        for widget in self.timeline_frame.winfo_children():
+            widget.destroy()
+
+        if (
+            not self.analysis_results
+            or "content_analysis" not in self.analysis_results
+            or "timeline" not in self.analysis_results["content_analysis"]
+        ):
+            label = ttk.Label(self.timeline_frame, text="No timeline data available")
+            label.pack(pady=50)
+            return
+
+        # Get timeline data
+        timeline_data = self.analysis_results["content_analysis"]["timeline"]
+
+        # Main timeline container with scrolling
+        timeline_canvas = tk.Canvas(self.timeline_frame)
+        timeline_scrollbar = ttk.Scrollbar(
+            self.timeline_frame, orient="vertical", command=timeline_canvas.yview
+        )
+        timeline_scrollable = ttk.Frame(timeline_canvas)
+
+        timeline_scrollable.bind(
+            "<Configure>",
+            lambda e: timeline_canvas.configure(
+                scrollregion=timeline_canvas.bbox("all")
+            ),
+        )
+
+        timeline_canvas.create_window((0, 0), window=timeline_scrollable, anchor="nw")
+        timeline_canvas.configure(yscrollcommand=timeline_scrollbar.set)
+
+        timeline_canvas.pack(side="left", fill="both", expand=True)
+        timeline_scrollbar.pack(side="right", fill="y")
+
+        # Title
+        title = ttk.Label(
+            timeline_scrollable, text="Activity Timeline", style="TitleLabel.TLabel"
+        )
+        title.pack(pady=20)
+
+        # Timeline frame
+        tl_frame = ttk.Frame(timeline_scrollable, padding=10)
+        tl_frame.pack(fill=tk.BOTH, expand=True, padx=20)
+
+        # Check if we have any timeline entries
+        if not timeline_data or len(timeline_data) == 0:
+            empty_label = ttk.Label(tl_frame, text="No timeline events found")
+            empty_label.pack(pady=20)
+            return
+
+        # Create axis line
+        axis_frame = ttk.Frame(tl_frame)
+        axis_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        # Sort timeline entries by date if available
+        try:
+            # Sort if date is available
+            from datetime import datetime
+
+            timeline_data = sorted(
+                timeline_data,
+                key=lambda x: datetime.strptime(
+                    x.get("date", "2000-01-01"), "%Y-%m-%d"
+                ),
+                reverse=True,  # Most recent first
+            )
+        except:
+            # If sorting fails, use as is
+            pass
+
+        # Add timeline entries
+        for i, event in enumerate(timeline_data):
+            event_frame = ttk.Frame(axis_frame)
+            event_frame.pack(fill=tk.X, pady=5)
+
+            # Date indicator
+            date_frame = ttk.Frame(event_frame, width=100)
+            date_frame.pack(side=tk.LEFT, padx=10)
+
+            if "date" in event:
+                date_label = ttk.Label(
+                    date_frame,
+                    text=event["date"],
+                    font=("Helvetica", 10, "bold"),
+                    foreground=self.colors["primary"],
+                )
+                date_label.pack(anchor=tk.E)
+
+            # Timeline node
+            node_canvas = tk.Canvas(
+                event_frame,
+                width=30,
+                height=30,
+                bg=self.colors["bg_light"],
+                highlightthickness=0,
+            )
+            node_canvas.pack(side=tk.LEFT)
+
+            # Draw node
+            node_canvas.create_oval(10, 5, 25, 20, fill=self.colors["primary"])
+
+            # Draw line to next node if not last
+            if i < len(timeline_data) - 1:
+                node_canvas.create_line(
+                    17.5, 20, 17.5, 35, fill=self.colors["primary"], width=2
+                )
+
+            # Event content
+            content_frame = ttk.Frame(event_frame)
+            content_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
+
+            # Event type
+            if "type" in event:
+                event_type = (
+                    event["type"].replace("_", " ").title()
+                    if isinstance(event["type"], str)
+                    else "Event"
+                )
+                type_label = ttk.Label(
+                    content_frame, text=event_type, font=("Helvetica", 11, "bold")
+                )
+                type_label.pack(anchor=tk.W)
+
+            # Event description
+            if "description" in event:
+                desc_label = ttk.Label(
+                    content_frame, text=event["description"], wraplength=600
+                )
+                desc_label.pack(anchor=tk.W, pady=2)
+
+            # Additional details if available
+            details_frame = ttk.Frame(content_frame)
+
+            has_details = False
+            for key, value in event.items():
+                if key not in ["date", "type", "description"] and value:
+                    has_details = True
+                    key_label = ttk.Label(
+                        details_frame,
+                        text=f"{key.replace('_', ' ').title()}: ",
+                        width=15,
+                        anchor=tk.W,
+                        font=("Helvetica", 10, "bold"),
+                    )
+                    key_label.pack(side=tk.LEFT)
+
+                    value_str = (
+                        str(value) if not isinstance(value, list) else ", ".join(value)
+                    )
+                    value_label = ttk.Label(
+                        details_frame, text=value_str, wraplength=450
+                    )
+                    value_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            if has_details:
+                details_frame.pack(anchor=tk.W, pady=5)
+
+        # Add timeline visualization (optional)
+        if len(timeline_data) >= 3:
+            # Try to create activity frequency chart
+            try:
+                # Extract dates and create frequency data
+                from datetime import datetime
+                from collections import Counter
+                import matplotlib.dates as mdates
+
+                # Get dates from timeline
+                dates = []
+                for event in timeline_data:
+                    if "date" in event:
+                        try:
+                            date = datetime.strptime(event["date"], "%Y-%m-%d")
+                            dates.append(date)
+                        except:
+                            pass
+
+                if dates:
+                    # Create a frequency chart
+                    viz_frame = ttk.LabelFrame(
+                        timeline_scrollable, text="Activity Frequency", padding=10
+                    )
+                    viz_frame.pack(fill=tk.X, padx=20, pady=20)
+
+                    fig = plt.Figure(figsize=(8, 3), dpi=100)
+                    ax = fig.add_subplot(111)
+
+                    # Plot frequency
+                    ax.hist(dates, bins=20, color=self.colors["primary"], alpha=0.7)
+                    ax.set_xlabel("Date")
+                    ax.set_ylabel("Number of Events")
+
+                    # Format date axis
+                    date_formatter = mdates.DateFormatter("%Y-%m")
+                    ax.xaxis.set_major_formatter(date_formatter)
+                    fig.autofmt_xdate()
+
+                    # Add chart to frame
+                    chart = FigureCanvasTkAgg(fig, viz_frame)
+                    chart.get_tk_widget().pack(fill=tk.X, expand=True)
+
+            except Exception as e:
+                print(f"Error creating timeline visualization: {str(e)}")
 
     def _setup_traits_tab(self):
         """Set up the personality traits and interests tab"""
-        pass  # Traits implementation will go here
+        # Clear existing widgets
+        for widget in self.traits_frame.winfo_children():
+            widget.destroy()
+
+        if not self.analysis_results or "content_analysis" not in self.analysis_results:
+            label = ttk.Label(
+                self.traits_frame, text="No personality traits data available"
+            )
+            label.pack(pady=50)
+            return
+
+        content = self.analysis_results.get("content_analysis", {})
+
+        # Title
+        title = ttk.Label(
+            self.traits_frame, text="Personality Profile", style="TitleLabel.TLabel"
+        )
+        title.pack(pady=20)
+
+        # Create a two-column layout
+        columns_frame = ttk.Frame(self.traits_frame)
+        columns_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        # Left column - Traits
+        traits_frame = ttk.LabelFrame(
+            columns_frame, text="Personality Traits", padding=10
+        )
+        traits_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Check if we have personality traits
+        if "personality_traits" in content and content["personality_traits"]:
+            traits = content["personality_traits"]
+
+            # Create radar chart for personality traits
+            traits_fig = plt.Figure(figsize=(5, 4), dpi=100)
+            traits_ax = traits_fig.add_subplot(111, polar=True)
+
+            # Get categories and values from traits
+            categories = list(traits.keys())
+            values = list(traits.values())
+
+            # Calculate angles for each category
+            n_cats = len(categories)
+            angles = [n / float(n_cats) * 2 * np.pi for n in range(n_cats)]
+
+            # Close the polygon
+            values.append(values[0])
+            angles.append(angles[0])
+
+            # Plot
+            traits_ax.plot(angles, values, linewidth=2, linestyle="solid")
+            traits_ax.fill(angles, values, alpha=0.3)
+
+            # Set category labels
+            traits_ax.set_xticks(angles[:-1])
+            traits_ax.set_xticklabels(categories)
+
+            # Create canvas for chart
+            traits_chart = FigureCanvasTkAgg(traits_fig, traits_frame)
+            traits_chart.get_tk_widget().pack(pady=10)
+
+            # Add legend or additional info
+            legend_frame = ttk.Frame(traits_frame)
+            legend_frame.pack(fill=tk.X, pady=10)
+
+            for trait, value in traits.items():
+                trait_frame = ttk.Frame(legend_frame)
+                trait_frame.pack(fill=tk.X, pady=2)
+
+                trait_label = ttk.Label(
+                    trait_frame,
+                    text=trait.replace("_", " ").title(),
+                    width=20,
+                    anchor=tk.W,
+                )
+                trait_label.pack(side=tk.LEFT)
+
+                trait_bar = ttk.Progressbar(
+                    trait_frame, value=int(value * 100), length=100
+                )
+                trait_bar.pack(side=tk.LEFT, padx=5)
+
+                trait_value = ttk.Label(trait_frame, text=f"{value:.2f}")
+                trait_value.pack(side=tk.LEFT)
+        else:
+            no_traits = ttk.Label(
+                traits_frame, text="No personality trait data available"
+            )
+            no_traits.pack(pady=20)
+
+        # Right column - Interests
+        interests_frame = ttk.LabelFrame(
+            columns_frame, text="Interests & Topics", padding=10
+        )
+        interests_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Check if we have interests data
+        if "interests" in content and content["interests"]:
+            interests = content["interests"]
+
+            # Sort interests by confidence score (if interests are dictionaries)
+            # or by direct value (if interests are simple values)
+            def get_interest_value(item):
+                key, value = item
+                if isinstance(value, dict) and "confidence" in value:
+                    return value["confidence"]  # Get confidence from dict
+                elif isinstance(value, (int, float)):
+                    return value  # Use direct value if it's a number
+                return 0  # Default if no usable value
+
+            sorted_interests = sorted(
+                interests.items(), key=get_interest_value, reverse=True
+            )
+
+            # Create bar chart for top interests
+            top_interests = sorted_interests[:8]  # Show top 8
+
+            int_fig = plt.Figure(figsize=(5, 4), dpi=100)
+            int_ax = int_fig.add_subplot(111)
+
+            # Extract labels and values based on the type of interest values
+            labels = []
+            values = []
+
+            for item in top_interests:
+                key, value = item
+                labels.append(key.replace("_", " ").title())
+
+                if isinstance(value, dict) and "confidence" in value:
+                    values.append(value["confidence"])
+                elif isinstance(value, (int, float)):
+                    values.append(value)
+                else:
+                    values.append(0)  # Default if no usable value
+
+            int_ax.barh(labels, values, color=self.colors["primary"])
+            int_ax.set_xlim(0, 1.0)
+            int_ax.set_title("Top Interests")
+
+            # Create canvas for chart
+            int_chart = FigureCanvasTkAgg(int_fig, interests_frame)
+            int_chart.get_tk_widget().pack(pady=10)
+
+            # List all interests with scores
+            list_frame = ttk.Frame(interests_frame)
+            list_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+            # Create a canvas with scrollbar for many interests
+            canvas = tk.Canvas(list_frame)
+            scrollbar = ttk.Scrollbar(
+                list_frame, orient="vertical", command=canvas.yview
+            )
+            scrollable_frame = ttk.Frame(canvas)
+
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
+            )
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            # Add all interests to the scrollable frame
+            for interest, interest_value in sorted_interests:
+                int_frame = ttk.Frame(scrollable_frame)
+                int_frame.pack(fill=tk.X, pady=2)
+
+                int_label = ttk.Label(
+                    int_frame,
+                    text=interest.replace("_", " ").title(),
+                    width=20,
+                    anchor=tk.W,
+                )
+                int_label.pack(side=tk.LEFT)
+
+                # Get the value to display based on the type of interest_value
+                display_value = 0
+                if isinstance(interest_value, dict) and "confidence" in interest_value:
+                    display_value = interest_value["confidence"]
+                elif isinstance(interest_value, (int, float)):
+                    display_value = interest_value
+
+                int_bar = ttk.Progressbar(
+                    int_frame, value=int(display_value * 100), length=100
+                )
+                int_bar.pack(side=tk.LEFT, padx=5)
+
+                int_value = ttk.Label(int_frame, text=f"{display_value:.2f}")
+                int_value.pack(side=tk.LEFT)
+        else:
+            no_interests = ttk.Label(
+                interests_frame, text="No interests data available"
+            )
+            no_interests.pack(pady=20)
 
     def _setup_writing_tab(self):
         """Set up the writing style analysis tab"""
@@ -670,15 +1360,47 @@ class AnalyzerApp(tk.Tk):
 
         auth_analysis = self.analysis_results["authenticity_analysis"]
 
-        # Main container
-        main_frame = ttk.Frame(self.authenticity_frame, padding=20)
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # Main container with scrolling for better layout
+        canvas = tk.Canvas(self.authenticity_frame)
+        scrollbar = ttk.Scrollbar(
+            self.authenticity_frame, orient="vertical", command=canvas.yview
+        )
+        main_frame = ttk.Frame(canvas, padding=20)
+
+        # Configure scroll behavior
+        main_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+
+        canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Allow canvas to expand and fill the authenticity frame
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
         # Title
         title = ttk.Label(
             main_frame, text="Profile Authenticity Analysis", style="TitleLabel.TLabel"
         )
         title.pack(pady=20)
+
+        # Check for mock data disclaimer
+        if "mock_data_disclaimer" in auth_analysis:
+            disclaimer_frame = ttk.Frame(main_frame, padding=10)
+            disclaimer_frame.pack(fill=tk.X, pady=10)
+
+            warning_icon = ttk.Label(disclaimer_frame, text="⚠️", font=("Arial", 20))
+            warning_icon.pack(side=tk.LEFT, padx=10)
+
+            mock_text = ttk.Label(
+                disclaimer_frame,
+                text=auth_analysis["mock_data_disclaimer"],
+                wraplength=600,
+                foreground=self.colors["warning"],
+            )
+            mock_text.pack(fill=tk.X, expand=True, padx=10)
 
         # Overall authenticity score
         if "overall_authenticity" in auth_analysis:
@@ -739,8 +1461,12 @@ class AnalyzerApp(tk.Tk):
             gauge_ax.set_xticks([])
             gauge_ax.set_yticks([])
 
+            # Create and configure chart widget
             gauge_canvas = FigureCanvasTkAgg(gauge_fig, overall_frame)
-            gauge_canvas.get_tk_widget().pack()
+            gauge_canvas.draw()
+            gauge_widget = gauge_canvas.get_tk_widget()
+            gauge_widget.config(width=400, height=240)
+            gauge_widget.pack(fill=tk.X)
 
             # Information below gauge
             info_frame = ttk.Frame(overall_frame)
@@ -760,242 +1486,107 @@ class AnalyzerApp(tk.Tk):
                 )
                 issues_label.pack(anchor=tk.CENTER, pady=5)
 
-        # Create two-column layout for detailed analysis
-        columns_frame = ttk.Frame(main_frame)
-        columns_frame.pack(fill=tk.BOTH, expand=True, pady=10)
-
-        # Left column - Consistency & Bot analysis
-        left_frame = ttk.Frame(columns_frame)
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
-
-        # Consistency score
-        if "consistency_score" in auth_analysis:
-            consistency_frame = ttk.LabelFrame(
-                left_frame, text="Temporal Consistency", padding=10
+        # Authenticity assessment section
+        if "assessment" in auth_analysis:
+            assessment_frame = ttk.LabelFrame(
+                main_frame, text="Assessment Summary", padding=15
             )
-            consistency_frame.pack(fill=tk.X, pady=10)
+            assessment_frame.pack(fill=tk.X, pady=10)
 
-            score = auth_analysis["consistency_score"]
+            assessment = auth_analysis["assessment"]
 
-            cons_label = ttk.Label(
-                consistency_frame, text=f"Consistency Score: {score:.0%}"
+            if "summary" in assessment:
+                summary_label = ttk.Label(
+                    assessment_frame,
+                    text=assessment["summary"],
+                    wraplength=700,
+                    font=("Helvetica", 12),
+                )
+                summary_label.pack(anchor=tk.W, pady=5)
+
+            # Risk factors
+            if "risk_factors" in assessment and assessment["risk_factors"]:
+                risks_frame = ttk.Frame(assessment_frame)
+                risks_frame.pack(fill=tk.X, pady=10)
+
+                risks_label = ttk.Label(
+                    risks_frame, text="Risk Factors:", font=("Helvetica", 11, "bold")
+                )
+                risks_label.pack(anchor=tk.W)
+
+                for risk in assessment["risk_factors"]:
+                    risk_item = ttk.Label(risks_frame, text=f"• {risk}", wraplength=650)
+                    risk_item.pack(anchor=tk.W, pady=2)
+        # If there's no authenticity data, create mock data for display
+        else:
+            # Create mock authenticity data for demonstration
+            mock_frame = ttk.Frame(main_frame, padding=10)
+            mock_frame.pack(fill=tk.X, pady=10)
+
+            mock_title = ttk.Label(
+                mock_frame,
+                text="Sample Authenticity Analysis",
+                font=("Helvetica", 12, "bold"),
             )
-            cons_label.pack(anchor=tk.W, pady=5)
+            mock_title.pack(pady=5)
 
-            cons_bar = ttk.Progressbar(
-                consistency_frame, value=int(score * 100), length=200
+            mock_desc = ttk.Label(
+                mock_frame,
+                text="This is sample data to demonstrate the authenticity analysis interface.",
+                wraplength=600,
             )
-            cons_bar.pack(anchor=tk.W, pady=5)
+            mock_desc.pack(pady=5)
 
-            # Description based on score
-            if score < 0.3:
-                desc = "Very inconsistent activity patterns detected"
-            elif score < 0.6:
-                desc = "Some inconsistencies in activity patterns"
-            else:
-                desc = "Activity patterns appear consistent"
+            # Create a sample gauge
+            gauge_fig = plt.Figure(figsize=(4, 3), dpi=100)
+            gauge_ax = gauge_fig.add_subplot(111, projection="polar")
 
-            cons_desc = ttk.Label(consistency_frame, text=desc)
-            cons_desc.pack(anchor=tk.W, pady=5)
+            # Create a half-circle gauge
+            theta = np.linspace(0, np.pi, 100)
+            radius = 1.0
 
-        # Bot likelihood analysis
-        if "bot_likelihood" in auth_analysis:
-            bot_frame = ttk.LabelFrame(left_frame, text="Bot Analysis", padding=10)
-            bot_frame.pack(fill=tk.X, pady=10)
+            # Background arc
+            gauge_ax.plot(theta, [radius] * len(theta), color="lightgray", linewidth=15)
 
-            bot = auth_analysis["bot_likelihood"]
-
-            bot_label = ttk.Label(bot_frame, text=f"Bot Likelihood: {bot['score']:.0%}")
-            bot_label.pack(anchor=tk.W, pady=5)
-
-            bot_bar = ttk.Progressbar(
-                bot_frame, value=int(bot["score"] * 100), length=200
+            # Score arc (sample score of 0.75)
+            sample_score = 0.75
+            score_theta = theta[: int(sample_score * len(theta))]
+            score_radius = [radius] * len(score_theta)
+            gauge_ax.plot(
+                score_theta, score_radius, color=self.colors["success"], linewidth=15
             )
-            bot_bar.pack(anchor=tk.W, pady=5)
 
-            conf_label = ttk.Label(
-                bot_frame, text=f"Analysis Confidence: {bot['confidence']:.0%}"
+            # Add labels
+            gauge_ax.text(-0.5, 0.5, "Fake", ha="right", va="center", fontsize=12)
+            gauge_ax.text(
+                np.pi / 2, 1.3, "Uncertain", ha="center", va="center", fontsize=12
             )
-            conf_label.pack(anchor=tk.W, pady=5)
-
-            # Indicator details if available
-            if "indicators" in bot:
-                indicators = bot["indicators"]
-
-                ind_frame = ttk.Frame(bot_frame)
-                ind_frame.pack(fill=tk.X, pady=5)
-
-                ind_label = ttk.Label(ind_frame, text="Individual Indicators:")
-                ind_label.pack(anchor=tk.W)
-
-                for name, value in indicators.items():
-                    ind_item = ttk.Frame(ind_frame)
-                    ind_item.pack(fill=tk.X, pady=2)
-
-                    item_name = ttk.Label(
-                        ind_item,
-                        text=name.replace("_", " ").capitalize(),
-                        width=20,
-                        anchor=tk.W,
-                    )
-                    item_name.pack(side=tk.LEFT)
-
-                    item_bar = ttk.Progressbar(
-                        ind_item, value=int(value * 100), length=100
-                    )
-                    item_bar.pack(side=tk.LEFT, padx=5)
-
-                    item_value = ttk.Label(ind_item, text=f"{value:.0%}")
-                    item_value.pack(side=tk.LEFT)
-
-        # Right column - Activity patterns and style comparison
-        right_frame = ttk.Frame(columns_frame)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
-
-        # Activity pattern analysis
-        if "activity_patterns" in auth_analysis:
-            activity_frame = ttk.LabelFrame(
-                right_frame, text="Activity Pattern Analysis", padding=10
+            gauge_ax.text(
+                np.pi + 0.5, 0.5, "Authentic", ha="left", va="center", fontsize=12
             )
-            activity_frame.pack(fill=tk.X, pady=10)
 
-            patterns = auth_analysis["activity_patterns"]
-
-            # Check if we have posting times distribution
-            if (
-                "posting_times" in patterns
-                and "distribution" in patterns["posting_times"]
-            ):
-                dist = patterns["posting_times"]["distribution"]
-
-                # Create a pie chart
-                pie_fig = plt.Figure(figsize=(4, 3), dpi=100)
-                pie_ax = pie_fig.add_subplot(111)
-
-                labels = [k.capitalize() for k in dist.keys()]
-                values = list(dist.values())
-
-                pie_ax.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-                pie_ax.set_title("Posting Time Distribution")
-
-                pie_canvas = FigureCanvasTkAgg(pie_fig, activity_frame)
-                pie_canvas.get_tk_widget().pack(pady=10)
-
-                # Consistency value if available
-                if "consistency" in patterns["posting_times"]:
-                    cons = patterns["posting_times"]["consistency"]
-                    cons_label = ttk.Label(
-                        activity_frame, text=f"Posting time consistency: {cons:.0%}"
-                    )
-                    cons_label.pack(anchor=tk.W, pady=5)
-
-            # Irregular patterns
-            if "irregular_patterns" in patterns:
-                irreg_text = (
-                    "Irregular activity patterns detected"
-                    if patterns["irregular_patterns"]
-                    else "No irregular patterns detected"
-                )
-                irreg_label = ttk.Label(activity_frame, text=irreg_text)
-                irreg_label.pack(anchor=tk.W, pady=5)
-
-            # Burst activities if any
-            if "burst_activities" in patterns and patterns["burst_activities"]:
-                burst_text = "Burst activities detected: " + ", ".join(
-                    patterns["burst_activities"]
-                )
-                burst_label = ttk.Label(activity_frame, text=burst_text)
-                burst_label.pack(anchor=tk.W, pady=5)
-
-            # Dormant periods if any
-            if "dormant_periods" in patterns and patterns["dormant_periods"]:
-                dormant_text = "Dormant periods detected: " + ", ".join(
-                    patterns["dormant_periods"]
-                )
-                dormant_label = ttk.Label(activity_frame, text=dormant_text)
-                dormant_label.pack(anchor=tk.W, pady=5)
-
-        # Style comparison
-        if "style_comparison" in auth_analysis:
-            style_frame = ttk.LabelFrame(
-                right_frame, text="Writing Style Comparison", padding=10
+            # Add score in center
+            gauge_ax.text(
+                np.pi / 2,
+                0.3,
+                f"Score: {sample_score:.0%}",
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="bold",
             )
-            style_frame.pack(fill=tk.X, pady=10)
 
-            comparison = auth_analysis["style_comparison"]
+            # Clean up the plot
+            gauge_ax.set_ylim(0, 1.5)
+            gauge_ax.set_xticks([])
+            gauge_ax.set_yticks([])
 
-            # Highest match information if available
-            if "highest_match" in comparison and comparison["highest_match"]:
-                highest = comparison["highest_match"]
-
-                match_frame = ttk.Frame(style_frame)
-                match_frame.pack(fill=tk.X, pady=10)
-
-                match_label = ttk.Label(
-                    match_frame, text="Highest Style Match:", style="Subheader.TLabel"
-                )
-                match_label.pack(anchor=tk.W)
-
-                profile_name = ttk.Label(
-                    match_frame, text=f"Profile: {highest['reference_profile']}"
-                )
-                profile_name.pack(anchor=tk.W, pady=2)
-
-                similarity = ttk.Label(
-                    match_frame,
-                    text=f"Similarity: {highest['similarity_score']:.0%} (Confidence: {highest['confidence']:.0%})",
-                )
-                similarity.pack(anchor=tk.W, pady=2)
-
-                if "matching_features" in highest and highest["matching_features"]:
-                    features_text = "Matching features: " + ", ".join(
-                        highest["matching_features"]
-                    )
-                    features_label = ttk.Label(match_frame, text=features_text)
-                    features_label.pack(anchor=tk.W, pady=2)
-
-            # All matches if available
-            if "matches" in comparison and len(comparison["matches"]) > 1:
-                all_matches_frame = ttk.Frame(style_frame)
-                all_matches_frame.pack(fill=tk.X, pady=10)
-
-                matches_label = ttk.Label(
-                    all_matches_frame,
-                    text="All Style Comparisons:",
-                    style="Subheader.TLabel",
-                )
-                matches_label.pack(anchor=tk.W)
-
-                # Sort by similarity score
-                sorted_matches = sorted(
-                    comparison["matches"],
-                    key=lambda x: x["similarity_score"],
-                    reverse=True,
-                )
-
-                for match in sorted_matches:
-                    match_item = ttk.Frame(all_matches_frame)
-                    match_item.pack(fill=tk.X, pady=2)
-
-                    item_name = ttk.Label(
-                        match_item,
-                        text=match["reference_profile"],
-                        width=20,
-                        anchor=tk.W,
-                    )
-                    item_name.pack(side=tk.LEFT)
-
-                    item_bar = ttk.Progressbar(
-                        match_item,
-                        value=int(match["similarity_score"] * 100),
-                        length=100,
-                    )
-                    item_bar.pack(side=tk.LEFT, padx=5)
-
-                    item_value = ttk.Label(
-                        match_item, text=f"{match['similarity_score']:.0%}"
-                    )
-                    item_value.pack(side=tk.LEFT)
+            # Create and configure chart widget
+            gauge_canvas = FigureCanvasTkAgg(gauge_fig, mock_frame)
+            gauge_canvas.draw()
+            gauge_widget = gauge_canvas.get_tk_widget()
+            gauge_widget.config(width=400, height=240)
+            gauge_widget.pack(pady=10)
 
     def _setup_predictions_tab(self):
         """Set up the predictions tab"""
@@ -1003,234 +1594,111 @@ class AnalyzerApp(tk.Tk):
         for widget in self.predictions_frame.winfo_children():
             widget.destroy()
 
+        # If no analysis results available or no predictions key, create sample data
         if not self.analysis_results or "predictions" not in self.analysis_results:
-            label = ttk.Label(
-                self.predictions_frame, text="No predictions data available"
-            )
-            label.pack(pady=50)
+            self._create_mock_predictions()
             return
 
         predictions = self.analysis_results["predictions"]
 
         # Main container with scrolling
-        pred_canvas = tk.Canvas(self.predictions_frame)
-        pred_scrollbar = ttk.Scrollbar(
-            self.predictions_frame, orient="vertical", command=pred_canvas.yview
+        canvas = tk.Canvas(self.predictions_frame)
+        scrollbar = ttk.Scrollbar(
+            self.predictions_frame, orient="vertical", command=canvas.yview
         )
-        scrollable_pred = ttk.Frame(pred_canvas)
+        main_frame = ttk.Frame(canvas, padding=20)
 
-        scrollable_pred.bind(
+        # Configure scroll behavior
+        main_frame.bind(
             "<Configure>",
-            lambda e: pred_canvas.configure(scrollregion=pred_canvas.bbox("all")),
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
         )
 
-        pred_canvas.create_window((0, 0), window=scrollable_pred, anchor="nw")
-        pred_canvas.configure(yscrollcommand=pred_scrollbar.set)
+        canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-        pred_canvas.pack(side="left", fill="both", expand=True)
-        pred_scrollbar.pack(side="right", fill="y")
+        # Allow canvas to expand and fill the predictions frame
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
-        # Title and disclaimer
+        # Title and intro
         title = ttk.Label(
-            scrollable_pred, text="Predictions & Forecasts", style="TitleLabel.TLabel"
+            main_frame, text="Profile Predictions", style="TitleLabel.TLabel"
         )
         title.pack(pady=20)
 
+        # Check if we're using mock data and display appropriate disclaimer
         if "disclaimer" in predictions:
-            disclaimer_frame = ttk.Frame(scrollable_pred, padding=10)
-            disclaimer_frame.pack(fill=tk.X, padx=20)
+            disclaimer_frame = ttk.Frame(main_frame, padding=10)
+            disclaimer_frame.pack(fill=tk.X, pady=10)
+
+            info_icon = ttk.Label(disclaimer_frame, text="ℹ️", font=("Arial", 20))
+            info_icon.pack(side=tk.LEFT, padx=10)
 
             disclaimer_text = ttk.Label(
                 disclaimer_frame,
                 text=predictions["disclaimer"],
                 wraplength=600,
-                foreground=self.colors["secondary"],
+                foreground=self.colors["info"],
             )
-            disclaimer_text.pack()
+            disclaimer_text.pack(fill=tk.X, expand=True, padx=10)
+
+        description = ttk.Label(
+            main_frame,
+            text="Based on historical data and current profile analysis, the system predicts the following patterns and interests.",
+            wraplength=700,
+        )
+        description.pack(pady=10)
 
         # Create a two-column layout for predictions
-        columns_frame = ttk.Frame(scrollable_pred, padding=20)
-        columns_frame.pack(fill=tk.BOTH, expand=True)
+        columns_frame = ttk.Frame(main_frame)
+        columns_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
-        # Left column
-        left_frame = ttk.Frame(columns_frame)
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+        # Left column - Future Interests
+        interests_frame = ttk.LabelFrame(
+            columns_frame, text="Predicted Interests", padding=10
+        )
+        interests_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
 
-        # Future interests
-        if "future_interests" in predictions and predictions["future_interests"]:
-            interests_frame = ttk.LabelFrame(
-                left_frame, text="Predicted Future Interests", padding=10
-            )
-            interests_frame.pack(fill=tk.X, pady=10)
+        # Check for both possible future interests keys in the data structure
+        future_interests = None
+        if "future_interests" in predictions:
+            future_interests = predictions["future_interests"]
+        elif "interests" in predictions:
+            future_interests = predictions["interests"]
 
-            for interest in predictions["future_interests"]:
+        if future_interests:
+            for interest in future_interests:
                 interest_frame = ttk.Frame(interests_frame)
                 interest_frame.pack(fill=tk.X, pady=5)
 
-                interest_label = ttk.Label(
-                    interest_frame,
-                    text=interest["interest"],
-                    font=("Helvetica", 11, "bold"),
-                )
-                interest_label.pack(anchor=tk.W)
+                # Handle different formats of interest data
+                interest_name = interest.get("interest", "")
+                if not interest_name and isinstance(interest, str):
+                    interest_name = interest
+                elif not interest_name and "label" in interest:
+                    interest_name = interest["label"]
 
-                conf_frame = ttk.Frame(interest_frame)
-                conf_frame.pack(fill=tk.X, pady=2)
-
-                conf_label = ttk.Label(
-                    conf_frame, text="Confidence: ", width=12, anchor=tk.W
-                )
-                conf_label.pack(side=tk.LEFT)
-
-                conf_bar = ttk.Progressbar(
-                    conf_frame, value=int(interest["confidence"] * 100), length=100
-                )
-                conf_bar.pack(side=tk.LEFT, padx=5)
-
-                conf_value = ttk.Label(conf_frame, text=f"{interest['confidence']:.0%}")
-                conf_value.pack(side=tk.LEFT)
-
-                if "reasoning" in interest:
-                    reason_label = ttk.Label(
+                # Only proceed if we have a valid interest name
+                if interest_name:
+                    interest_label = ttk.Label(
                         interest_frame,
-                        text=f"Reasoning: {interest['reasoning']}",
-                        wraplength=350,
+                        text=interest_name,
+                        font=("Helvetica", 11, "bold"),
                     )
-                    reason_label.pack(anchor=tk.W, pady=2)
+                    interest_label.pack(anchor=tk.W)
 
-        # Predicted behaviors
-        if "potential_behaviors" in predictions and predictions["potential_behaviors"]:
-            behaviors_frame = ttk.LabelFrame(
-                left_frame, text="Predicted Behaviors", padding=10
-            )
-            behaviors_frame.pack(fill=tk.X, pady=10)
+                    # Get confidence value based on data structure
+                    confidence = 0.7  # Default if not found
+                    if "confidence" in interest:
+                        confidence = interest["confidence"]
+                    elif isinstance(interest, dict) and any(
+                        k in interest for k in ["score", "value"]
+                    ):
+                        confidence = interest.get("score", interest.get("value", 0.7))
 
-            for behavior in predictions["potential_behaviors"]:
-                behavior_frame = ttk.Frame(behaviors_frame)
-                behavior_frame.pack(fill=tk.X, pady=5)
-
-                behavior_label = ttk.Label(
-                    behavior_frame,
-                    text=behavior["behavior"],
-                    font=("Helvetica", 11, "bold"),
-                )
-                behavior_label.pack(anchor=tk.W)
-
-                conf_frame = ttk.Frame(behavior_frame)
-                conf_frame.pack(fill=tk.X, pady=2)
-
-                conf_label = ttk.Label(
-                    conf_frame, text="Confidence: ", width=12, anchor=tk.W
-                )
-                conf_label.pack(side=tk.LEFT)
-
-                conf_bar = ttk.Progressbar(
-                    conf_frame, value=int(behavior["confidence"] * 100), length=100
-                )
-                conf_bar.pack(side=tk.LEFT, padx=5)
-
-                conf_value = ttk.Label(conf_frame, text=f"{behavior['confidence']:.0%}")
-                conf_value.pack(side=tk.LEFT)
-
-                if "reasoning" in behavior:
-                    reason_label = ttk.Label(
-                        behavior_frame,
-                        text=f"Reasoning: {behavior['reasoning']}",
-                        wraplength=350,
-                    )
-                    reason_label.pack(anchor=tk.W, pady=2)
-
-        # Right column
-        right_frame = ttk.Frame(columns_frame)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
-
-        # Demographic predictions
-        if "demographic_predictions" in predictions:
-            demographics_frame = ttk.LabelFrame(
-                right_frame, text="Demographic Predictions", padding=10
-            )
-            demographics_frame.pack(fill=tk.X, pady=10)
-
-            demog = predictions["demographic_predictions"]
-
-            # Age range
-            if "age_range" in demog:
-                age_frame = ttk.Frame(demographics_frame)
-                age_frame.pack(fill=tk.X, pady=5)
-
-                age_label = ttk.Label(
-                    age_frame, text="Age Range:", width=15, anchor=tk.W
-                )
-                age_label.pack(side=tk.LEFT)
-
-                age_value = ttk.Label(
-                    age_frame,
-                    text=f"{demog['age_range']['prediction']} (Confidence: {demog['age_range']['confidence']:.0%})",
-                )
-                age_value.pack(side=tk.LEFT)
-
-            # Education level
-            if "education_level" in demog:
-                edu_frame = ttk.Frame(demographics_frame)
-                edu_frame.pack(fill=tk.X, pady=5)
-
-                edu_label = ttk.Label(
-                    edu_frame, text="Education Level:", width=15, anchor=tk.W
-                )
-                edu_label.pack(side=tk.LEFT)
-
-                edu_value = ttk.Label(
-                    edu_frame,
-                    text=f"{demog['education_level']['prediction']} (Confidence: {demog['education_level']['confidence']:.0%})",
-                )
-                edu_value.pack(side=tk.LEFT)
-
-            # Occupation category
-            if "occupation_category" in demog:
-                occ_frame = ttk.Frame(demographics_frame)
-                occ_frame.pack(fill=tk.X, pady=5)
-
-                occ_label = ttk.Label(
-                    occ_frame, text="Occupation:", width=15, anchor=tk.W
-                )
-                occ_label.pack(side=tk.LEFT)
-
-                occ_value = ttk.Label(
-                    occ_frame,
-                    text=f"{demog['occupation_category']['prediction']} (Confidence: {demog['occupation_category']['confidence']:.0%})",
-                )
-                occ_value.pack(side=tk.LEFT)
-
-        # Affinity predictions
-        if (
-            "affinity_predictions" in predictions
-            and predictions["affinity_predictions"]
-        ):
-            affinity_frame = ttk.LabelFrame(
-                right_frame, text="Affinity Predictions", padding=10
-            )
-            affinity_frame.pack(fill=tk.X, pady=10)
-
-            for affinity in predictions["affinity_predictions"]:
-                aff_category = ttk.Frame(affinity_frame)
-                aff_category.pack(fill=tk.X, pady=5)
-
-                category_label = ttk.Label(
-                    aff_category,
-                    text=affinity["category"],
-                    font=("Helvetica", 11, "bold"),
-                )
-                category_label.pack(anchor=tk.W)
-
-                if "affinities" in affinity and affinity["affinities"]:
-                    affinities_text = ", ".join(affinity["affinities"])
-                    affinities_label = ttk.Label(
-                        aff_category, text=affinities_text, wraplength=350
-                    )
-                    affinities_label.pack(anchor=tk.W, pady=2)
-
-                if "confidence" in affinity:
-                    conf_frame = ttk.Frame(aff_category)
+                    # Display confidence bar
+                    conf_frame = ttk.Frame(interest_frame)
                     conf_frame.pack(fill=tk.X, pady=2)
 
                     conf_label = ttk.Label(
@@ -1239,14 +1707,305 @@ class AnalyzerApp(tk.Tk):
                     conf_label.pack(side=tk.LEFT)
 
                     conf_bar = ttk.Progressbar(
-                        conf_frame, value=int(affinity["confidence"] * 100), length=100
+                        conf_frame, value=int(confidence * 100), length=100
                     )
                     conf_bar.pack(side=tk.LEFT, padx=5)
 
-                    conf_value = ttk.Label(
-                        conf_frame, text=f"{affinity['confidence']:.0%}"
-                    )
+                    conf_value = ttk.Label(conf_frame, text=f"{confidence:.0%}")
                     conf_value.pack(side=tk.LEFT)
+
+                    # Display reasoning if available
+                    if "reasoning" in interest:
+                        reason_label = ttk.Label(
+                            interest_frame,
+                            text=f"Reasoning: {interest['reasoning']}",
+                            wraplength=350,
+                        )
+                        reason_label.pack(anchor=tk.W, pady=2)
+                    elif "description" in interest:
+                        reason_label = ttk.Label(
+                            interest_frame,
+                            text=interest["description"],
+                            wraplength=350,
+                        )
+                        reason_label.pack(anchor=tk.W, pady=2)
+        else:
+            # If no future interests data is available
+            no_interests = ttk.Label(
+                interests_frame,
+                text="No interest predictions available",
+                wraplength=350,
+            )
+            no_interests.pack(pady=20)
+
+        # Right column - Behaviors/Traits
+        behaviors_frame = ttk.LabelFrame(
+            columns_frame, text="Predicted Behaviors", padding=10
+        )
+        behaviors_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Check for various possible keys for behavior data
+        behavior_data = None
+        for key in ["potential_behaviors", "behavior_patterns", "personality_traits"]:
+            if key in predictions:
+                behavior_data = predictions[key]
+                break
+
+        if behavior_data:
+            # Handle both list and dictionary formats
+            behaviors_to_display = []
+
+            if isinstance(behavior_data, list):
+                behaviors_to_display = behavior_data
+            elif isinstance(behavior_data, dict):
+                # Convert dictionary to list format
+                for trait, data in behavior_data.items():
+                    if isinstance(data, dict):
+                        behavior = {
+                            "behavior": data.get("label", trait),
+                            "confidence": data.get("confidence", 0.7),
+                            "reasoning": data.get("description", ""),
+                        }
+                        behaviors_to_display.append(behavior)
+
+            for behavior in behaviors_to_display:
+                behavior_frame = ttk.Frame(behaviors_frame)
+                behavior_frame.pack(fill=tk.X, pady=5)
+
+                # Get behavior name from various possible fields
+                behavior_name = behavior.get("behavior", "")
+                if not behavior_name and "label" in behavior:
+                    behavior_name = behavior["label"]
+
+                if behavior_name:
+                    behavior_label = ttk.Label(
+                        behavior_frame,
+                        text=behavior_name,
+                        font=("Helvetica", 11, "bold"),
+                    )
+                    behavior_label.pack(anchor=tk.W)
+
+                    # Get confidence value
+                    confidence = 0.7  # Default
+                    if "confidence" in behavior:
+                        confidence = behavior["confidence"]
+                    elif "score" in behavior:
+                        confidence = behavior["score"]
+
+                    conf_frame = ttk.Frame(behavior_frame)
+                    conf_frame.pack(fill=tk.X, pady=2)
+
+                    conf_label = ttk.Label(
+                        conf_frame, text="Confidence: ", width=12, anchor=tk.W
+                    )
+                    conf_label.pack(side=tk.LEFT)
+
+                    conf_bar = ttk.Progressbar(
+                        conf_frame, value=int(confidence * 100), length=100
+                    )
+                    conf_bar.pack(side=tk.LEFT, padx=5)
+
+                    conf_value = ttk.Label(conf_frame, text=f"{confidence:.0%}")
+                    conf_value.pack(side=tk.LEFT)
+
+                    # Display reasoning if available
+                    if "reasoning" in behavior:
+                        reason_label = ttk.Label(
+                            behavior_frame,
+                            text=f"Reasoning: {behavior['reasoning']}",
+                            wraplength=350,
+                        )
+                        reason_label.pack(anchor=tk.W, pady=2)
+                    elif "description" in behavior:
+                        reason_label = ttk.Label(
+                            behavior_frame,
+                            text=behavior["description"],
+                            wraplength=350,
+                        )
+                        reason_label.pack(anchor=tk.W, pady=2)
+        else:
+            # If no behavior data is available
+            no_behaviors = ttk.Label(
+                behaviors_frame,
+                text="No behavior predictions available",
+                wraplength=350,
+            )
+            no_behaviors.pack(pady=20)
+
+    def _create_mock_predictions(self):
+        """Create mock prediction data for the predictions tab when no real data is available"""
+        # Clear existing widgets
+        for widget in self.predictions_frame.winfo_children():
+            widget.destroy()
+
+        # Main container with scrolling
+        canvas = tk.Canvas(self.predictions_frame)
+        scrollbar = ttk.Scrollbar(
+            self.predictions_frame, orient="vertical", command=canvas.yview
+        )
+        main_frame = ttk.Frame(canvas, padding=20)
+
+        # Configure scroll behavior
+        main_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+
+        canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Allow canvas to expand and fill the predictions frame
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Title and intro
+        title = ttk.Label(
+            main_frame, text="Profile Predictions", style="TitleLabel.TLabel"
+        )
+        title.pack(pady=20)
+
+        disclaimer = ttk.Frame(main_frame, padding=10)
+        disclaimer.pack(fill=tk.X, pady=10)
+
+        warning_icon = ttk.Label(disclaimer, text="ℹ️", font=("Arial", 20))
+        warning_icon.pack(side=tk.LEFT, padx=10)
+
+        disclaimer_text = ttk.Label(
+            disclaimer,
+            text="This tab shows sample prediction data. Run an actual profile analysis to see real predictions.",
+            wraplength=600,
+            foreground=self.colors["info"],
+        )
+        disclaimer_text.pack(fill=tk.X, expand=True, padx=10)
+
+        description = ttk.Label(
+            main_frame,
+            text="Based on profile analysis, the system predicts the following patterns and interests.",
+            wraplength=700,
+        )
+        description.pack(pady=10)
+
+        # Create a two-column layout for predictions
+        columns_frame = ttk.Frame(main_frame)
+        columns_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        # Left column - Interests
+        interests_frame = ttk.LabelFrame(
+            columns_frame, text="Predicted Interests", padding=10
+        )
+        interests_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Sample interest data
+        sample_interests = [
+            {
+                "interest": "Environmental Sustainability",
+                "confidence": 0.85,
+                "reasoning": "Based on engagement with climate content and sustainability topics",
+            },
+            {
+                "interest": "Technology Innovation",
+                "confidence": 0.78,
+                "reasoning": "Frequent discussion of emerging tech trends and new products",
+            },
+            {
+                "interest": "Outdoor Activities",
+                "confidence": 0.65,
+                "reasoning": "Mentions of hiking, camping, and nature photography",
+            },
+        ]
+
+        for interest in sample_interests:
+            interest_frame = ttk.Frame(interests_frame)
+            interest_frame.pack(fill=tk.X, pady=5)
+
+            interest_label = ttk.Label(
+                interest_frame,
+                text=interest["interest"],
+                font=("Helvetica", 11, "bold"),
+            )
+            interest_label.pack(anchor=tk.W)
+
+            conf_frame = ttk.Frame(interest_frame)
+            conf_frame.pack(fill=tk.X, pady=2)
+
+            conf_label = ttk.Label(
+                conf_frame, text="Confidence: ", width=12, anchor=tk.W
+            )
+            conf_label.pack(side=tk.LEFT)
+
+            conf_bar = ttk.Progressbar(
+                conf_frame, value=int(interest["confidence"] * 100), length=100
+            )
+            conf_bar.pack(side=tk.LEFT, padx=5)
+
+            conf_value = ttk.Label(conf_frame, text=f"{interest['confidence']:.0%}")
+            conf_value.pack(side=tk.LEFT)
+
+            reason_label = ttk.Label(
+                interest_frame,
+                text=f"Reasoning: {interest['reasoning']}",
+                wraplength=350,
+            )
+            reason_label.pack(anchor=tk.W, pady=2)
+
+        # Right column - Behaviors
+        behaviors_frame = ttk.LabelFrame(
+            columns_frame, text="Predicted Behaviors", padding=10
+        )
+        behaviors_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Sample behavior data
+        sample_behaviors = [
+            {
+                "behavior": "Increased Social Networking",
+                "confidence": 0.72,
+                "reasoning": "Growing pattern of engagement and networking activities",
+            },
+            {
+                "behavior": "Content Creation Focus",
+                "confidence": 0.83,
+                "reasoning": "Trend toward creating and sharing original content",
+            },
+            {
+                "behavior": "Community Leadership",
+                "confidence": 0.61,
+                "reasoning": "Emerging pattern of organizing discussions and events",
+            },
+        ]
+
+        for behavior in sample_behaviors:
+            behavior_frame = ttk.Frame(behaviors_frame)
+            behavior_frame.pack(fill=tk.X, pady=5)
+
+            behavior_label = ttk.Label(
+                behavior_frame,
+                text=behavior["behavior"],
+                font=("Helvetica", 11, "bold"),
+            )
+            behavior_label.pack(anchor=tk.W)
+
+            conf_frame = ttk.Frame(behavior_frame)
+            conf_frame.pack(fill=tk.X, pady=2)
+
+            conf_label = ttk.Label(
+                conf_frame, text="Confidence: ", width=12, anchor=tk.W
+            )
+            conf_label.pack(side=tk.LEFT)
+
+            conf_bar = ttk.Progressbar(
+                conf_frame, value=int(behavior["confidence"] * 100), length=100
+            )
+            conf_bar.pack(side=tk.LEFT, padx=5)
+
+            conf_value = ttk.Label(conf_frame, text=f"{behavior['confidence']:.0%}")
+            conf_value.pack(side=tk.LEFT)
+
+            reason_label = ttk.Label(
+                behavior_frame,
+                text=f"Reasoning: {behavior['reasoning']}",
+                wraplength=350,
+            )
+            reason_label.pack(anchor=tk.W, pady=2)
 
     def _start_analysis(self):
         """Start the analysis process"""

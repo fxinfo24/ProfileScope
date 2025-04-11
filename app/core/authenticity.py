@@ -31,6 +31,18 @@ class ProfileAuthenticityAnalyzer:
         """
         self.logger.info("Analyzing profile authenticity")
 
+        # Check if we're using mock data
+        is_mock = "profile" in profile_data and profile_data["profile"].get(
+            "mock_data", False
+        )
+
+        if is_mock:
+            # For mock data, generate complete authenticity analysis
+            return self._generate_mock_authenticity_analysis(
+                profile_data, content_analysis
+            )
+
+        # For real data analysis, run the actual checks
         # Run various checks
         consistency_score = self._check_consistency(profile_data, content_analysis)
         activity_score = self._check_activity_patterns(profile_data)
@@ -79,6 +91,135 @@ class ProfileAuthenticityAnalyzer:
                 "account_age": round(account_age_score, 2),
                 "language_patterns": round(language_score, 2),
             },
+        }
+
+    def _generate_mock_authenticity_analysis(
+        self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Generate comprehensive mock authenticity analysis for demonstration
+
+        Args:
+            profile_data: Dictionary containing profile data
+            content_analysis: Results from content analysis
+
+        Returns:
+            Complete mock authenticity analysis
+        """
+        # Generate random but realistic-looking values
+        import random
+
+        # Use username as seed for deterministic results
+        username = profile_data.get("profile", {}).get("username", "default")
+        seed_value = sum(ord(c) for c in str(username))
+        random.seed(seed_value)
+
+        # Overall authenticity score - generate between 0.7 and 0.95 for demo
+        overall_authenticity = {
+            "score": round(random.uniform(0.7, 0.95), 2),
+            "confidence": round(random.uniform(0.8, 0.95), 2),
+        }
+
+        # Decide if there are any potential issues
+        potential_issues = []
+        if random.random() < 0.3:  # 30% chance to have issues
+            issues = [
+                "Some posting patterns show minor inconsistencies",
+                "Account shows occasional automated activity",
+                "Writing style varies slightly between posts",
+            ]
+            potential_issues = random.sample(issues, random.randint(0, 2))
+
+        # Bot likelihood analysis
+        bot_likelihood = {
+            "score": round(random.uniform(0.05, 0.25), 2),
+            "confidence": round(random.uniform(0.7, 0.9), 2),
+            "indicators": {
+                "posting_pattern_regularity": round(random.uniform(0.1, 0.3), 2),
+                "content_variability": round(random.uniform(0.05, 0.2), 2),
+                "interaction_patterns": round(random.uniform(0.1, 0.3), 2),
+                "language_markers": round(random.uniform(0.05, 0.25), 2),
+            },
+        }
+
+        # Consistency score
+        consistency_score = round(random.uniform(0.7, 0.9), 2)
+
+        # Activity patterns
+        posting_times = {
+            "distribution": {
+                "morning": round(random.uniform(0.1, 0.3), 2),
+                "afternoon": round(random.uniform(0.3, 0.5), 2),
+                "evening": round(random.uniform(0.2, 0.4), 2),
+                "night": round(random.uniform(0.05, 0.2), 2),
+            },
+            "consistency": round(random.uniform(0.7, 0.9), 2),
+        }
+
+        irregular_patterns = random.random() < 0.2  # 20% chance for irregularities
+
+        activity_patterns = {
+            "posting_times": posting_times,
+            "irregular_patterns": irregular_patterns,
+        }
+
+        # Maybe add some burst activities
+        if random.random() < 0.3:  # 30% chance to have bursts
+            burst_dates = ["2024-11-15 to 2024-11-17", "2025-01-22 to 2025-01-23"]
+            activity_patterns["burst_activities"] = burst_dates
+
+        # Maybe add some dormant periods
+        if random.random() < 0.25:  # 25% chance to have dormant periods
+            dormant_dates = ["2024-09-05 to 2024-10-12", "2025-02-10 to 2025-02-28"]
+            activity_patterns["dormant_periods"] = dormant_dates
+
+        # Style comparison
+        style_comparison = {
+            "highest_match": {
+                "reference_profile": "typical_"
+                + profile_data.get("metadata", {}).get("platform", "social")
+                + "_user",
+                "similarity_score": round(random.uniform(0.7, 0.9), 2),
+                "confidence": round(random.uniform(0.7, 0.85), 2),
+                "matching_features": random.sample(
+                    [
+                        "sentence structure",
+                        "vocabulary usage",
+                        "emoji patterns",
+                        "punctuation style",
+                    ],
+                    random.randint(2, 4),
+                ),
+            },
+            "matches": [
+                {
+                    "reference_profile": "typical_"
+                    + profile_data.get("metadata", {}).get("platform", "social")
+                    + "_user",
+                    "similarity_score": round(random.uniform(0.7, 0.9), 2),
+                    "confidence": round(random.uniform(0.7, 0.85), 2),
+                },
+                {
+                    "reference_profile": "average_personal_account",
+                    "similarity_score": round(random.uniform(0.5, 0.7), 2),
+                    "confidence": round(random.uniform(0.6, 0.8), 2),
+                },
+                {
+                    "reference_profile": "commercial_account",
+                    "similarity_score": round(random.uniform(0.2, 0.4), 2),
+                    "confidence": round(random.uniform(0.7, 0.9), 2),
+                },
+            ],
+        }
+
+        # Assemble complete authenticity analysis
+        return {
+            "overall_authenticity": overall_authenticity,
+            "potential_issues": potential_issues,
+            "consistency_score": consistency_score,
+            "bot_likelihood": bot_likelihood,
+            "activity_patterns": activity_patterns,
+            "style_comparison": style_comparison,
         }
 
     def _check_consistency(

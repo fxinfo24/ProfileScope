@@ -35,6 +35,15 @@ class PredictionEngine:
         """
         self.logger.info("Generating predictions based on profile analysis")
 
+        # Check if we're using mock data
+        is_mock = "profile" in profile_data and profile_data["profile"].get(
+            "mock_data", False
+        )
+
+        if is_mock:
+            # For mock data, generate comprehensive mock predictions
+            return self._generate_mock_predictions(profile_data, content_analysis)
+
         # Initialize predictions
         predictions = {
             "personality_traits": self._predict_personality_traits(content_analysis),
@@ -50,6 +59,139 @@ class PredictionEngine:
             "predictions": filtered_predictions,
             "disclaimer": "These predictions are generated using AI analysis of public profile data "
             "and should be considered approximations rather than definitive conclusions.",
+        }
+
+    def _generate_mock_predictions(
+        self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Generate comprehensive mock predictions for demonstration purposes
+
+        Args:
+            profile_data: Dictionary containing profile data
+            content_analysis: Results from content analysis
+
+        Returns:
+            Complete mock predictions data structure
+        """
+        import random
+
+        # Use username as seed for deterministic results
+        username = profile_data.get("profile", {}).get("username", "default")
+        seed_value = sum(ord(c) for c in str(username))
+        random.seed(seed_value)
+
+        # Standard disclaimer
+        disclaimer = "These predictions are generated using AI analysis of public profile data and should be considered approximations rather than definitive conclusions. For demonstration purposes only."
+
+        # Future interests predictions
+        future_interests = [
+            {
+                "interest": "Sustainable technology",
+                "confidence": round(random.uniform(0.7, 0.95), 2),
+                "reasoning": "Based on engagement with environmental content and tech discussions",
+            },
+            {
+                "interest": "Remote work tools",
+                "confidence": round(random.uniform(0.65, 0.85), 2),
+                "reasoning": "Increasing mentions of productivity and digital collaboration",
+            },
+        ]
+
+        # Add 1-2 more random interests
+        potential_extra_interests = [
+            {
+                "interest": "Artificial intelligence",
+                "confidence": round(random.uniform(0.6, 0.85), 2),
+                "reasoning": "Recent engagement with AI-related topics",
+            },
+            {
+                "interest": "Mindfulness & wellness",
+                "confidence": round(random.uniform(0.6, 0.8), 2),
+                "reasoning": "Growing interest in health-related content",
+            },
+            {
+                "interest": "Digital privacy",
+                "confidence": round(random.uniform(0.65, 0.9), 2),
+                "reasoning": "Increased awareness of privacy topics in recent posts",
+            },
+            {
+                "interest": "Data visualization",
+                "confidence": round(random.uniform(0.7, 0.85), 2),
+                "reasoning": "Content suggests growing interest in data presentation",
+            },
+        ]
+
+        # Add 1-2 random additional interests
+        future_interests.extend(
+            random.sample(potential_extra_interests, random.randint(1, 2))
+        )
+
+        # Behavioral predictions
+        potential_behaviors = [
+            {
+                "behavior": "Likely to engage with educational content",
+                "confidence": round(random.uniform(0.7, 0.9), 2),
+                "reasoning": "Consistent pattern of interacting with learning materials",
+            },
+            {
+                "behavior": "Tends to be an early adopter of new technologies",
+                "confidence": round(random.uniform(0.65, 0.85), 2),
+                "reasoning": "History of discussing new products soon after release",
+            },
+            {
+                "behavior": "Shares content primarily during weekday evenings",
+                "confidence": round(random.uniform(0.75, 0.95), 2),
+                "reasoning": "Strong temporal pattern in posting behavior",
+            },
+        ]
+
+        # Demographic predictions (with appropriate caution since these are sensitive)
+        demographic_predictions = {
+            "age_range": {
+                "prediction": "25-34",
+                "confidence": round(random.uniform(0.6, 0.75), 2),
+            },
+            "education_level": {
+                "prediction": "Bachelor's degree or higher",
+                "confidence": round(random.uniform(0.55, 0.7), 2),
+            },
+            "occupation_category": {
+                "prediction": "Technology/Digital sector",
+                "confidence": round(random.uniform(0.6, 0.8), 2),
+            },
+        }
+
+        # Affinities (brands, media, etc.)
+        affinity_predictions = [
+            {
+                "category": "Technology brands",
+                "affinities": ["Apple", "Google", "Microsoft"],
+                "confidence": round(random.uniform(0.7, 0.9), 2),
+            },
+            {
+                "category": "Media consumption",
+                "affinities": [
+                    "Technology news",
+                    "Business podcasts",
+                    "Documentary streaming",
+                ],
+                "confidence": round(random.uniform(0.65, 0.85), 2),
+            },
+            {
+                "category": "Online platforms",
+                "affinities": ["Twitter/X", "LinkedIn", "Medium"],
+                "confidence": round(random.uniform(0.7, 0.95), 2),
+            },
+        ]
+
+        # Assemble complete predictions
+        return {
+            "disclaimer": disclaimer,
+            "future_interests": future_interests,
+            "potential_behaviors": potential_behaviors,
+            "demographic_predictions": demographic_predictions,
+            "affinity_predictions": affinity_predictions,
         }
 
     def _predict_personality_traits(

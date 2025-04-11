@@ -59,18 +59,34 @@ class AuthenticationError(DataCollectionError):
 class DataCollector:
     """Collects data from social media platforms."""
 
-    def __init__(self, platform: str, rate_limit: int):
+    def __init__(self, platform: str, rate_limit: int, use_mock_data: bool = False):
         """
         Initialize data collector for a specific platform
 
         Args:
             platform: Social media platform name
             rate_limit: API rate limit per minute
+            use_mock_data: If True, use mock data instead of API calls
         """
         self.platform = platform.lower()
         self.rate_limit = rate_limit
         self.last_request_time = 0
+        self.use_mock_data = use_mock_data
         self.logger = logging.getLogger(f"ProfileScope.DataCollector.{platform}")
+
+        # Initialize API clients if not using mock data
+        if not self.use_mock_data:
+            try:
+                config = load_config()
+                if "api" in config:
+                    if platform == "twitter" and "twitter" in config["api"]:
+                        self.twitter_client = TwitterClient(config["api"]["twitter"])
+                    elif platform == "facebook" and "facebook" in config["api"]:
+                        self.facebook_client = FacebookClient(config["api"]["facebook"])
+            except (ConfigError, ValueError) as e:
+                self.logger.warning(f"Could not initialize API clients: {str(e)}")
+                self.use_mock_data = True
+                self.logger.info("Falling back to mock data generation")
 
     def collect_profile_data(self, profile_id: str) -> Dict[str, Any]:
         """
@@ -125,11 +141,42 @@ class DataCollector:
 
     def _collect_twitter_data(self, profile_id: str) -> Dict[str, Any]:
         """Collect Twitter profile data"""
-        # This would use Twitter API in production
-        # For now using a placeholder implementation
         self.logger.info(f"Collecting Twitter data for {profile_id}")
 
-        # TODO: Replace with actual Twitter API implementation
+        # Use mock data if specified or if real data collection fails
+        try:
+            if not self.use_mock_data and hasattr(self, "twitter_client"):
+                # Try to get real profile data from Twitter API
+                self.logger.info("Attempting to get real Twitter profile data")
+                profile = self.twitter_client.get_user_profile(profile_id)
+
+                if profile:
+                    # Successfully retrieved real profile data
+                    profile_data = {
+                        "user_id": profile["id"],
+                        "screen_name": profile["username"],
+                        "follower_count": profile["followers_count"],
+                        "following_count": profile["following_count"],
+                        "created_at": profile["created_at"],
+                        "verified": profile["verified"],
+                        "description": profile["bio"],
+                        "profile_image_url": profile["profile_image_url"],
+                        "posts": self._collect_twitter_posts(profile_id, 100),
+                        "metadata": {
+                            "platform": "twitter",
+                            "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                            "is_real_data": True,
+                        },
+                    }
+                    return profile_data
+
+                # If we got here, real data retrieval failed
+                self.logger.warning("Failed to get real Twitter data, using mock data")
+        except Exception as e:
+            self.logger.warning(f"Error retrieving real Twitter data: {str(e)}")
+            self.logger.info("Falling back to mock data generation")
+
+        # Generate mock data if real data collection failed or was not requested
         profile_data = {
             "user_id": profile_id,
             "screen_name": profile_id,
@@ -143,6 +190,7 @@ class DataCollector:
             "metadata": {
                 "platform": "twitter",
                 "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "is_mock_data": True,
             },
         }
 
@@ -150,11 +198,48 @@ class DataCollector:
 
     def _collect_facebook_data(self, profile_id: str) -> Dict[str, Any]:
         """Collect Facebook profile data"""
-        # This would use Facebook API in production
-        # For now using a placeholder implementation
         self.logger.info(f"Collecting Facebook data for {profile_id}")
 
-        # TODO: Replace with actual Facebook API implementation
+        # Use mock data if specified or if real data collection fails
+        try:
+            if not self.use_mock_data and hasattr(self, "facebook_client"):
+                # Try to get real profile data from Facebook API
+                self.logger.info("Attempting to get real Facebook profile data")
+                profile = self.facebook_client.get_user_profile(profile_id)
+
+                if profile:
+                    # Create posts list from generator
+                    posts = []
+                    for post in self.facebook_client.get_user_posts(profile_id, 100):
+                        posts.append(post)
+                        if len(posts) >= 100:
+                            break
+
+                    # Successfully retrieved real profile data
+                    profile_data = {
+                        "user_id": profile["id"],
+                        "name": profile["name"],
+                        "created_at": profile.get("created_at", "Unknown"),
+                        "bio": profile.get("bio", ""),
+                        "location": profile.get("location", ""),
+                        "profile_url": profile.get("profile_url", ""),
+                        "profile_image_url": profile.get("profile_image_url", ""),
+                        "posts": posts,
+                        "metadata": {
+                            "platform": "facebook",
+                            "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                            "is_real_data": True,
+                        },
+                    }
+                    return profile_data
+
+                # If we got here, real data retrieval failed
+                self.logger.warning("Failed to get real Facebook data, using mock data")
+        except Exception as e:
+            self.logger.warning(f"Error retrieving real Facebook data: {str(e)}")
+            self.logger.info("Falling back to mock data generation")
+
+        # Generate mock data if real data collection failed or was not requested
         profile_data = {
             "user_id": profile_id,
             "name": f"{profile_id} User",
@@ -167,6 +252,7 @@ class DataCollector:
             "metadata": {
                 "platform": "facebook",
                 "collection_date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "is_mock_data": True,
             },
         }
 
@@ -176,7 +262,40 @@ class DataCollector:
         self, profile_id: str, count: int
     ) -> List[Dict[str, Any]]:
         """Collect posts from Twitter profile"""
-        # TODO: Replace with actual Twitter API implementation
+        # Try to get real posts if we're not using mock data
+        try:
+            if not self.use_mock_data and hasattr(self, "twitter_client"):
+                self.logger.info(
+                    f"Attempting to get real Twitter posts for {profile_id}"
+                )
+                real_posts = self.twitter_client.get_user_timeline(profile_id, count)
+
+                if real_posts:
+                    # Convert the tweet data to our format
+                    formatted_posts = []
+                    for post in real_posts:
+                        formatted_posts.append(
+                            {
+                                "post_id": post["id"],
+                                "content": post["text"],
+                                "created_at": post["created_at"],
+                                "likes": post["favorite_count"],
+                                "retweets": post["retweet_count"],
+                                "hashtags": post["hashtags"],
+                                "urls": post.get("urls", []),
+                                "media": post.get("media", []),
+                                "mentions": post.get("mentions", []),
+                                "is_real_data": True,
+                            }
+                        )
+                    return formatted_posts
+
+                # If we got here, real posts retrieval failed
+                self.logger.warning("Failed to get real Twitter posts, using mock data")
+        except Exception as e:
+            self.logger.warning(f"Error retrieving real Twitter posts: {str(e)}")
+
+        # Generate mock data if real data collection failed or was not requested
         posts = []
         for i in range(min(count, 20)):  # Limit to 20 for sample data
             posts.append(
@@ -190,6 +309,7 @@ class DataCollector:
                     "hashtags": [
                         f"#{tag}" for tag in ["sample", "test", "placeholder"]
                     ],
+                    "is_mock_data": True,
                 }
             )
         return posts
@@ -198,7 +318,47 @@ class DataCollector:
         self, profile_id: str, count: int
     ) -> List[Dict[str, Any]]:
         """Collect posts from Facebook profile"""
-        # TODO: Replace with actual Facebook API implementation
+        # Try to get real posts if we're not using mock data
+        try:
+            if not self.use_mock_data and hasattr(self, "facebook_client"):
+                self.logger.info(
+                    f"Attempting to get real Facebook posts for {profile_id}"
+                )
+
+                # Get posts from the generator
+                real_posts = []
+                for post in self.facebook_client.get_user_posts(profile_id, count):
+                    real_posts.append(post)
+                    if len(real_posts) >= count:
+                        break
+
+                if real_posts:
+                    # Convert the post data to our format
+                    formatted_posts = []
+                    for post in real_posts:
+                        formatted_posts.append(
+                            {
+                                "post_id": post["id"],
+                                "content": post["text"] if "text" in post else "",
+                                "created_at": post["created_at"],
+                                "likes": post.get("reactions", 0),
+                                "comments": 0,  # We don't have this in the API response
+                                "shares": post.get("shares", 0),
+                                "url": post.get("url", ""),
+                                "type": post.get("type", ""),
+                                "is_real_data": True,
+                            }
+                        )
+                    return formatted_posts
+
+                # If we got here, real posts retrieval failed
+                self.logger.warning(
+                    "Failed to get real Facebook posts, using mock data"
+                )
+        except Exception as e:
+            self.logger.warning(f"Error retrieving real Facebook posts: {str(e)}")
+
+        # Generate mock data if real data collection failed or was not requested
         posts = []
         for i in range(min(count, 20)):  # Limit to 20 for sample data
             posts.append(
@@ -210,6 +370,7 @@ class DataCollector:
                     "comments": i * 3,
                     "shares": i,
                     "tags": [f"{tag}" for tag in ["sample", "test", "placeholder"]],
+                    "is_mock_data": True,
                 }
             )
         return posts

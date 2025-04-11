@@ -59,9 +59,9 @@ def create_app(test_config=None):
         app.register_blueprint(views_bp)
 
         # Import and register error handlers
-        from .error_handlers import register_error_handlers
+        from .error_handlers import register_handlers
 
-        register_error_handlers(app)
+        register_handlers(app)
 
         # Import and register filters
         from .filters import register_filters

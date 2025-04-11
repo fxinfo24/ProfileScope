@@ -23,7 +23,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     platform = db.Column(db.String(50), nullable=False)
     profile_id = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.Enum(TaskStatus), default=TaskStatus.PENDING)
+    status = db.Column(db.String(20), default=TaskStatus.PENDING.value)
     progress = db.Column(db.Integer, default=0)
     message = db.Column(db.String(255))
     result_path = db.Column(db.String(255))
@@ -40,12 +40,12 @@ class Task(db.Model):
         """Initialize a new task"""
         self.platform = platform.lower()
         self.profile_id = profile_id
-        self.status = TaskStatus.PENDING
+        self.status = TaskStatus.PENDING.value
         self.progress = 0
 
     def start(self):
         """Mark task as started"""
-        self.status = TaskStatus.PROCESSING
+        self.status = TaskStatus.PROCESSING.value
         self.started_at = datetime.utcnow()
         self.message = "Analysis in progress..."
         db.session.commit()
@@ -59,7 +59,7 @@ class Task(db.Model):
 
     def complete(self, result_path: str = None):
         """Mark task as completed"""
-        self.status = TaskStatus.COMPLETED
+        self.status = TaskStatus.COMPLETED.value
         self.progress = 100
         self.completed_at = datetime.utcnow()
         self.message = "Analysis completed successfully"
@@ -74,7 +74,7 @@ class Task(db.Model):
 
     def fail(self, error: str):
         """Mark task as failed"""
-        self.status = TaskStatus.FAILED
+        self.status = TaskStatus.FAILED.value
         self.error = error
         self.message = f"Analysis failed: {error}"
         self.completed_at = datetime.utcnow()
@@ -90,7 +90,7 @@ class Task(db.Model):
             "id": self.id,
             "platform": self.platform,
             "profile_id": self.profile_id,
-            "status": self.status.value,
+            "status": self.status,
             "progress": self.progress,
             "message": self.message,
             "error": self.error,
@@ -103,6 +103,4 @@ class Task(db.Model):
         }
 
     def __repr__(self):
-        return (
-            f"<Task {self.id}: {self.platform}/{self.profile_id} - {self.status.value}>"
-        )
+        return f"<Task {self.id}: {self.platform}/{self.profile_id} - {self.status}>"

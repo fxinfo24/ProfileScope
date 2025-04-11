@@ -8,28 +8,37 @@ import sys
 import subprocess
 import argparse
 from pathlib import Path
+import datetime
 
 
-def run_quick_test():
-    """Run the quick verification test"""
-    print("\n=== Running Quick Test ===\n")
-    result = subprocess.run([sys.executable, "test_analyzer.py"])
-    return result.returncode == 0
+def run_cleanup_script():
+    """Run the cleanup script before tests"""
+    print("\n=== Running Cleanup Script ===\n")
 
+    # Path to the cleanup script
+    script_path = os.path.join(os.path.dirname(__file__), "scripts", "cleanup.sh")
 
-def run_pytest(path=None, verbose=False):
-    """Run pytest tests"""
-    print(f"\n=== Running Pytest Tests{f' in {path}' if path else ''} ===\n")
+    if not os.path.exists(script_path):
+        print(f"Warning: Cleanup script not found at: {script_path}")
+        return False
 
-    cmd = [sys.executable, "-m", "pytest"]
-    if verbose:
-        cmd.append("-v")
+    try:
+        print(f"Executing: {script_path}")
+        result = subprocess.run(["bash", script_path], capture_output=True, text=True)
 
-    if path:
-        cmd.append(path)
-
-    result = subprocess.run(cmd)
-    return result.returncode == 0
+        if result.returncode == 0:
+            print("✅ Cleanup completed successfully")
+            # Mark cleanup as run to avoid duplicate execution
+            os.environ["PROFILESCOPE_CLEANUP_RUN"] = "1"
+            return True
+        else:
+            print(f"❌ Cleanup failed with exit code {result.returncode}")
+            print("Error output:")
+            print(result.stderr)
+            return False
+    except Exception as e:
+        print(f"❌ Failed to run cleanup script: {e}")
+        return False
 
 
 def setup_test_environment():
@@ -39,78 +48,129 @@ def setup_test_environment():
     # Create test directories if they don't exist
     os.makedirs("test_results", exist_ok=True)
 
-    # Make sure pytest is installed
+    # Install test dependencies if needed
     try:
         import pytest
     except ImportError:
         print("Installing pytest...")
         subprocess.run([sys.executable, "-m", "pip", "install", "pytest"])
 
-    # Install test dependencies
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "pytest-mock", "pytest-cov"]
-    )
-
+    # We won't require pytest-html by default to avoid the errors
     return True
 
 
+def run_simple_tests():
+    """Run a very simple test to verify basic pytest functionality"""
+    print("\n=== Running Simple Test ===\n")
+
+    # Create a temporary simple test file
+    test_file = "test_simple.py"
+    with open(test_file, "w") as f:
+        f.write(
+            """
+import pytest
+
+def test_simple():
+    \"\"\"A simple test that must pass\"\"\"
+    assert 1 == 1
+"""
+        )
+
+    # Run the test with minimal options to avoid plugin conflicts
+    cmd = [sys.executable, "-m", "pytest", "-v", test_file]
+
+    result = subprocess.run(cmd)
+
+    # Clean up the temporary test file
+    try:
+        os.remove(test_file)
+    except:
+        pass
+
+    return result.returncode == 0
+
+
 def main():
+    """Main function"""
     parser = argparse.ArgumentParser(description="Test runner for ProfileScope")
     parser.add_argument(
-        "--quick", action="store_true", help="Run only the quick verification test"
-    )
-    parser.add_argument("--unit", action="store_true", help="Run only unit tests")
-    parser.add_argument(
-        "--integration", action="store_true", help="Run only integration tests"
+        "--simple",
+        action="store_true",
+        help="Run only simple test to verify functionality",
     )
     parser.add_argument(
-        "--web", action="store_true", help="Run only web interface tests"
+        "--html-report",
+        action="store_true",
+        help="Generate HTML report (requires pytest-html package)",
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Run tests in verbose mode"
+        "--skip-cleanup",
+        action="store_true",
+        help="Skip running the cleanup script before tests",
     )
-
+    parser.add_argument(
+        "--junitxml",
+        help="Generate JUnit XML report at the specified path",
+    )
+    parser.add_argument("pytest_args", nargs="*", help="Additional pytest arguments")
     args = parser.parse_args()
 
-    # Set up the test environment
+    # Run cleanup script before tests unless skipped
+    if not args.skip_cleanup and os.environ.get("PROFILESCOPE_CLEANUP_RUN") != "1":
+        run_cleanup_script()
+    else:
+        if args.skip_cleanup:
+            print("\n=== Skipping cleanup (--skip-cleanup) ===\n")
+        elif os.environ.get("PROFILESCOPE_CLEANUP_RUN") == "1":
+            print("\n=== Cleanup already run in this session ===\n")
+
+    # Set up test environment
     if not setup_test_environment():
         print("Failed to set up test environment")
         return 1
 
-    success = True
+    # Run simple verification test
+    if args.simple:
+        if run_simple_tests():
+            print("\n✅ Simple test passed!")
+            return 0
+        else:
+            print("\n❌ Simple test failed.")
+            return 1
 
-    # If no specific test is requested, run all tests
-    run_all = not (args.quick or args.unit or args.integration or args.web)
+    # Build command for running tests
+    cmd = [sys.executable, "-m", "pytest", "-v", "--no-header", "--tb=native"]
 
-    # Run quick verification test
-    if args.quick or run_all:
-        if not run_quick_test():
-            success = False
-            if not run_all:
-                return 1
+    # Create environment variables dictionary
+    env_vars = os.environ.copy()
+    env_vars["PROFILESCOPE_CLEANUP_RUN"] = "1"  # Prevents duplicate cleanup
 
-    # Run unit tests
-    if args.unit or run_all:
-        if not run_pytest("tests/test_core", args.verbose):
-            success = False
-            if not run_all:
-                return 1
+    # Add HTML reporting only if explicitly requested
+    if args.html_report:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        html_report = f"test_results/pytest_report_{timestamp}.html"
+        try:
+            import pytest_html
 
-    # Run integration tests
-    if args.integration or run_all:
-        if not run_pytest("tests/test_integration.py", args.verbose):
-            success = False
-            if not run_all:
-                return 1
+            cmd.extend(["--html", html_report, "--self-contained-html"])
+            print(f"HTML report will be saved to: {html_report}")
+        except ImportError:
+            print("Warning: pytest-html not installed. HTML report won't be generated.")
+            print("Install with: pip install pytest-html")
 
-    # Run web interface tests
-    if args.web or run_all:
-        if not run_pytest("tests/test_web", args.verbose):
-            success = False
-            if not run_all:
-                return 1
+    # Add JUnit XML report if specified
+    if args.junitxml:
+        cmd.extend(["--junitxml", args.junitxml])
 
-    if success:
+    # Add any additional pytest arguments
+    if args.pytest_args:
+        cmd.extend(args.pytest_args)
+
+    print(f"\n=== Running Tests ===")
+
+    result = subprocess.run(cmd, env=env_vars)
+
+    if result.returncode == 0:
         print("\n✅ All tests passed!")
         return 0
     else:

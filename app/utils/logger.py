@@ -1,65 +1,63 @@
 """
-ProfileScope: Logging Utility
-Provides centralized logging configuration
+ProfileScope: Logging Utility Module
+Provides standardized logging for the application
 """
 
 import logging
-from typing import Dict, Any
 import os
+from typing import Dict, Any
 import time
 from functools import wraps
 
 
 def setup_logger(name: str, config: Dict[str, Any] = None) -> logging.Logger:
     """
-    Set up and configure a logger instance
+    Set up and configure a logger
 
     Args:
         name: Logger name
-        config: Configuration options
+        config: Dictionary with logging configuration
 
     Returns:
         Configured logger instance
     """
     if config is None:
-        config = {"level": "INFO", "file": "profilescope.log"}
+        config = {"level": "INFO", "file": None}
 
     # Create logger
     logger = logging.getLogger(name)
 
-    # Set level
-    level_name = config.get("level", "INFO")
-    level = getattr(logging, level_name)
+    # Set level based on config
+    level_name = config.get("level", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
     logger.setLevel(level)
 
-    # Create handlers if logger has no handlers yet
-    if not logger.handlers:
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(level)
+    # Clear existing handlers to avoid duplicates
+    if logger.hasHandlers():
+        logger.handlers.clear()
 
-        # File handler
-        log_file = config.get("file")
-        if log_file:
-            # Create log directory if it doesn't exist
-            log_dir = os.path.dirname(log_file)
-            if log_dir and not os.path.exists(log_dir):
-                os.makedirs(log_dir)
+    # Create formatters
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(level)
+    # Always add console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
-            # Add format to handlers
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            file_handler.setFormatter(formatter)
-            console_handler.setFormatter(formatter)
+    # Add file handler if configured
+    log_file = config.get("file")
+    if log_file:
+        # Ensure log directory exists
+        log_dir = os.path.dirname(log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
 
-            # Add handlers to logger
-            logger.addHandler(file_handler)
-
-        logger.addHandler(console_handler)
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return logger
 

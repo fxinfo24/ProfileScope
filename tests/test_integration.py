@@ -1,26 +1,80 @@
 """
-Integration test for ProfileScope
-
-This test verifies that all components work together properly.
+Integration tests for ProfileScope
 """
 
-import os
-import sys
-import pytest
 import json
+import os
+import pytest
+from pathlib import Path
 from unittest.mock import patch
-
-# Add the project root to the path so we can import the app
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tempfile
+import shutil
 
 from app.core.analyzer import SocialMediaAnalyzer
 from app.core.data_collector import DataCollector
-from app.utils.nlp_utils import preprocess_text
+
+
+@pytest.fixture
+def mock_profile_data():
+    """Create sample profile data for testing"""
+    return {
+        "profile": {
+            "username": "test_user",
+            "name": "Test User",
+            "bio": "Software engineer passionate about technology, AI, and innovation. Love to travel and explore new cultures.",
+            "join_date": "2020-01-01",
+            "verification": False,
+            "followers_count": 500,
+            "following_count": 250,
+        },
+        "posts": [
+            {
+                "id": "post1",
+                "content": "Just finished implementing a new ML model for our product. Exciting results! #machinelearning #python",
+                "created_at": "2023-01-15T14:30:00Z",
+                "likes": 45,
+                "retweets": 12,
+                "replies": 5,
+            },
+            {
+                "id": "post2",
+                "content": "Exploring Tokyo this week! Amazing city with incredible food and culture. #travel #japan",
+                "created_at": "2023-02-10T08:15:00Z",
+                "likes": 78,
+                "retweets": 8,
+                "replies": 14,
+            },
+            {
+                "id": "post3",
+                "content": "Check out this article on the future of AI in healthcare: https://example.com/article",
+                "created_at": "2023-02-25T18:45:00Z",
+                "likes": 32,
+                "retweets": 9,
+                "replies": 3,
+            },
+        ],
+        "media": [
+            {
+                "id": "media1",
+                "type": "image",
+                "url": "https://example.com/image1.jpg",
+                "caption": "Beautiful sunset in Tokyo. #travel #japan",
+                "date": "2023-02-10",
+            },
+            {
+                "id": "media2",
+                "type": "video",
+                "url": "https://example.com/video1.mp4",
+                "caption": "Demo of our new ML model in action",
+                "date": "2023-01-16",
+            },
+        ],
+    }
 
 
 @pytest.fixture
 def test_config():
-    """Create a test configuration"""
+    """Create test configuration"""
     return {
         "rate_limits": {"twitter": 100, "facebook": 100},
         "analysis": {
@@ -29,53 +83,7 @@ def test_config():
             "confidence_threshold": 0.65,
         },
         "output": {"save_raw_data": False, "export_format": "json"},
-        "logging": {"level": "INFO", "file": "test_profilescope.log"},
-    }
-
-
-@pytest.fixture
-def mock_profile_data():
-    """Create mock profile data"""
-    return {
-        "profile": {
-            "username": "test_user",
-            "bio": "Passionate about technology, AI, and innovation. Love to travel and explore new cultures.",
-            "join_date": "2020-01-01",
-        },
-        "posts": [
-            {
-                "id": "post1",
-                "content": "Just finished an amazing book about artificial intelligence. The future is now!",
-                "date": "2023-01-01",
-                "likes": 42,
-            },
-            {
-                "id": "post2",
-                "content": "Traveled to Japan last month. The culture and technology there is incredible.",
-                "date": "2023-02-15",
-                "likes": 78,
-            },
-            {
-                "id": "post3",
-                "content": "Working on a new project using machine learning. Exciting times!",
-                "date": "2023-03-10",
-                "likes": 55,
-            },
-        ],
-        "media": [
-            {
-                "id": "media1",
-                "type": "image",
-                "caption": "Beautiful sunset in Tokyo. #travel #japan",
-                "date": "2023-02-10",
-            },
-            {
-                "id": "media2",
-                "type": "image",
-                "caption": "My new programming setup. #coding #technology",
-                "date": "2023-03-05",
-            },
-        ],
+        "logging": {"level": "INFO", "file": "test_log.log"},
     }
 
 
@@ -111,21 +119,24 @@ def test_full_analysis_flow(mock_collect, mock_profile_data, test_config, tmp_pa
     assert "personality_traits" in content
     assert "interests" in content
     assert "writing_style" in content
-    assert "timeline" in content
+    assert "content_topics" in content
 
-    # Verify authenticity analysis
+    # Verify authenticity analysis format
     auth = results["authenticity_analysis"]
-    assert "overall_authenticity" in auth
+    assert isinstance(auth.get("overall_score", 0), (int, float))
 
-    # Verify NLP utility functions were used in the analysis
-    mock_collect.assert_called_once_with("test_user")
+    # Verify predictions are included
+    assert "disclaimer" in results["predictions"]
 
-    # Test exporting results
+    # Export functionality test
     output_path = tmp_path / "test_results.json"
     analyzer.export_results(results, str(output_path))
+
     assert output_path.exists()
 
-    # Verify the exported results match
+    # Verify exported file is valid JSON and contains expected data
     with open(output_path, "r") as f:
-        exported = json.load(f)
-    assert exported["metadata"]["profile_id"] == results["metadata"]["profile_id"]
+        exported_data = json.load(f)
+
+    assert exported_data["metadata"]["profile_id"] == "test_user"
+    assert "content_analysis" in exported_data

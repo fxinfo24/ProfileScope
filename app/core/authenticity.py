@@ -1,182 +1,410 @@
 """
-ProfileScope: Profile Authenticity Analysis Module
-Analyzes profile authenticity and detects potential fake accounts
+ProfileScope: Profile Authenticity Analyzer
+Evaluates profile authenticity based on various signals
 """
 
-import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Tuple
+import re
 from datetime import datetime
+import logging
 
 
 class ProfileAuthenticityAnalyzer:
-    """Module for detecting potential fake profiles"""
+    """Analyzes social media profiles for authenticity signals"""
 
-    def __init__(self, reference_profiles: Optional[Dict[str, Any]] = None):
-        """
-        Initialize authenticity analyzer
-        Args:
-            reference_profiles: Dictionary of known profiles for comparison
-        """
-        self.reference_profiles = reference_profiles or {}
+    def __init__(self):
+        """Initialize the authenticity analyzer"""
         self.logger = logging.getLogger("ProfileScope.AuthenticityAnalyzer")
 
     def analyze_authenticity(
         self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Analyze profile authenticity and detect potential fake indicators
+        Analyze a profile for signs of authenticity or inauthenticity
+
         Args:
-            profile_data: Data collected from profile
-            content_analysis: Results from ContentAnalyzer
+            profile_data: Dictionary containing profile data
+            content_analysis: Results from content analysis
+
         Returns:
-            Dictionary with authenticity analysis
+            Dictionary with authenticity analysis results
         """
         self.logger.info("Analyzing profile authenticity")
 
+        # Run various checks
+        consistency_score = self._check_consistency(profile_data, content_analysis)
+        activity_score = self._check_activity_patterns(profile_data)
+        verification_status = self._check_verification(profile_data)
+        account_age_score = self._check_account_age(profile_data)
+        language_score = self._check_language_patterns(profile_data)
+
+        # Calculate overall authenticity score
+        # Weights could be adjusted based on importance of each factor
+        weights = {
+            "consistency": 0.25,
+            "activity": 0.20,
+            "verification": 0.15,
+            "account_age": 0.20,
+            "language": 0.20,
+        }
+
+        verification_value = 1.0 if verification_status else 0.5
+
+        overall_score = (
+            weights["consistency"] * consistency_score
+            + weights["activity"] * activity_score
+            + weights["verification"] * verification_value
+            + weights["account_age"] * account_age_score
+            + weights["language"] * language_score
+        )
+
+        # Generate confidence level and flags
+        confidence_level, flags = self._generate_confidence_assessment(
+            overall_score,
+            consistency_score,
+            activity_score,
+            verification_status,
+            account_age_score,
+            language_score,
+        )
+
         return {
-            "consistency_score": self._analyze_temporal_consistency(profile_data),
-            "bot_likelihood": self._calculate_bot_likelihood(profile_data),
-            "style_comparison": self._compare_writing_style(
-                content_analysis["writing_style"]
-            ),
-            "activity_patterns": self._analyze_activity_patterns(profile_data),
-            "overall_authenticity": {
-                "score": 0.82,  # Higher is more likely to be authentic
-                "confidence": 0.75,
-                "potential_issues": self._identify_potential_issues(profile_data),
+            "overall_score": round(overall_score, 2),
+            "confidence_level": confidence_level,
+            "flags": flags,
+            "components": {
+                "consistency": round(consistency_score, 2),
+                "activity_patterns": round(activity_score, 2),
+                "verification": verification_status,
+                "account_age": round(account_age_score, 2),
+                "language_patterns": round(language_score, 2),
             },
         }
 
-    def _analyze_temporal_consistency(self, profile_data: Dict[str, Any]) -> float:
-        """Analyze consistency of activity over time"""
-        # TODO: Implement real temporal consistency analysis
-        return 0.78
+    def _check_consistency(
+        self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
+    ) -> float:
+        """
+        Check consistency between profile elements and posting behavior
 
-    def _calculate_bot_likelihood(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate likelihood that profile is automated"""
-        # TODO: Implement real bot detection
-        return {
-            "score": 0.15,  # Higher means more likely to be a bot
-            "confidence": 0.65,
-            "indicators": {
-                "posting_regularity": 0.12,
-                "content_diversity": 0.18,
-                "interaction_patterns": 0.14,
-            },
-        }
+        Returns:
+            Score from 0.0 (inconsistent) to 1.0 (highly consistent)
+        """
+        consistency_score = 0.7  # Start with average score
 
-    def _compare_writing_style(self, writing_style: Dict[str, Any]) -> Dict[str, Any]:
-        """Compare writing style to reference profiles"""
-        style_comparisons = []
+        # Check if writing style is consistent
+        if "writing_style" in content_analysis:
+            writing_style = content_analysis["writing_style"]
 
-        # For each reference profile, calculate similarity
-        for name, profile in self.reference_profiles.items():
-            # TODO: Implement real style comparison
-            similarity = 0.2  # Default low similarity
-            if name == "known_example_1":
-                similarity = 0.85  # High similarity for demo
+            # Large variations in sentence length can indicate multiple authors
+            if writing_style.get("avg_sentence_length", 0) > 30:
+                consistency_score -= 0.1
 
-            style_comparisons.append(
-                {
-                    "reference_profile": name,
-                    "similarity_score": similarity,
-                    "confidence": 0.7,
-                    "matching_features": (
-                        ["word_choice", "sentence_structure"]
-                        if similarity > 0.7
-                        else []
-                    ),
-                }
-            )
+        # Check if posting patterns are erratic
+        if "posting_patterns" in content_analysis:
+            patterns = content_analysis["posting_patterns"]
 
-        return {
-            "matches": style_comparisons,
-            "highest_match": (
-                max(style_comparisons, key=lambda x: x["similarity_score"])
-                if style_comparisons
-                else None
-            ),
-            "distinctive_style": writing_style["stylistic_fingerprint"],
-        }
+            # Very high posting frequency might be suspicious
+            if patterns.get("frequency", {}).get("daily_average", 0) > 20:
+                consistency_score -= 0.15
 
-    def _analyze_activity_patterns(
-        self, profile_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Analyze activity patterns for suspicious behavior"""
-        # TODO: Implement real activity pattern analysis
-        activity_analysis = {
-            "posting_times": {
-                "distribution": {
-                    "morning": 0.3,
-                    "afternoon": 0.45,
-                    "evening": 0.2,
-                    "night": 0.05,
-                },
-                "consistency": 0.75,
-            },
-            "irregular_patterns": False,
-            "burst_activities": [],
-            "dormant_periods": [],
-        }
+        # Check topic consistency
+        if "content_topics" in content_analysis:
+            topics = content_analysis["content_topics"]
+            # If there's a very wide spread of topics, might be suspicious
+            if len(topics.get("top_topics", [])) >= 3:
+                topic_values = [v for _, v in topics.get("top_topics", [])]
+                if len(topic_values) >= 2:
+                    # If the top topic is much more common than others, more consistent
+                    if topic_values[0] > 3 * topic_values[-1]:
+                        consistency_score += 0.1
 
-        activity_analysis.update(self._analyze_posting_frequency(profile_data))
-        return activity_analysis
+        return max(0.0, min(1.0, consistency_score))
 
-    def _analyze_posting_frequency(
-        self, profile_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Analyze frequency and regularity of posting"""
-        # TODO: Implement real posting frequency analysis
-        return {
-            "frequency_metrics": {
-                "posts_per_day": 2.5,
-                "consistency_score": 0.85,
-                "automation_likelihood": 0.12,
-            },
-            "unusual_patterns": [],
-        }
+    def _check_activity_patterns(self, profile_data: Dict[str, Any]) -> float:
+        """
+        Check for suspicious activity patterns
 
-    def _identify_potential_issues(self, profile_data: Dict[str, Any]) -> List[str]:
-        """Identify potential issues that might indicate a fake profile"""
-        issues = []
+        Returns:
+            Score from 0.0 (suspicious patterns) to 1.0 (normal patterns)
+        """
+        # Default to a neutral score
+        activity_score = 0.7
 
-        # Check for missing profile information
-        if "profile" in profile_data:
-            profile = profile_data["profile"]
-            if not profile.get("bio"):
-                issues.append("Missing profile bio")
-            if not profile.get("location"):
-                issues.append("Missing location information")
+        posts = profile_data.get("posts", [])
 
-        # Check posting patterns
-        patterns = self._analyze_activity_patterns(profile_data)
-        if patterns["irregular_patterns"]:
-            issues.append("Irregular posting patterns detected")
+        # Check for posting volume
+        if len(posts) < 5:
+            # Very few posts is suspicious for established accounts
+            activity_score -= 0.2
 
-        # Check engagement metrics
-        if "posts" in profile_data:
-            engagement_issues = self._check_engagement_metrics(profile_data["posts"])
-            issues.extend(engagement_issues)
+        # Check for posting times
+        posting_times = self._extract_posting_times(posts)
 
-        return issues
+        # Look for posts at regular intervals (bot-like behavior)
+        if self._detect_regular_intervals(posting_times):
+            activity_score -= 0.3
 
-    def _check_engagement_metrics(self, posts: List[Dict[str, Any]]) -> List[str]:
-        """Analyze engagement metrics for suspicious patterns"""
-        issues = []
+        # Check for very high engagement metrics
+        if self._has_abnormal_engagement(posts):
+            activity_score -= 0.2
+
+        return max(0.0, min(1.0, activity_score))
+
+    def _check_verification(self, profile_data: Dict[str, Any]) -> bool:
+        """
+        Check if the account is verified by the platform
+
+        Returns:
+            Boolean indicating verification status
+        """
+        return profile_data.get("verified", False)
+
+    def _check_account_age(self, profile_data: Dict[str, Any]) -> float:
+        """
+        Check account age and assess based on age
+
+        Returns:
+            Score from 0.0 (very new account) to 1.0 (well-established account)
+        """
+        # Default score for accounts with unknown creation date
+        if "created_at" not in profile_data:
+            return 0.5
+
+        created_str = profile_data.get("created_at", "")
+
+        try:
+            creation_date = datetime.strptime(created_str, "%Y-%m-%dT%H:%M:%SZ")
+            now = datetime.now()
+
+            # Calculate account age in days
+            account_age_days = (now - creation_date).days
+
+            # Score based on account age
+            if account_age_days < 7:
+                return 0.1  # Very new accounts are suspicious
+            elif account_age_days < 30:
+                return 0.3  # Less than a month
+            elif account_age_days < 90:
+                return 0.5  # 1-3 months
+            elif account_age_days < 365:
+                return 0.7  # 3-12 months
+            else:
+                return 0.9  # Over a year
+
+        except (ValueError, TypeError):
+            # If date parsing fails, return neutral score
+            return 0.5
+
+    def _check_language_patterns(self, profile_data: Dict[str, Any]) -> float:
+        """
+        Check for suspicious language patterns
+
+        Returns:
+            Score from 0.0 (suspicious patterns) to 1.0 (natural patterns)
+        """
+        posts = profile_data.get("posts", [])
 
         if not posts:
-            return ["No posts available for analysis"]
+            return 0.5  # Neutral score if no posts
 
-        # Calculate average engagement
+        # Default to a good score
+        language_score = 0.8
+
+        # Extract all content
+        all_content = " ".join([post.get("content", "") for post in posts])
+
+        # Check for repeated phrases
+        repeated_phrases = self._find_repeated_phrases(all_content)
+        if repeated_phrases:
+            language_score -= 0.2 * len(repeated_phrases)
+
+        # Check for excessive hashtags
+        hashtag_ratio = self._calculate_hashtag_ratio(posts)
+        if hashtag_ratio > 0.3:  # More than 30% hashtags is suspicious
+            language_score -= 0.2
+
+        # Check for spammy content
+        if self._contains_spam_patterns(all_content):
+            language_score -= 0.3
+
+        return max(0.0, min(1.0, language_score))
+
+    def _extract_posting_times(self, posts: List[Dict[str, Any]]) -> List[datetime]:
+        """Extract posting times from posts"""
+        times = []
+
+        for post in posts:
+            time_str = post.get("created_at", "")
+            try:
+                post_time = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
+                times.append(post_time)
+            except (ValueError, TypeError):
+                # Skip invalid timestamps
+                continue
+
+        return sorted(times)
+
+    def _detect_regular_intervals(self, timestamps: List[datetime]) -> bool:
+        """
+        Detect if posts are made at suspiciously regular intervals
+
+        Returns:
+            Boolean indicating if regular posting intervals detected
+        """
+        if len(timestamps) < 6:
+            return False  # Need enough data points
+
+        # Calculate time differences between posts
+        intervals = []
+        for i in range(1, len(timestamps)):
+            diff_seconds = (timestamps[i] - timestamps[i - 1]).total_seconds()
+            intervals.append(diff_seconds)
+
+        # Check for consistent intervals (within 5% variance)
+        if len(intervals) >= 5:
+            avg_interval = sum(intervals) / len(intervals)
+            consistent_count = sum(
+                1
+                for interval in intervals
+                if abs(interval - avg_interval) < 0.05 * avg_interval
+            )
+
+            # If more than 50% of intervals are consistent, flag as suspicious
+            if consistent_count > len(intervals) * 0.5:
+                return True
+
+        return False
+
+    def _has_abnormal_engagement(self, posts: List[Dict[str, Any]]) -> bool:
+        """
+        Check if engagement metrics are suspiciously high
+
+        Returns:
+            Boolean indicating abnormal engagement
+        """
+        if not posts:
+            return False
+
+        # Calculate average likes and comments
         total_likes = sum(post.get("likes", 0) for post in posts)
-        total_shares = sum(post.get("shares", 0) for post in posts)
+
+        # Get comments or replies depending on platform
+        total_comments = sum(
+            post.get("comments", 0) + post.get("replies", 0) for post in posts
+        )
+
         avg_likes = total_likes / len(posts)
-        avg_shares = total_shares / len(posts)
+        avg_comments = total_comments / len(posts)
 
-        # Check for suspiciously high or low engagement
-        if avg_likes > 1000 and avg_shares < 1:
-            issues.append("Suspicious like-to-share ratio")
-        if avg_likes == 0 and len(posts) > 10:
-            issues.append("Zero engagement despite activity")
+        # These thresholds would be calibrated based on platform norms
+        return avg_likes > 1000 and avg_comments > 200
 
-        return issues
+    def _find_repeated_phrases(self, text: str) -> List[str]:
+        """Find suspiciously repeated phrases in content"""
+        # This is a simplified implementation
+        # Real implementation would use more sophisticated text analysis
+
+        # Extract 3-5 word phrases
+        words = text.lower().split()
+        phrases = []
+
+        for length in range(3, 6):
+            if len(words) <= length:
+                continue
+
+            for i in range(len(words) - length + 1):
+                phrase = " ".join(words[i : i + length])
+                phrases.append(phrase)
+
+        # Count phrases and find those repeated suspiciously often
+        phrase_counts = {}
+        for phrase in phrases:
+            phrase_counts[phrase] = phrase_counts.get(phrase, 0) + 1
+
+        # Filter to find repeated phrases
+        repeated = [phrase for phrase, count in phrase_counts.items() if count >= 3]
+
+        return repeated[:3]  # Return top 3 repeated phrases
+
+    def _calculate_hashtag_ratio(self, posts: List[Dict[str, Any]]) -> float:
+        """Calculate ratio of hashtags to content"""
+        total_length = 0
+        hashtag_length = 0
+
+        for post in posts:
+            content = post.get("content", "")
+            total_length += len(content)
+
+            # Count hashtags
+            hashtags = re.findall(r"#\w+", content)
+            hashtag_length += sum(len(tag) for tag in hashtags)
+
+        if total_length == 0:
+            return 0.0
+
+        return hashtag_length / total_length
+
+    def _contains_spam_patterns(self, text: str) -> bool:
+        """Check for common spam patterns in text"""
+        # Look for common spam indicators
+        spam_patterns = [
+            r"(?i)buy now",
+            r"(?i)click here",
+            r"(?i)limited time offer",
+            r"(?i)discount code",
+            r"(?i)earn money fast",
+            r"(?i)www\.[a-z0-9-]+\.[a-z]{2,}",  # Simple URL pattern
+            r"(?i)call now",
+            r"(?i)\d+% off",
+        ]
+
+        # Check each pattern
+        for pattern in spam_patterns:
+            if re.search(pattern, text):
+                return True
+
+        return False
+
+    def _generate_confidence_assessment(
+        self,
+        overall_score: float,
+        consistency_score: float,
+        activity_score: float,
+        verification_status: bool,
+        account_age_score: float,
+        language_score: float,
+    ) -> Tuple[str, List[str]]:
+        """
+        Generate confidence level and flags for the assessment
+
+        Returns:
+            Tuple of (confidence_level, flags)
+        """
+        flags = []
+
+        # Set confidence level based on overall score
+        if overall_score >= 0.8:
+            confidence_level = "high"
+        elif overall_score >= 0.6:
+            confidence_level = "medium"
+        else:
+            confidence_level = "low"
+
+        # Generate specific flags based on component scores
+        if consistency_score < 0.5:
+            flags.append("Inconsistent profile behavior")
+
+        if activity_score < 0.5:
+            flags.append("Suspicious activity patterns")
+
+        if not verification_status:
+            flags.append("Account not verified")
+
+        if account_age_score < 0.3:
+            flags.append("Very new account")
+
+        if language_score < 0.5:
+            flags.append("Suspicious language patterns")
+
+        return confidence_level, flags

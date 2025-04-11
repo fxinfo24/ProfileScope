@@ -1,20 +1,21 @@
 """
-ProfileScope: Prediction Engine Module
-Generates predictions based on profile analysis results
+ProfileScope: Prediction Engine
+Generates predictions about user traits and behaviors
 """
 
-import logging
 from typing import Dict, Any, List
+import logging
 
 
 class PredictionEngine:
-    """Module for making predictions based on analysis"""
+    """Generates predictions about social media users"""
 
     def __init__(self, confidence_threshold: float = 0.65):
         """
-        Initialize prediction engine
+        Initialize the prediction engine
+
         Args:
-            confidence_threshold: Minimum confidence for predictions
+            confidence_threshold: Minimum confidence level for predictions
         """
         self.confidence_threshold = confidence_threshold
         self.logger = logging.getLogger("ProfileScope.PredictionEngine")
@@ -23,185 +24,336 @@ class PredictionEngine:
         self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Generate predictions based on profile analysis
-        Args:
-            profile_data: Data collected from profile
-            content_analysis: Results from ContentAnalyzer
-        Returns:
-            Dictionary with predictions
-        """
-        self.logger.info("Generating predictions")
+        Generate predictions based on profile data and content analysis
 
+        Args:
+            profile_data: Dictionary containing profile data
+            content_analysis: Results from content analysis
+
+        Returns:
+            Dictionary with predictions and confidence scores
+        """
+        self.logger.info("Generating predictions based on profile analysis")
+
+        # Initialize predictions
         predictions = {
-            "future_interests": self._predict_interests(content_analysis),
-            "potential_behaviors": self._predict_behaviors(content_analysis),
-            "demographic_predictions": self._predict_demographics(content_analysis),
-            "affinity_predictions": self._predict_affinities(content_analysis),
-            "growth_predictions": self._predict_growth(profile_data),
-            "engagement_predictions": self._predict_engagement(profile_data),
-            "disclaimer": (
-                "These predictions are speculative and based on patterns in public data. "
-                "Accuracy may vary significantly and predictions should not be treated as definitive."
-            ),
+            "personality_traits": self._predict_personality_traits(content_analysis),
+            "interests": self._predict_interests(profile_data, content_analysis),
+            "behavior_patterns": self._predict_behavior_patterns(content_analysis),
+            "demographic": self._predict_demographics(profile_data, content_analysis),
         }
 
-        # Filter predictions based on confidence threshold
-        return self._filter_low_confidence(predictions)
+        # Filter predictions by confidence threshold
+        filtered_predictions = self._filter_low_confidence_predictions(predictions)
+
+        return {
+            "predictions": filtered_predictions,
+            "disclaimer": "These predictions are generated using AI analysis of public profile data "
+            "and should be considered approximations rather than definitive conclusions.",
+        }
+
+    def _predict_personality_traits(
+        self, content_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Predict personality traits based on content analysis
+
+        Returns:
+            Dictionary with trait predictions and confidence scores
+        """
+        traits = {}
+
+        # Use existing personality traits if available
+        if "personality_traits" in content_analysis:
+            base_traits = content_analysis["personality_traits"]
+
+            # Map traits to descriptive labels with confidence
+            if "extraversion" in base_traits:
+                extraversion = base_traits["extraversion"]
+                if extraversion > 0.7:
+                    traits["extraversion"] = {
+                        "label": "extraverted",
+                        "description": "Likely enjoys social interaction and being around others",
+                        "confidence": min(1.0, extraversion + 0.1),
+                    }
+                elif extraversion < 0.3:
+                    traits["extraversion"] = {
+                        "label": "introverted",
+                        "description": "Likely prefers solitude or small group interactions",
+                        "confidence": min(1.0, 1.0 - extraversion + 0.1),
+                    }
+
+            if "openness" in base_traits:
+                openness = base_traits["openness"]
+                if openness > 0.7:
+                    traits["openness"] = {
+                        "label": "open to new experiences",
+                        "description": "Shows curiosity and appreciation for variety and novel experiences",
+                        "confidence": min(1.0, openness + 0.1),
+                    }
+                elif openness < 0.3:
+                    traits["openness"] = {
+                        "label": "conventional",
+                        "description": "Tends to prefer familiar routines and traditional values",
+                        "confidence": min(1.0, 1.0 - openness + 0.1),
+                    }
+
+            if "conscientiousness" in base_traits:
+                conscientiousness = base_traits["conscientiousness"]
+                if conscientiousness > 0.7:
+                    traits["conscientiousness"] = {
+                        "label": "highly conscientious",
+                        "description": "Likely organized, responsible, and goal-oriented",
+                        "confidence": min(1.0, conscientiousness + 0.1),
+                    }
+                elif conscientiousness < 0.3:
+                    traits["conscientiousness"] = {
+                        "label": "spontaneous",
+                        "description": "May prefer flexibility over rigid planning and structure",
+                        "confidence": min(1.0, 1.0 - conscientiousness + 0.1),
+                    }
+
+        # Additional traits based on writing style
+        if "writing_style" in content_analysis:
+            style = content_analysis["writing_style"]
+
+            # Formality as a trait
+            if "formality_score" in style:
+                formality = style["formality_score"]
+                if formality > 0.7:
+                    traits["communication_style"] = {
+                        "label": "formal communicator",
+                        "description": "Tends to use precise, structured language in communication",
+                        "confidence": min(1.0, formality + 0.1),
+                    }
+                elif formality < 0.3:
+                    traits["communication_style"] = {
+                        "label": "casual communicator",
+                        "description": "Tends to use relaxed, informal language in communication",
+                        "confidence": min(1.0, 1.0 - formality + 0.1),
+                    }
+
+        return traits
 
     def _predict_interests(
+        self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Predict user interests based on content
+
+        Returns:
+            Dictionary with interest predictions and confidence scores
+        """
+        interests = {}
+
+        # Use topic distribution if available
+        if "content_topics" in content_analysis:
+            topics = content_analysis["content_topics"]
+            topic_dist = topics.get("topic_distribution", {})
+
+            # Convert topics to interests with confidence scores
+            for topic, count in topic_dist.items():
+                # Normalize count to confidence (assuming max count around 10)
+                confidence = min(0.95, count / 10)
+
+                if confidence >= self.confidence_threshold:
+                    interests[topic] = {
+                        "label": topic,
+                        "description": f"Shows interest in {topic}-related content",
+                        "confidence": round(confidence, 2),
+                    }
+
+        # Look at hashtags for additional interest signals
+        if "content_topics" in content_analysis:
+            hashtags = content_analysis["content_topics"].get("top_hashtags", [])
+
+            for hashtag, count in hashtags:
+                # Skip hashtags that are just single letters or numbers
+                if len(hashtag) <= 2:
+                    continue
+
+                # Convert hashtag to interest
+                tag = hashtag.replace("#", "").lower()
+
+                # Skip if already covered in topics
+                if tag in interests or any(tag in t for t in interests.keys()):
+                    continue
+
+                # Normalize count to confidence
+                confidence = min(0.9, 0.6 + (count / 20))
+
+                if confidence >= self.confidence_threshold:
+                    interests[tag] = {
+                        "label": tag,
+                        "description": f"Frequently uses {hashtag}",
+                        "confidence": round(confidence, 2),
+                    }
+
+        return interests
+
+    def _predict_behavior_patterns(
         self, content_analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Predict future interests based on current analysis"""
-        self.logger.info("Predicting future interests")
+    ) -> Dict[str, Any]:
+        """
+        Predict user behavior patterns
 
-        # Extract current interests and personality traits
-        current_interests = content_analysis.get("interests", {})
-        personality = content_analysis.get("personality_traits", {})
+        Returns:
+            Dictionary with behavior predictions and confidence scores
+        """
+        behaviors = {}
 
-        # TODO: Implement real interest prediction based on ML models
-        predictions = [
-            {
-                "interest": "Data visualization",
-                "confidence": 0.78,
-                "reasoning": "Based on technology interests and analytical thinking patterns",
-                "timeframe": "3-6 months",
-            },
-            {
-                "interest": "Sustainable living",
-                "confidence": 0.62,
-                "reasoning": "Based on recent engagement with environmental content",
-                "timeframe": "6-12 months",
-            },
-        ]
+        # Use posting patterns if available
+        if "posting_patterns" in content_analysis:
+            patterns = content_analysis["posting_patterns"]
 
-        return predictions
+            # Activity time predictions
+            if "activity_hours" in patterns:
+                activity = patterns["activity_hours"]
+                time_periods = activity.get("time_periods", {})
 
-    def _predict_behaviors(
-        self, content_analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Predict potential future behaviors"""
-        self.logger.info("Predicting future behaviors")
+                # Find the dominant time period
+                dominant_period = max(
+                    time_periods.items(),
+                    key=lambda x: (
+                        x[1].get("percentage", 0) if isinstance(x[1], dict) else 0
+                    ),
+                )[0]
 
-        # TODO: Implement real behavior prediction
-        return [
-            {
-                "behavior": "Increased engagement with political content",
-                "confidence": 0.71,
-                "reasoning": "Based on recent trend and belief indicators",
-                "timeframe": "Next 3 months",
-            },
-            {
-                "behavior": "Travel to new locations",
-                "confidence": 0.58,
-                "reasoning": "Based on expressed interest in travel",
-                "timeframe": "Next 6 months",
-            },
-        ]
+                # Calculate confidence based on percentage
+                dominant_percentage = time_periods.get(dominant_period, {}).get(
+                    "percentage", 0
+                )
+                confidence = min(0.95, dominant_percentage / 100)
 
-    def _predict_demographics(self, content_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Predict demographic information"""
-        self.logger.info("Predicting demographics")
+                if confidence >= self.confidence_threshold:
+                    behaviors["active_time"] = {
+                        "label": f"{dominant_period} person",
+                        "description": f"Most active during {dominant_period} hours",
+                        "confidence": round(confidence, 2),
+                    }
 
-        # TODO: Implement real demographic prediction
-        return {
-            "age_range": {
-                "prediction": "30-40",
-                "confidence": 0.68,
-                "evidence": ["writing style", "topic interests", "cultural references"],
-            },
-            "education_level": {
-                "prediction": "Graduate degree",
-                "confidence": 0.72,
-                "evidence": ["vocabulary complexity", "technical interests"],
-            },
-            "occupation_category": {
-                "prediction": "Technology / Professional",
-                "confidence": 0.75,
-                "evidence": ["industry knowledge", "professional interests"],
-            },
-        }
+            # Posting frequency predictions
+            if "frequency" in patterns:
+                frequency = patterns["frequency"]
+                daily_avg = frequency.get("daily_average", 0)
 
-    def _predict_affinities(
-        self, content_analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Predict affinity for brands, groups, or ideas"""
-        self.logger.info("Predicting affinities")
+                if daily_avg > 5:
+                    behaviors["posting_frequency"] = {
+                        "label": "frequent poster",
+                        "description": "Posts multiple times daily on average",
+                        "confidence": min(0.95, 0.7 + (daily_avg / 20)),
+                    }
+                elif daily_avg < 0.3:  # Less than twice a week
+                    behaviors["posting_frequency"] = {
+                        "label": "occasional poster",
+                        "description": "Posts infrequently, typically less than weekly",
+                        "confidence": min(0.95, 0.7 + ((1 - daily_avg) / 2)),
+                    }
 
-        # TODO: Implement real affinity prediction
-        return [
-            {
-                "category": "Technology brands",
-                "affinities": ["Apple", "Tesla"],
-                "confidence": 0.81,
-                "reasoning": "Based on topic discussions and sentiment analysis",
-            },
-            {
-                "category": "Media consumption",
-                "affinities": ["Science fiction", "Documentaries"],
-                "confidence": 0.76,
-                "reasoning": "Based on content sharing patterns",
-            },
-        ]
+        # Use sentiment analysis for emotional pattern predictions
+        if "sentiment" in content_analysis:
+            sentiment = content_analysis["sentiment"]
+            overall = sentiment.get("overall_sentiment", {})
 
-    def _predict_growth(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Predict profile growth and influence trends"""
-        self.logger.info("Predicting growth patterns")
+            label = overall.get("label", "")
+            score = abs(
+                overall.get("score", 0)
+            )  # Use absolute value of sentiment score
 
-        return {
-            "follower_growth": {
-                "trend": "steady_increase",
-                "rate": "15%",
-                "confidence": 0.67,
-                "timeframe": "6 months",
-            },
-            "influence_growth": {
-                "trend": "moderate_increase",
-                "confidence": 0.63,
-                "factors": ["engagement rate", "content quality"],
-            },
-        }
+            if label and score > 0.3:
+                if label == "positive":
+                    behaviors["emotional_expression"] = {
+                        "label": "positive expresser",
+                        "description": "Tends to express positive emotions in posts",
+                        "confidence": min(0.95, 0.6 + score),
+                    }
+                elif label == "negative":
+                    behaviors["emotional_expression"] = {
+                        "label": "critical expresser",
+                        "description": "Tends to express critical or negative views in posts",
+                        "confidence": min(0.95, 0.6 + score),
+                    }
 
-    def _predict_engagement(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Predict future engagement patterns"""
-        self.logger.info("Predicting engagement patterns")
+        return behaviors
 
-        return {
-            "engagement_rate": {
-                "prediction": "increasing",
-                "estimated_change": "+5%",
-                "confidence": 0.69,
-                "timeframe": "3 months",
-            },
-            "content_performance": {
-                "top_performing_types": ["media", "long-form"],
-                "confidence": 0.73,
-                "reasoning": "Based on historical engagement patterns",
-            },
-        }
+    def _predict_demographics(
+        self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Predict demographic information
+        This should be handled with extreme care and appropriate disclaimers
 
-    def _filter_low_confidence(self, predictions: Dict[str, Any]) -> Dict[str, Any]:
-        """Filter out predictions below confidence threshold"""
+        Returns:
+            Dictionary with demographic predictions and confidence scores
+        """
+        # Note: demographic predictions should be minimal and handled carefully
+        demographics = {}
+
+        # Predict occupation category based on topics and language
+        if "content_topics" in content_analysis:
+            topics = content_analysis["content_topics"]
+            top_topics = topics.get("top_topics", [])
+
+            # Simple occupation category inference from topics
+            tech_topics = [
+                "technology",
+                "programming",
+                "coding",
+                "software",
+                "development",
+            ]
+            creative_topics = ["design", "art", "music", "writing", "creative"]
+            business_topics = ["business", "marketing", "finance", "entrepreneur"]
+
+            # Check if any group of topics is strongly represented
+            for topic_name, count in top_topics:
+                confidence = 0.0
+                occupation = ""
+
+                if topic_name in tech_topics:
+                    occupation = "tech professional"
+                    confidence = min(0.75, 0.6 + (count / 10))
+                elif topic_name in creative_topics:
+                    occupation = "creative professional"
+                    confidence = min(0.75, 0.6 + (count / 10))
+                elif topic_name in business_topics:
+                    occupation = "business professional"
+                    confidence = min(0.75, 0.6 + (count / 10))
+
+                if occupation and confidence >= self.confidence_threshold:
+                    demographics["occupation_category"] = {
+                        "label": occupation,
+                        "description": f"Content suggests possible background in {occupation} field",
+                        "confidence": round(confidence, 2),
+                    }
+                    break
+
+        return demographics
+
+    def _filter_low_confidence_predictions(
+        self, predictions: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Filter out predictions below the confidence threshold
+
+        Args:
+            predictions: Dictionary of predictions
+
+        Returns:
+            Filtered predictions
+        """
         filtered = {}
 
-        for key, value in predictions.items():
-            if key == "disclaimer":
-                filtered[key] = value
-                continue
+        for category, category_predictions in predictions.items():
+            filtered_category = {}
 
-            if isinstance(value, list):
-                filtered[key] = [
-                    item
-                    for item in value
-                    if "confidence" not in item
-                    or item["confidence"] >= self.confidence_threshold
-                ]
-            elif isinstance(value, dict):
-                if (
-                    "confidence" not in value
-                    or value["confidence"] >= self.confidence_threshold
-                ):
-                    filtered[key] = value
-            else:
-                filtered[key] = value
+            for trait, prediction in category_predictions.items():
+                confidence = prediction.get("confidence", 0)
+
+                if confidence >= self.confidence_threshold:
+                    filtered_category[trait] = prediction
+
+            if filtered_category:
+                filtered[category] = filtered_category
 
         return filtered

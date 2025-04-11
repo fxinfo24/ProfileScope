@@ -7,166 +7,140 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 mb-4">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('views.tasks') }}">Tasks</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('views.task', task_id=task.id) }}">Task #{{ task.id }}</a></li>
-                <li class="breadcrumb-item active">Results</li>
-            </ol>
-        </nav>
-        
-        <div class="d-flex justify-content-between align-items-center">
-            <h1>Analysis Results</h1>
-            <div class="btn-group">
-                <a href="{{ url_for('api.export_results', task_id=task.id, format='json') }}" 
-                   class="btn btn-outline-primary">
-                    <i class="bi bi-download"></i> Download JSON
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {% if results.content_analysis.mock_data_disclaimer is defined %}
-    <div class="col-12 mb-4">
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>Mock Data Notice:</strong> 
-            {{ results.content_analysis.mock_data_disclaimer }}
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Profile Information</h5>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Platform</dt>
-                    <dd class="col-sm-8">{{ task.platform|title }}</dd>
-                    
-                    <dt class="col-sm-4">Profile ID</dt>
-                    <dd class="col-sm-8">{{ task.profile_id }}</dd>
-                    
-                    <dt class="col-sm-4">Analysis Date</dt>
-                    <dd class="col-sm-8">{{ task.completed_at|datetime }}</dd>
-                    
-                    <dt class="col-sm-4">Duration</dt>
-                    <dd class="col-sm-8">{{ task.duration|duration }}</dd>
-                </dl>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Authenticity Score</h5>
-                <div class="text-center">
-                    <div class="display-4 mb-2">
-                        {{ (results.authenticity_score * 100)|round|int }}%
-                    </div>
-                    <canvas id="authenticityChart" width="200" height="200"></canvas>
+<div class="container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('views.tasks') }}">Tasks</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('views.task', task_id=task.id) }}">Task #{{ task.id }}</a></li>
+                    <li class="breadcrumb-item active">Results</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Analysis Results</h1>
+                <div class="btn-group">
+                    <a href="{{ url_for('api.export_results', task_id=task.id, format='json') }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-download"></i> Export Results
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Content Analysis</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="contentAnalysisChart"></canvas>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Behavioral Patterns</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="behaviorChart"></canvas>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Risk Assessment</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Risk Factor</th>
-                            <th>Level</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for risk in results.risk_factors %}
-                        <tr>
-                            <td>{{ risk.name }}</td>
-                            <td>
-                                <div class="progress" style="width: 100px">
-                                    <div class="progress-bar bg-{{ risk.level|risk_color }}" 
-                                         role="progressbar"
-                                         style="width: {{ risk.score * 100 }}%"
-                                         aria-valuenow="{{ risk.score * 100 }}"
-                                         aria-valuemin="0"
-                                         aria-valuemax="100">
-                                        {{ (risk.score * 100)|round|int }}%
-                                    </div>
-                                </div>
-                            </td>
-                            <td>{{ risk.description }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {% if results.predictions %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Predictions</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for prediction in results.predictions %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">{{ prediction.name }}</h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="h4 mb-0">
-                                        {{ (prediction.confidence * 100)|round|int }}%
-                                    </div>
-                                    <div class="text-muted">
-                                        Confidence
-                                    </div>
-                                </div>
-                                <p class="card-text mt-2">
-                                    {{ prediction.description }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+        {% if results.content_analysis.mock_data_disclaimer is defined %}
+        <div class="col-12 mb-4">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Mock Data Notice:</strong> 
+                {{ results.content_analysis.mock_data_disclaimer }}
             </div>
         </div>
         {% endif %}
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Platform:</dt>
+                        <dd class="col-sm-7">{{ task.platform|title }}</dd>
+                        
+                        <dt class="col-sm-5">Profile ID:</dt>
+                        <dd class="col-sm-7">{{ task.profile_id }}</dd>
+                        
+                        <dt class="col-sm-5">Analysis Date:</dt>
+                        <dd class="col-sm-7">{{ task.completed_at|datetime }}</dd>
+                        
+                        <dt class="col-sm-5">Duration:</dt>
+                        <dd class="col-sm-7">{{ task.duration|duration }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if results.authenticity_analysis is defined and results.authenticity_analysis.overall_authenticity is defined %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Authenticity Score</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <canvas id="authenticityChart" width="200" height="200"></canvas>
+                    </div>
+
+                    {% set auth_score = results.authenticity_analysis.overall_authenticity.score %}
+                    {% set score_percent = (auth_score * 100)|int %}
+                    
+                    <div class="h3 mb-0 text-{{ auth_score|risk_color }}">
+                        {{ score_percent }}% Authentic
+                    </div>
+                    
+                    {% if results.authenticity_analysis.overall_authenticity.confidence is defined %}
+                    <small class="text-muted">
+                        Confidence: {{ (results.authenticity_analysis.overall_authenticity.confidence * 100)|int }}%
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Content Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contentAnalysisChart"></canvas>
+                </div>
+            </div>
+
+            {% if results.predictions and results.predictions.future_interests %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Predicted Interests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for interest in results.predictions.future_interests %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ interest.interest }}</h6>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar" 
+                                             style="width: {{ interest.confidence * 100 }}%" 
+                                             aria-valuenow="{{ interest.confidence * 100 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ (interest.confidence * 100)|int }}%
+                                        </div>
+                                    </div>
+                                    {% if interest.reasoning %}
+                                    <small class="text-muted">{{ interest.reasoning }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    {% if results.authenticity_analysis is defined and results.authenticity_analysis.overall_authenticity is defined %}
     // Authenticity gauge chart
-    const authenticityScore = {{ results.authenticity_score }};
+    const authenticityScore = {{ results.authenticity_analysis.overall_authenticity.score }};
     const authenticityCtx = document.getElementById('authenticityChart').getContext('2d');
     new Chart(authenticityCtx, {
         type: 'doughnut',
@@ -175,12 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets: [{
                 data: [authenticityScore, 1 - authenticityScore],
                 backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(255, 99, 132, 0.2)'
-                ],
-                borderColor: [
-                    'rgb(75, 192, 192)',
-                    'rgb(255, 99, 132)'
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
                 ],
                 borderWidth: 1
             }]
@@ -190,21 +160,47 @@ document.addEventListener('DOMContentLoaded', () => {
             cutout: '70%',
             plugins: {
                 legend: {
-                    display: false
+                    position: 'bottom'
                 }
             }
         }
     });
+    {% endif %}
 
+    {% if results.content_analysis is defined and results.content_analysis.personality_traits is defined %}
     // Content analysis radar chart
-    const contentData = {{ results.content_analysis|tojson }};
     const contentCtx = document.getElementById('contentAnalysisChart').getContext('2d');
-    createRadarChart(contentCtx, contentData);
-
-    // Behavioral patterns chart
-    const behaviorData = {{ results.behavioral_patterns|tojson }};
-    const behaviorCtx = document.getElementById('behaviorChart').getContext('2d');
-    createBarChart(behaviorCtx, behaviorData);
+    const traits = {{ results.content_analysis.personality_traits|tojson }};
+    
+    new Chart(contentCtx, {
+        type: 'radar',
+        data: {
+            labels: Object.keys(traits).map(key => key.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{
+                label: 'Personality Traits',
+                data: Object.values(traits),
+                fill: true,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(54, 162, 235)'
+            }]
+        },
+        options: {
+            scales: {
+                r: {
+                    min: 0,
+                    max: 1,
+                    ticks: {
+                        stepSize: 0.2
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}

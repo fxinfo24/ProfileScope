@@ -1,65 +1,69 @@
 """
-Custom filters for Jinja2 templates
+Custom template filters for the web interface
 """
 
 from datetime import datetime
+from flask import Flask
+from app.web.models import TaskStatus
 
 
-def format_datetime(value):
-    """Format datetime to readable string"""
-    if not value:
-        return ""
-    if isinstance(value, str):
-        try:
-            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        except ValueError:
-            return value
-    return value.strftime("%b %d, %Y, %H:%M")
+def register_filters(app: Flask):
+    """Register custom filters with Flask app"""
 
+    @app.template_filter("datetime")
+    def format_datetime(value):
+        """Format a datetime object to a readable string"""
+        if not value:
+            return ""
+        return value.strftime("%b %d, %Y %H:%M")
 
-def format_duration(seconds):
-    """Format seconds into human-readable duration"""
-    if not seconds:
-        return "-"
+    @app.template_filter("duration")
+    def format_duration(seconds):
+        """Format duration in seconds to a readable string"""
+        if not seconds:
+            return "-"
 
-    minutes, seconds = divmod(int(seconds), 60)
-    hours, minutes = divmod(minutes, 60)
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        remaining_seconds = int(seconds % 60)
 
-    parts = []
-    if hours > 0:
-        parts.append(f"{hours}h")
-    if minutes > 0:
-        parts.append(f"{minutes}m")
-    if seconds > 0 or not parts:
-        parts.append(f"{seconds}s")
+        parts = []
+        if hours > 0:
+            parts.append(f"{hours}h")
+        if minutes > 0 or hours > 0:
+            parts.append(f"{minutes}m")
+        parts.append(f"{remaining_seconds}s")
 
-    return " ".join(parts)
+        return " ".join(parts)
 
+    @app.template_filter("status_badge")
+    def status_badge_class(status):
+        """Convert task status to appropriate Bootstrap badge class"""
+        if isinstance(status, str):
+            status = status.lower()
+        elif isinstance(status, TaskStatus):
+            status = status.value
 
-def status_badge(status):
-    """Convert task status to Bootstrap badge color"""
-    badges = {
-        "pending": "warning",
-        "processing": "primary",
-        "completed": "success",
-        "failed": "danger",
-    }
-    return badges.get(status, "secondary")
+        badge_map = {
+            "pending": "secondary",
+            "processing": "primary",
+            "completed": "success",
+            "failed": "danger",
+        }
 
+        return badge_map.get(status, "secondary")
 
-def status_badge_class(status_enum):
-    """Convert task status enum to Bootstrap badge class"""
-    if hasattr(status_enum, "value"):
-        status = status_enum.value
-    else:
-        status = str(status_enum).lower()
+    @app.template_filter("status_badge_class")
+    def get_status_badge_class(status):
+        """Get full badge class based on status"""
+        return f"bg-{status_badge_class(status)}"
 
-    return f"bg-{status_badge(status)}"
-
-
-def register_filters(app):
-    """Register custom filters with the Flask app"""
-    app.jinja_env.filters["datetime"] = format_datetime
-    app.jinja_env.filters["duration"] = format_duration
-    app.jinja_env.filters["status_badge"] = status_badge
-    app.jinja_env.filters["status_badge_class"] = status_badge_class
+    @app.template_filter("risk_color")
+    def risk_color(score):
+        """Return color class based on risk score (0-1)"""
+        if score < 0.3:
+            return "danger"
+        elif score < 0.7:
+            return "warning"
+        else:
+            return "success"

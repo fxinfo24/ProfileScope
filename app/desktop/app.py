@@ -10,15 +10,58 @@ import time  # Add missing time import
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
 
+# Configure for maximum compatibility
+import os
+import sys
+
+# Set environment variables to avoid Qt conflicts
+os.environ['QT_API'] = 'tkinter'
+os.environ['MPLBACKEND'] = 'TkAgg'
+
 # Configure matplotlib before importing tkinter
 import matplotlib
-
 matplotlib.use("TkAgg")
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+# Import matplotlib plotting with error handling
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    MATPLOTLIB_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  Warning: Matplotlib charts unavailable: {e}")
+    MATPLOTLIB_AVAILABLE = False
+
+# Fix for macOS compatibility
+import platform
+import sys
+
+def check_macos_compatibility():
+    """Check macOS compatibility without strict version requirements"""
+    if platform.system() == "Darwin":  # macOS
+        try:
+            version = platform.mac_ver()[0]
+            if version:
+                # Parse version properly
+                version_parts = version.split('.')
+                major = int(version_parts[0])
+                minor = int(version_parts[1]) if len(version_parts) > 1 else 0
+                
+                # macOS 10.14+ should work fine (Mojave and later)
+                if major >= 11 or (major == 10 and minor >= 14):
+                    return True
+                else:
+                    print(f"⚠️  Warning: macOS {version} detected. Some features may not work optimally.")
+                    return True  # Allow to continue anyway
+            else:
+                print("⚠️  Warning: Could not detect macOS version.")
+                return True  # Allow to continue
+        except Exception as e:
+            print(f"⚠️  Warning: Error checking macOS version: {e}")
+            return True  # Allow to continue
+    return True
 
 # Import the analyzer core
 from app.core.analyzer import SocialMediaAnalyzer
@@ -28,17 +71,31 @@ class AnalyzerApp(tk.Tk):
     """Main application window for ProfileScope"""
 
     def __init__(self):
+        # Check macOS compatibility
+        if not check_macos_compatibility():
+            print("❌ macOS compatibility check failed")
+            sys.exit(1)
+            
         # Ensure the Tk root is properly initialized for matplotlib
         super().__init__()
 
-        # Make sure the window is visible on macOS
-        self.update_idletasks()
-        self.lift()
-        self.attributes("-topmost", True)
-        self.after_idle(self.attributes, "-topmost", False)
-
-        # Explicitly process any pending events before continuing
-        self.update()
+        # Make sure the window is visible on macOS - with error handling
+        try:
+            self.update_idletasks()
+            self.lift()
+            # Only set topmost on supported systems
+            if platform.system() == "Darwin":
+                try:
+                    self.attributes("-topmost", True)
+                    self.after_idle(self.attributes, "-topmost", False)
+                except tk.TclError:
+                    # Fallback for older macOS versions
+                    pass
+            # Explicitly process any pending events before continuing
+            self.update()
+        except Exception as e:
+            print(f"⚠️  Warning: Window initialization issue: {e}")
+            # Continue anyway
 
         # Initialize app window
         self.title("ProfileScope: Social Media Profile Analyzer")
@@ -80,7 +137,7 @@ class AnalyzerApp(tk.Tk):
         project_root = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
-        self.config_path = os.path.join(project_root, "config.json")
+        self.config_path = os.path.join(project_root, "config", "config.json")
 
         # Configure styles
         self.style.configure(
@@ -2711,3 +2768,31 @@ if __name__ == "__main__":
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
     main()
+
+
+
+def main():
+    """Main function to run the desktop application"""
+    try:
+        print("🖥️  Initializing ProfileScope Desktop Application...")
+        
+        # Check system compatibility
+        if not check_macos_compatibility():
+            print("❌ System compatibility check failed")
+            return 1
+            
+        # Create and run the application
+        app = AnalyzerApp()
+        print("✅ Application initialized successfully")
+        app.mainloop()
+        return 0
+        
+    except Exception as e:
+        print(f"❌ Fatal error starting desktop application: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

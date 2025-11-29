@@ -11,7 +11,7 @@ from flask import Flask
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    filename="profilescope_web.log",
+    filename="logs/profilescope_web.log",
 )
 logger = logging.getLogger("ProfileScope.Web")
 
@@ -29,14 +29,19 @@ def create_app(test_config=None):
         template_folder="templates",
     )
 
+    # Create data directory if it doesn't exist
+    data_dir = os.path.join(os.getcwd(), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    db_path = os.path.join(data_dir, "profilescope.db")
+    
     # Load default configuration
     app.config.from_mapping(
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key-for-development-only"),
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            "DATABASE_URI", "sqlite:///profilescope.db"
+            "DATABASE_URI", f"sqlite:///{db_path}"
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        RESULTS_FOLDER=os.path.join(os.path.dirname(app.instance_path), "results"),
+        RESULTS_FOLDER=os.path.join(os.getcwd(), "data", "results"),
     )
 
     # Override default configuration

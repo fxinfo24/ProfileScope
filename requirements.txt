@@ -1,6 +1,6 @@
 # Core dependencies
 setuptools>=65.5.1
-numpy==1.26.2  # Pinned to a version compatible with Python 3.12
+numpy<2.0.0  # Fixed compatibility issue with PyTorch
 pandas>=1.3.0
 scikit-learn>=1.0.0
 nltk>=3.6.0

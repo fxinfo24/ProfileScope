@@ -8,7 +8,7 @@ ProfileScope is the most comprehensive AI-powered social media intelligence plat
 
 ### 🌍 Universal Platform Coverage
 - **10+ Major Platforms**: Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, GitHub
-- **Universal Data Collection**: Single API integration via ScrapeCreators (API Key: vEq3wIwAMQZST5ffeI7XRGdnKYt2)
+- **Universal Data Collection**: Single API integration via ScrapeCreators
 - **Real-time Processing**: Celery + Redis distributed task processing
 - **Comprehensive Analysis**: Profile data, content analysis, engagement metrics across all platforms
 

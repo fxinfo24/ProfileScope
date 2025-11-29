@@ -16,22 +16,24 @@ pip install -r requirements.txt
 #### ScrapeCreators Setup (Primary - 10+ Platforms)
 ProfileScope uses ScrapeCreators for universal access to 10+ social media platforms:
 
-1. **Already Configured**: API key is pre-configured
+1. **Configuration Required**: Add your ScrapeCreators API key to .env file
 2. **Supported Platforms**: Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, GitHub
-3. **Configuration**: 
+3. **Setup Instructions**: 
    ```
-   SCRAPECREATORS_API_KEY=vEq3wIwAMQZST5ffeI7XRGdnKYt2
+   # Copy .env.example to .env and add your API key
+   SCRAPECREATORS_API_KEY=your_scrapecreators_api_key_here
    SCRAPECREATORS_BASE_URL=https://api.scrapecreators.com
    ```
 
 #### OpenRouter AI Setup (Universal AI Access)
 ProfileScope uses OpenRouter for access to multiple AI models:
 
-1. **Already Configured**: API key is pre-configured
+1. **Configuration Required**: Add your OpenRouter API key to .env file
 2. **Available Models**: GPT-4, Claude-3, Gemini, Llama-2, Mixtral
-3. **Configuration**:
+3. **Setup Instructions**:
    ```
-   OPENROUTER_API_KEY=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
+   # Add your OpenRouter API key to .env file
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
    ```
 
 #### Legacy Individual APIs (Optional)

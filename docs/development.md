@@ -174,7 +174,7 @@ docker-compose up -d
 
 ### ScrapeCreators Setup
 ```python
-# Already configured with API key: vEq3wIwAMQZST5ffeI7XRGdnKYt2
+# Configure with your API key in .env file
 from app.core.scrape_client import get_scrape_client
 client = get_scrape_client()
 profile = client.get_twitter_profile("username")
@@ -182,7 +182,7 @@ profile = client.get_twitter_profile("username")
 
 ### OpenRouter Setup
 ```python
-# Already configured with API key
+# Configure with your API key in .env file
 from app.core.openrouter_client import openrouter_client
 analysis = openrouter_client.analyze_profile_content(profile_data, posts)
 ```

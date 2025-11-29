@@ -6,8 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import enum
 
-# Initialize SQLAlchemy
-from app.web import db
+# Initialize SQLAlchemy - will be initialized by the Flask app
+db = SQLAlchemy()
 
 
 class TaskStatus(enum.Enum):

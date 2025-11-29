@@ -10,7 +10,12 @@ import random
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import tweepy
-from facebook_business.exceptions import FacebookRequestError
+try:
+    from facebook_business.exceptions import FacebookRequestError
+except ImportError:
+    # Fallback for when facebook_business is not available
+    class FacebookRequestError(Exception):
+        pass
 import requests
 import time
 

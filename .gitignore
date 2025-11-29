@@ -1,4 +1,8 @@
+# ProfileScope .gitignore - Comprehensive coverage for multi-platform development
+
+# =============================================================================
 # Python
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,21 +23,36 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
 
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
 .pytest_cache/
+test-results/
+test_results/
 
-# Environments
+# =============================================================================
+# Environment & Secrets
+# =============================================================================
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .venv
 env/
 venv/
@@ -41,6 +60,94 @@ ENV/
 env.bak/
 venv.bak/
 
+# API Keys and secrets (keep .env.example)
+config.local.json
+secrets.json
+.secrets/
+
+# =============================================================================
+# Database & Data
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+profilescope.db
+data/profilescope.db
+instance/profilescope.db
+*.sql
+*.dump
+
+# Data files and uploads
+data/uploads/*
+!data/uploads/.gitkeep
+data/results/*
+!data/results/.gitkeep
+data/backups/*
+!data/backups/.gitkeep
+instance/uploads/*
+instance/results/*
+results/
+uploads/
+
+# Logs
+logs/
+*.log
+data/logs/
+app/logs/
+
+# =============================================================================
+# Real-time Processing (Celery + Redis)
+# =============================================================================
+celerybeat-schedule
+celerybeat.pid
+celery.pid
+celerybeat-schedule.db
+dump.rdb
+flower/
+
+# =============================================================================
+# Frontend (React + TypeScript)
+# =============================================================================
+frontend/node_modules/
+frontend/.npm
+frontend/.eslintcache
+frontend/build/
+frontend/dist/
+app/web/static/dist/
+frontend/.env
+frontend/.env.local
+frontend/coverage/
+frontend/.DS_Store
+frontend/*.tsbuildinfo
+
+# =============================================================================
+# Mobile (React Native + Expo)
+# =============================================================================
+mobile/node_modules/
+mobile/.expo/
+mobile/.expo-shared/
+mobile/dist/
+mobile/build/
+mobile/web-build/
+
+# iOS
+mobile/ios/build/
+mobile/ios/Pods/
+mobile/ios/*.xcworkspace/xcuserdata/
+mobile/ios/*.xcodeproj/xcuserdata/
+
+# Android
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/.idea/
+mobile/android/*.iml
+
+# =============================================================================
+# Development & IDE
+# =============================================================================
 # VSCode
 .vscode/*
 !.vscode/settings.json
@@ -48,15 +155,75 @@ venv.bak/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Project specific
-data/uploads/*
-data/results/*
-!data/uploads/.gitkeep
-!data/results/.gitkeep
-logs/
-*.log
+# PyCharm
+.idea/
+*.swp
+*.swo
+
+# =============================================================================
+# System Files
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+.directory
+
+# =============================================================================
+# Enterprise Features
+# =============================================================================
+app/enterprise/assets/custom/
+branding/
+custom-themes/
+enterprise-configs/
+teams/
+organizations/
+
+# =============================================================================
+# AI & ML Models
+# =============================================================================
+*.model
+*.pkl
+*.joblib
+models/
+checkpoints/
+cv_cache/
+image_cache/
+
+# =============================================================================
+# Temporary & Cache Files
+# =============================================================================
+tmp_rovodev_*
+temp_*
+*.tmp
+*.temp
+.cache/
+cache/
 temp_working_files/
 
-# OS specific
-.DS_Store
-Thumbs.db
+# =============================================================================
+# Docker & Deployment
+# =============================================================================
+.dockerignore
+docker-compose.override.yml
+.docker/
+.terraform/
+*.kubeconfig
+
+# =============================================================================
+# Production & Monitoring
+# =============================================================================
+production.env
+staging.env
+*.bak
+backup-*
+*.crt
+*.key
+*.pem
+ssl/
+monitoring/
+analytics_cache/

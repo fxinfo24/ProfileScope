@@ -9,10 +9,21 @@ import logging
 from typing import Dict, Any, Optional, Generator, List
 from datetime import datetime, timedelta
 import tweepy
-from facebook_business.api import FacebookAdsApi
-from facebook_business.adobjects.user import User
-from facebook_business.adobjects.post import Post
-from facebook_business.exceptions import FacebookRequestError
+try:
+    from facebook_business.api import FacebookAdsApi
+    from facebook_business.adobjects.user import User
+    from facebook_business.adobjects.post import Post
+    from facebook_business.exceptions import FacebookRequestError
+except ImportError:
+    # Fallback for when facebook_business is not available
+    class FacebookAdsApi:
+        pass
+    class User:
+        pass
+    class Post:
+        pass
+    class FacebookRequestError(Exception):
+        pass
 from requests.exceptions import RequestException
 from ..utils.config import load_config
 
@@ -115,61 +126,132 @@ class RetryHandler:
 class TwitterClient:
     """Twitter/X API client wrapper"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize Twitter API client"""
-        self._validate_config(config)
-        self.rate_limiter = RateLimiter(calls=50)  # Twitter has varying rate limits
+        import os
+        from dotenv import load_dotenv
+        
+        # Load environment variables
+        load_dotenv()
+        
+        if config is None:
+            config = {}
+        
+        # Try environment variables first, then config file
+        twitter_config = config.get("twitter", {})
+        
+        self.api_key = os.getenv("TWITTER_API_KEY") or twitter_config.get("api_key")
+        self.api_secret = os.getenv("TWITTER_API_SECRET") or twitter_config.get("api_secret")
+        self.access_token = os.getenv("TWITTER_ACCESS_TOKEN") or twitter_config.get("access_token")
+        self.access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET") or twitter_config.get("access_token_secret")
+        
+        self.rate_limiter = RateLimiter(calls=300, period=900)  # Twitter API v2: 300/15min
         self.retry_handler = RetryHandler()
 
-        try:
-            # Using OAuth1UserHandler instead of deprecated OAuthHandler
-            auth = tweepy.OAuth1UserHandler(
-                config["api_key"],
-                config["api_secret"],
-                config["access_token"],
-                config["access_token_secret"],
-            )
-            self._api = tweepy.API(auth)
-            self._api.verify_credentials()
-            logger.info("Twitter API client initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize Twitter API client: {str(e)}")
+        if self.api_key and self.api_secret and self.access_token and self.access_token_secret:
+            try:
+                # Using OAuth1UserHandler for API v1.1
+                auth = tweepy.OAuth1UserHandler(
+                    self.api_key,
+                    self.api_secret,
+                    self.access_token,
+                    self.access_token_secret,
+                )
+                self._api = tweepy.API(auth, wait_on_rate_limit=True)
+                
+                # Twitter API v2 Client
+                self._client_v2 = tweepy.Client(
+                    consumer_key=self.api_key,
+                    consumer_secret=self.api_secret,
+                    access_token=self.access_token,
+                    access_token_secret=self.access_token_secret,
+                    wait_on_rate_limit=True
+                )
+                
+                # Test connection
+                self._test_connection()
+                logger.info("Twitter API client initialized successfully")
+                
+            except Exception as e:
+                logger.error(f"Failed to initialize Twitter API client: {str(e)}")
+                self._api = None
+                self._client_v2 = None
+        else:
+            logger.warning("Twitter API credentials not found in environment or config")
             self._api = None
+            self._client_v2 = None
+
+    def _test_connection(self):
+        """Test API connection"""
+        try:
+            if self._api:
+                user = self._api.verify_credentials()
+                print(f"✅ Twitter API v1.1 verified: @{user.screen_name}")
+            if self._client_v2:
+                me = self._client_v2.get_me()
+                if me.data:
+                    print(f"✅ Twitter API v2 verified: @{me.data.username}")
+        except Exception as e:
+            logger.warning(f"Twitter API connection test failed: {e}")
 
     def _validate_config(self, config: Dict[str, Any]) -> None:
-        """Validate Twitter API configuration"""
-        required_keys = ["api_key", "api_secret", "access_token", "access_token_secret"]
-        missing_keys = [key for key in required_keys if not config.get(key)]
-
-        if missing_keys:
-            raise ValueError(
-                f"Missing Twitter API credentials: {', '.join(missing_keys)}"
-            )
+        """Validate Twitter API configuration (deprecated - now uses environment variables)"""
+        pass  # No longer needed as we use environment variables
 
     @RetryHandler()
     @RateLimiter(50)
     def get_user_profile(self, username: str) -> Optional[Dict[str, Any]]:
-        """Get Twitter user profile data"""
-        if not self._api:
-            logger.error("Twitter API client not initialized")
+        """Get Twitter user profile data using API v2"""
+        if not self._client_v2:
+            logger.error("Twitter API v2 client not initialized")
             return None
 
         try:
-            user = self._api.get_user(screen_name=username)
-
-            return {
-                "id": user.id_str,
-                "username": user.screen_name,
-                "name": user.name,
-                "bio": user.description,
-                "location": user.location,
-                "created_at": user.created_at.isoformat(),
-                "verified": user.verified,
-                "followers_count": user.followers_count,
-                "following_count": user.friends_count,
-                "tweets_count": user.statuses_count,
-                "profile_image_url": user.profile_image_url_https,
+            self.rate_limiter.check()
+            
+            # Use API v2 for enhanced user data
+            response = self._client_v2.get_user(
+                username=username,
+                user_fields=['created_at', 'description', 'entities', 'location', 'pinned_tweet_id',
+                           'profile_image_url', 'protected', 'public_metrics', 'url', 'verified',
+                           'verified_type', 'withheld']
+            )
+            
+            if not response.data:
+                logger.error(f"User @{username} not found")
+                return None
+                
+            user = response.data
+            metrics = user.public_metrics
+            
+            profile_data = {
+                "id": user.id,
+                "username": user.username,
+                "display_name": user.name,
+                "bio": user.description or "",
+                "location": user.location or "",
+                "followers_count": metrics['followers_count'],
+                "following_count": metrics['following_count'], 
+                "posts_count": metrics['tweet_count'],
+                "listed_count": metrics['listed_count'],
+                "verified": user.verified or False,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "profile_image_url": user.profile_image_url,
+                "url": user.url,
+                "protected": user.protected or False,
+                "pinned_tweet_id": user.pinned_tweet_id,
+                "platform": "twitter"
             }
+            
+            # Add verified type if available
+            if hasattr(user, 'verified_type') and user.verified_type:
+                profile_data["verified_type"] = user.verified_type
+                
+            return profile_data
+            
+        except RateLimitExceededError:
+            logger.warning("Twitter API rate limit exceeded")
+            raise
         except Exception as e:
             logger.error(f"Failed to get Twitter user profile: {str(e)}")
             return None

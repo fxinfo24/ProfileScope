@@ -8,11 +8,21 @@ import logging
 from flask import Flask
 from flask_migrate import Migrate
 
-# Setup logging
+# Setup logging - production-safe (logs to stdout if logs/ doesn't exist)
+log_file = None
+logs_dir = os.path.join(os.getcwd(), "logs")
+if os.path.exists(logs_dir) or os.access(os.getcwd(), os.W_OK):
+    try:
+        os.makedirs(logs_dir, exist_ok=True)
+        log_file = os.path.join(logs_dir, "profilescope_web.log")
+    except (OSError, PermissionError):
+        # If we can't create logs directory, log to stdout
+        pass
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    filename="logs/profilescope_web.log",
+    filename=log_file,  # None means log to stdout
 )
 logger = logging.getLogger("ProfileScope.Web")
 

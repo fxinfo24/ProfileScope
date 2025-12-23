@@ -21,7 +21,7 @@ pip install numpy==1.26.2
 
 # Install remaining dependencies
 echo "Installing remaining dependencies..."
-pip install -r requirements.txt
+pip install -r requirements-full.txt
 
 # Download required NLTK data
 echo "Downloading NLTK data..."

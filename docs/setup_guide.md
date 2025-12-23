@@ -8,7 +8,8 @@
 source venv/bin/activate
 
 # Install dependencies (already done if following from README)
-pip install -r requirements.txt
+pip install -r requirements-full.txt  # For local development
+# OR: pip install -r requirements.txt  # For Railway (minimal)
 ```
 
 ### 2. Universal API Configuration
@@ -115,37 +116,41 @@ pytest tests/test_utils/
 
 ### Manual Testing
 ```bash
-# Test web API
-curl http://127.0.0.1:5000/api/status
+# Test web API (tasks)
+curl -X POST http://127.0.0.1:5000/api/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"platform":"twitter","profile_id":"elonmusk"}'
 
-# Test analysis with mock data
-python tmp_rovodev_test_analysis.py
+# List tasks
+curl http://127.0.0.1:5000/api/tasks
 ```
 
 ## Production Deployment
 
-### Security Configuration
-1. Change the Flask secret key in config.json
-2. Set `debug: false` in web configuration
-3. Use environment variables for sensitive data
-4. Configure proper database for production (not SQLite)
+### Security / environment configuration (production)
+1. Set `SECRET_KEY` as an environment variable (do not hardcode)
+2. Set `FLASK_DEBUG=false`
+3. Configure `DATABASE_URI` to point to Postgres
+4. Configure `REDIS_URL` for Celery workers
 
-### Web Server Setup
+### Web Server Setup (Railway)
 ```bash
-# Using gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app.web.app:create_app()
+# Web service (Railway provides $PORT)
+gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+
+# Worker service
+celery -A app.core.tasks worker --loglevel=info --queues=analysis
 ```
+
+### Frontend Setup (Vercel)
+Set `VITE_API_BASE_URL` to your Railway backend URL + `/api`, e.g.
+`https://<your-service>.up.railway.app/api`
 
 ### Database Setup
 ```bash
-# Initialize database
-python -c "
-from app.web.app import create_app
-from app.web.models import db
-app = create_app()
-with app.app_context():
-    db.create_all()
-"
+# Run migrations (recommended for production)
+export FLASK_APP=app.web.app
+flask db upgrade
 ```
 
 ## Troubleshooting
@@ -155,7 +160,9 @@ with app.app_context():
 1. **Import Errors**: Ensure virtual environment is activated
 2. **Missing NLTK Data**: Run the NLTK download commands in the setup
 3. **API Errors**: Check your API credentials in the .env file
-4. **Database Issues**: Delete `data/profilescope.db` and reinitialize
+4. **Database Issues**:
+   - SQLite (dev): delete `data/profilescope.db` and restart
+   - Postgres (prod): run `flask db upgrade` and verify `DATABASE_URI`
 
 ### Debug Mode
 ```bash

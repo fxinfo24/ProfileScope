@@ -179,6 +179,11 @@ api_usage (id, user_id, endpoint, timestamp, usage_count)
 ## ✅ **Phase 3 (Months 7-9): Scale & Enterprise**
 
 ### **1. ✅ Real-time Processing Pipeline (Celery + Redis)**
+
+**Status (current repo)**:
+- ✅ Web creates tasks via `/api/analyze`
+- ✅ Worker processes tasks via Celery (`celery -A app.core.tasks ...`) when `REDIS_URL` is set
+- ✅ Results are persisted in Postgres (`task.result_data` JSONB) and served via `/api/tasks/<id>/results`
 **Status**: ✅ COMPLETED  
 **Progress**: 100%  
 **Started**: November 2025  

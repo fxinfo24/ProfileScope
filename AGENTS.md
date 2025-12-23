@@ -96,7 +96,8 @@ Here’s how I want you to respond:
   - `python -m venv venv`
   - `source venv/bin/activate`
 - Install Python dependencies:
-  - `pip install -r requirements.txt`
+  - Local development (all features): `pip install -r requirements-full.txt`
+  - Railway/production (minimal): `pip install -r requirements.txt` (auto-detected)
 - Configure environment:
   - `cp .env.example .env`
   - Fill in required API keys (see **Environment & config** below)
@@ -155,7 +156,7 @@ Here’s how I want you to respond:
 ## Tests
 
 - Pytest config: `config/pytest.ini`
-- Run tests (inside the project virtualenv, after `pip install -r requirements.txt`):
+- Run tests (inside the project virtualenv, after `pip install -r requirements-full.txt`):
   - `python -m pytest`
   - or `python3 bin/run_tests.py`
     - `--simple` runs a minimal verification test

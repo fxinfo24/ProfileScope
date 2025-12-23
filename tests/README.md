@@ -12,7 +12,7 @@ pip install setuptools
 python scripts/setup_env.py
 
 # Install requirements with compatibility
-pip install -r requirements.txt
+pip install -r requirements-full.txt
 
 # Install testing dependencies
 pip install pytest pytest-mock pytest-cov pytest-html
@@ -72,7 +72,7 @@ If you encounter installation errors with specific package versions:
 
 2. For other dependency errors:
    ```bash
-   pip install -r requirements.txt --ignore-installed
+   pip install -r requirements-full.txt --ignore-installed
    ```
 
 3. If tests are failing:

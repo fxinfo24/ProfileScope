@@ -137,7 +137,8 @@
 ```python
 # ACHIEVED: Real-time Processing Infrastructure
 - Celery + Redis for background task processing
-- Real-time WebSocket connections for live updates
+- Real-time updates (future): WebSocket connections for live updates
+  - Current implementation uses polling via `/api/tasks/<task_id>/status`
 - Flower monitoring dashboard (:5555)
 - Multi-queue architecture (analysis/vision/reports/data)
 - Auto-scaling worker capabilities
@@ -217,7 +218,8 @@
 ```python
 # Modern web technologies
 - React.js frontend with real-time updates
-- WebSocket connections for live analysis
+- WebSocket connections for live analysis (future)
+  - Current implementation uses polling via `/api/tasks/<task_id>/status`
 - Interactive data visualizations (D3.js)
 - Progressive Web App (PWA) capabilities
 ```

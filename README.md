@@ -57,8 +57,17 @@ source venv/bin/activate  # On Windows use: venv\Scripts\activate
 ```
 
 3. Install dependencies:
+
+**Requirements Files:**
+- `requirements.txt` - Ultra-minimal for Railway/production (fast build, ~1-2 min)
+- `requirements-railway-medium.txt` - Medium build with some NLP features
+- `requirements-full.txt` - Complete local development environment with ML/AI
+
 ```bash
-pip install -r requirements.txt
+# Local development (recommended):
+pip install -r requirements-full.txt
+
+# Railway will auto-detect requirements.txt (minimal, fast builds)
 ```
 
 4. Setup NLP components:

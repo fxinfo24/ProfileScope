@@ -100,24 +100,41 @@ def start_analysis():
     # Production: if REDIS_URL is configured, enqueue via Celery so the work runs
     # in a separate worker process (Railway-friendly).
     # Development fallback: background thread.
-    if os.getenv("REDIS_URL"):
+    redis_url = os.getenv("REDIS_URL")
+    task_started = False
+    
+    if redis_url:
+        logger.info(f"REDIS_URL configured, attempting Celery enqueue for task {task.id}")
         try:
             from app.core.tasks import run_task_analysis
-
             run_task_analysis.delay(task.id)
+            task_started = True
+            logger.info(f"Task {task.id} enqueued to Celery successfully")
         except Exception as e:
-            logger.error(f"Failed to enqueue Celery task, falling back to thread: {e}")
+            logger.error(f"Failed to enqueue Celery task {task.id}: {e}", exc_info=True)
+    
+    if not task_started:
+        # Fallback to threading
+        logger.info(f"Starting task {task.id} in background thread (fallback)")
+        try:
             thread = threading.Thread(
                 target=run_analysis, args=(task.id, task.platform, task.profile_id)
             )
             thread.daemon = True
             thread.start()
-    else:
-        thread = threading.Thread(
-            target=run_analysis, args=(task.id, task.platform, task.profile_id)
-        )
-        thread.daemon = True
-        thread.start()
+            task_started = True
+            logger.info(f"Task {task.id} started in background thread")
+        except Exception as e:
+            logger.error(f"Failed to start background thread for task {task.id}: {e}", exc_info=True)
+            # Update task as failed
+            task.status = TaskStatus.FAILED
+            task.error = f"Failed to start analysis: {str(e)}"
+            db.session.commit()
+            return (jsonify({
+                "error": "Failed to start analysis task",
+                "details": str(e),
+                "task": task.to_dict()
+            }), 500)
 
     return (jsonify({"message": "Analysis task created", "task": task.to_dict()}), 202)
 

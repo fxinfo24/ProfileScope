@@ -145,14 +145,122 @@ export FLASK_APP=app.web.app
 flask db upgrade
 ```
 
-### Deployment notes (Vercel + Railway)
+## Production Deployment
 
-- **Frontend (Vercel)**: set `VITE_API_BASE_URL` to your Railway web service URL, e.g.
-  `https://<your-service>.up.railway.app/api`
-- **Backend (Railway)**:
-  - Web process: run Flask via Gunicorn
-  - Worker process: run Celery worker
-  - Use Railway Redis + Railway Postgres
+### Complete Railway + Vercel Deployment Guide
+
+#### Prerequisites
+- GitHub repository connected to Railway
+- Vercel account connected to GitHub
+- Railway project with Postgres and Redis add-ons
+
+#### Step 1: Railway Backend Setup
+
+**1.1 Create Web Service**
+```bash
+# Railway auto-detects Procfile and runs "web" command
+# Command: gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+```
+
+**1.2 Add Database Services**
+- Click "New" → "Database" → "Add PostgreSQL"
+- Click "New" → "Database" → "Add Redis"
+- Railway automatically sets `DATABASE_URI` and `REDIS_URL`
+
+**1.3 Configure Environment Variables**
+```bash
+# Required
+SECRET_KEY=your-secure-random-key-here
+CORS_ORIGINS=https://your-frontend.vercel.app,https://yourdomain.com
+
+# Optional API Keys
+SCRAPECREATORS_API_KEY=your_api_key
+OPENROUTER_API_KEY=your_api_key
+```
+
+**1.4 Enable Database Migrations**
+Set Railway release command:
+```bash
+flask db upgrade
+```
+
+**1.5 Deploy Worker Service (Optional - for async tasks)**
+- Create NEW Railway service from SAME GitHub repo
+- Set custom start command:
+  ```bash
+  celery -A app.core.tasks worker --loglevel=info --queues=analysis
+  ```
+- Ensure `REDIS_URL` and `DATABASE_URI` are available
+- Deploy alongside web service
+
+**Important**: Without Redis/Worker, the app uses threading fallback (works fine for moderate load).
+
+#### Step 2: Vercel Frontend Setup
+
+**2.1 Connect Repository**
+- Import your GitHub repository to Vercel
+- Framework preset: Vite
+- Root directory: `frontend`
+
+**2.2 Configure Build Settings**
+```bash
+Build command: npm run build
+Output directory: dist
+Install command: npm install
+```
+
+**2.3 Set Environment Variables**
+```bash
+VITE_API_BASE_URL=https://your-service.up.railway.app/api
+```
+
+**2.4 Deploy**
+- Vercel auto-deploys on push to main
+- Preview deployments for pull requests
+
+#### Step 3: Verify Deployment
+
+**3.1 Test CORS**
+```bash
+curl -I https://your-service.up.railway.app/api/stats/completion-rate \
+  -H "Origin: https://your-frontend.vercel.app"
+# Should return: Access-Control-Allow-Origin header
+```
+
+**3.2 Test API Endpoints**
+```bash
+# Health check
+curl https://your-service.up.railway.app/api/tasks
+
+# Create analysis
+curl -X POST https://your-service.up.railway.app/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"twitter","profile_id":"test"}'
+```
+
+**3.3 Monitor Services**
+- Railway: Check deployment logs and metrics
+- Vercel: Monitor function invocations
+- Database: Monitor connection pool usage
+
+#### Troubleshooting
+
+**CORS Issues**
+- Verify `CORS_ORIGINS` matches your Vercel URL exactly
+- Check browser console for specific error messages
+- Ensure no trailing slashes in URLs
+
+**Database Connection**
+- Railway Postgres auto-configures `DATABASE_URI`
+- Run migrations: `flask db upgrade`
+- Check connection pool settings
+
+**Worker Not Processing**
+- Verify Redis is running and `REDIS_URL` is set
+- Check worker service logs in Railway
+- Without worker, tasks run via threading (acceptable for low/medium load)
+
+For detailed setup instructions, see `docs/setup_guide.md`.
 
 ### Results storage (production)
 

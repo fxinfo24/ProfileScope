@@ -127,20 +127,46 @@ curl http://127.0.0.1:5000/api/tasks
 
 ## Production Deployment
 
-### Security / environment configuration (production)
-1. Set `SECRET_KEY` as an environment variable (do not hardcode)
-2. Set `FLASK_DEBUG=false`
-3. Configure `DATABASE_URI` to point to Postgres
-4. Configure `REDIS_URL` for Celery workers
+### Railway Deployment (Recommended)
 
-### Web Server Setup (Railway)
+#### Step 1: Environment Variables
+Set these in your Railway service dashboard:
+
 ```bash
-# Web service (Railway provides $PORT)
-gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+# Required
+SECRET_KEY=your-secure-random-key-here
+DATABASE_URI=postgresql://user:pass@host:port/dbname  # Auto-provided by Railway Postgres
+REDIS_URL=redis://:password@host:port                  # Auto-provided by Railway Redis
+CORS_ORIGINS=https://your-frontend.vercel.app,https://yourdomain.com
 
-# Worker service
-celery -A app.core.tasks worker --loglevel=info --queues=analysis
+# Optional
+FLASK_DEBUG=false
+SCRAPECREATORS_API_KEY=your_api_key_here
+OPENROUTER_API_KEY=your_api_key_here
 ```
+
+#### Step 2: Deploy Web Service
+1. Connect your GitHub repository to Railway
+2. Railway auto-detects Procfile and uses the "web" command
+3. Command: `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
+4. Railway provides $PORT automatically
+
+#### Step 3: Enable Redis Add-on
+1. In Railway dashboard, click "New" → "Database" → "Add Redis"
+2. Railway automatically:
+   - Creates Redis service
+   - Sets REDIS_URL environment variable
+   - Links it to your web service
+
+#### Step 4: Deploy Worker Service (for async tasks)
+1. Create NEW service in Railway from the SAME repository
+2. Set custom start command: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
+3. Ensure these environment variables are set:
+   - `REDIS_URL` (from Redis add-on)
+   - `DATABASE_URI` (from Postgres add-on)
+4. Deploy the worker service
+
+**Important**: Web and Worker must be SEPARATE Railway services pointing to the same repo.
 
 ### Frontend Setup (Vercel)
 Set `VITE_API_BASE_URL` to your Railway backend URL + `/api`, e.g.

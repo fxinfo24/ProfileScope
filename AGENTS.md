@@ -81,7 +81,7 @@ Here’s how I want you to respond:
 - **Primary language**: Python
 - **Key backend frameworks/libraries**:
   - Flask + SQLAlchemy (`app/web/`)
-  - Celery + Redis for background jobs (`app/core/tasks.py`, `config/celery_config.py`)
+  - Celery + Redis for background jobs (`app/core/tasks.py` - canonical config)
   - NLP/ML stack: `nltk`, `spacy`, `transformers`, `torch`
   - Scraping/API integrations: ScrapeCreators client (`app/core/scrape_client.py`) and legacy platform APIs
   - LLM integration: OpenRouter (`app/core/openrouter_client.py`)
@@ -228,7 +228,7 @@ Here’s how I want you to respond:
 - Keep generated outputs in `data/`, `results/`, and `logs/` (don’t commit generated artifacts).
 - When adding new Celery tasks:
   - Put them in `app/core/tasks.py`.
-  - Add routing/queue mapping in `config/celery_config.py` if needed.
+  - Add routing/queue mapping in the `celery_app.conf.update()` section of `app/core/tasks.py` (lines 40-51).
 - Frontend API calls should target `/api/*` so Vite’s proxy works in development.
 
 ## Where to look first when debugging
@@ -240,7 +240,7 @@ Here’s how I want you to respond:
 - Analysis logic:
   - `app/core/analyzer.py`, `app/core/content_analyzer.py`, `app/core/authenticity.py`
 - Task processing:
-  - `app/core/tasks.py`, `config/celery_config.py`, Redis connectivity
+  - `app/core/tasks.py` (Celery configuration), Redis connectivity
 
 ## Documentation index
 

@@ -8,7 +8,7 @@
 
 ```
 📁 bin/          - Executable scripts (run.py, start_*.sh)
-📁 config/       - Configuration files (config.json, pytest.ini, celery_config.py) 
+📁 config/       - Configuration files (config.json, pytest.ini) 
 📁 logs/         - Log files (profilescope_web.log)
 📁 data/         - Database and data storage
 ```

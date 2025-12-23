@@ -1,25 +1,41 @@
 #!/bin/bash
 # Start Celery Worker and Flower Monitoring for ProfileScope
+# This script is for LOCAL DEVELOPMENT only
+# For Railway production, workers are deployed as separate services
 
 echo "🚀 Starting ProfileScope Real-Time Processing Pipeline"
 echo "====================================================="
 
 # Load environment variables
-source .env
+if [ -f .env ]; then
+    source .env
+else
+    echo "⚠️  Warning: .env file not found, using system environment"
+fi
 
 # Check if Redis is running
+echo "Checking Redis connection..."
 if ! redis-cli ping > /dev/null 2>&1; then
     echo "⚠️  Redis not running. Please start Redis server first:"
-    echo "   macOS: brew services start redis"
-    echo "   Linux: sudo systemctl start redis"
-    echo "   Docker: docker run -d -p 6379:6379 redis:alpine"
+    echo ""
+    echo "   macOS:   brew services start redis"
+    echo "   Linux:   sudo systemctl start redis"
+    echo "   Docker:  docker run -d -p 6379:6379 redis:alpine"
+    echo ""
+    echo "Or set REDIS_URL in .env to use remote Redis service."
     exit 1
 fi
 
 echo "✅ Redis server is running"
 
-# Activate virtual environment
-source venv/bin/activate
+# Activate virtual environment if it exists
+if [ -d "venv" ]; then
+    echo "Activating virtual environment..."
+    source venv/bin/activate
+else
+    echo "⚠️  Virtual environment not found at ./venv"
+    echo "Proceeding with system Python..."
+fi
 
 # Start Celery worker in background
 echo "🔄 Starting Celery worker..."

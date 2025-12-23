@@ -1,16 +1,26 @@
 """ProfileScope Celery tasks.
 
-This module is the Celery entrypoint used by `scripts/start_celery.sh` and by a
-Railway worker process.
+This module is the CANONICAL Celery configuration and task entrypoint.
+Used by `scripts/start_celery.sh` locally and Railway worker service in production.
+
+⚠️  IMPORTANT: This is the SOURCE OF TRUTH for Celery configuration.
+    Any other Celery config files are deprecated/unused.
 
 Design goals:
 - Operate on the same `Task` table used by the Flask API (`app.web.models.Task`).
 - Be safe to run as a separate process (Celery worker) in production.
-- Avoid references to non-existent legacy modules.
+- Gracefully handle Flask app context for database operations.
+- Support both local Redis and Railway Redis services.
 
-How to run locally:
-- Web: `python3 bin/run.py --web`
-- Worker: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
+How to run:
+- Local web: `python3 bin/run.py --web`
+- Local worker: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
+- Railway web: Auto-deployed via Procfile "web" command
+- Railway worker: Separate Railway service using Procfile "worker" command
+
+Environment requirements:
+- REDIS_URL: Redis connection string (required for Celery)
+- DATABASE_URI: PostgreSQL connection (Railway auto-provides)
 """
 
 from __future__ import annotations

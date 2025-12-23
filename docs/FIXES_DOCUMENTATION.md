@@ -8,7 +8,7 @@ This document details all systematic fixes applied to resolve critical issues wi
 ### Before (Messy Root Directory)
 ```
 ProfileScope/
-├── celery_config.py
+├── celery_config.py   # (now removed - moved to app/core/tasks.py)
 ├── config.json
 ├── pytest.ini
 ├── start_desktop.sh
@@ -28,7 +28,7 @@ ProfileScope/
 │   ├── start_web.sh
 │   └── run_tests.py
 ├── config/
-│   ├── celery_config.py
+│   ├── (celery_config.py removed - configuration in app/core/tasks.py)
 │   ├── config.json
 │   └── pytest.ini
 ├── logs/

@@ -9,15 +9,21 @@ import logging
 import random
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import tweepy
+import requests
+import time
+
+# Optional imports for social media APIs
+try:
+    import tweepy
+except ImportError:
+    tweepy = None
+
 try:
     from facebook_business.exceptions import FacebookRequestError
 except ImportError:
     # Fallback for when facebook_business is not available
     class FacebookRequestError(Exception):
         pass
-import requests
-import time
 
 from ..utils.config import load_config, ConfigError
 from .api_clients import TwitterClient, FacebookClient, RateLimitExceededError

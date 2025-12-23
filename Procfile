@@ -6,8 +6,10 @@
 #
 # To deploy worker:
 # 1. Create new service in Railway from same repo
-# 2. Set start command to: celery -A app.core.tasks worker --loglevel=info --queues=analysis
+# 2. Set start command to: celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis
 # 3. Ensure REDIS_URL environment variable is available
+#
+# Note: Using --pool=solo to avoid mmap dependency issues in containerized environments
 
 web: gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
-worker: celery -A app.core.tasks worker --loglevel=info --queues=analysis
+worker: celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis

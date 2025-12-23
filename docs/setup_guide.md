@@ -160,13 +160,16 @@ OPENROUTER_API_KEY=your_api_key_here
 
 #### Step 4: Deploy Worker Service (for async tasks)
 1. Create NEW service in Railway from the SAME repository
-2. Set custom start command: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
+2. Set custom start command: `celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis`
 3. Ensure these environment variables are set:
    - `REDIS_URL` (from Redis add-on)
    - `DATABASE_URI` (from Postgres add-on)
 4. Deploy the worker service
 
-**Important**: Web and Worker must be SEPARATE Railway services pointing to the same repo.
+**Important**: 
+- Web and Worker must be SEPARATE Railway services pointing to the same repo
+- Uses `--pool=solo` to avoid mmap dependency issues in Railway's containerized environment
+- Solo pool processes 1 task at a time (sufficient for ProfileScope's I/O-bound workload)
 
 ### Frontend Setup (Vercel)
 Set `VITE_API_BASE_URL` to your Railway backend URL + `/api`, e.g.
@@ -189,6 +192,11 @@ flask db upgrade
 4. **Database Issues**:
    - SQLite (dev): delete `data/profilescope.db` and restart
    - Postgres (prod): run `flask db upgrade` and verify `DATABASE_URI`
+5. **Celery Worker Crashes on Railway** (`ModuleNotFoundError: No module named 'mmap'`):
+   - Railway's Nixpacks Python build may lack the mmap module for multiprocessing
+   - Solution: Use `--pool=solo` flag in worker start command (already in Procfile)
+   - This runs single-threaded but is sufficient for ProfileScope's workload
+   - Verify logs show "concurrency: 1 (solo)" instead of "concurrency: 48 (prefork)"
 
 ### Debug Mode
 ```bash

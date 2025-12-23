@@ -188,12 +188,18 @@ flask db upgrade
 - Create NEW Railway service from SAME GitHub repo
 - Set custom start command:
   ```bash
-  celery -A app.core.tasks worker --loglevel=info --queues=analysis
+  celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis
   ```
 - Ensure `REDIS_URL` and `DATABASE_URI` are available
 - Deploy alongside web service
 
-**Important**: Without Redis/Worker, the app uses threading fallback (works fine for moderate load).
+**Important**: 
+- Uses `--pool=solo` to avoid mmap dependency issues in containerized environments
+  - Railway's Nixpacks Python build may be missing the `mmap` module required for multiprocessing
+  - Solo pool runs single-threaded (1 task at a time) but uses less memory and works reliably
+  - Sufficient for ProfileScope's I/O-bound tasks (~120-180 tasks/hour)
+  - Scale horizontally by adding more worker services if higher throughput is needed
+- Without Redis/Worker, the app uses threading fallback (works fine for moderate load)
 
 #### Step 2: Vercel Frontend Setup
 
@@ -258,6 +264,10 @@ curl -X POST https://your-service.up.railway.app/api/analyze \
 **Worker Not Processing**
 - Verify Redis is running and `REDIS_URL` is set
 - Check worker service logs in Railway
+- If worker crashes with "ModuleNotFoundError: No module named 'mmap'":
+  - Ensure you're using `--pool=solo` flag in the worker start command
+  - Railway's Python may lack the mmap module needed for prefork multiprocessing
+  - Solo pool is the recommended solution for containerized environments
 - Without worker, tasks run via threading (acceptable for low/medium load)
 
 For detailed setup instructions, see `docs/setup_guide.md`.

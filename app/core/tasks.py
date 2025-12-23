@@ -17,6 +17,7 @@ How to run:
 - Local worker: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
 - Railway web: Auto-deployed via Procfile "web" command
 - Railway worker: Separate Railway service using Procfile "worker" command
+  * Uses --pool=solo to avoid mmap dependency issues in containerized environments
 
 Environment requirements:
 - REDIS_URL: Redis connection string (required for Celery)

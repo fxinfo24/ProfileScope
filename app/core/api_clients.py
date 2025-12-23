@@ -8,7 +8,15 @@ import time
 import logging
 from typing import Dict, Any, Optional, Generator, List
 from datetime import datetime, timedelta
-import tweepy
+from requests.exceptions import RequestException
+from ..utils.config import load_config
+
+# Optional imports for social media APIs
+try:
+    import tweepy
+except ImportError:
+    tweepy = None
+
 try:
     from facebook_business.api import FacebookAdsApi
     from facebook_business.adobjects.user import User
@@ -24,8 +32,6 @@ except ImportError:
         pass
     class FacebookRequestError(Exception):
         pass
-from requests.exceptions import RequestException
-from ..utils.config import load_config
 
 logger = logging.getLogger("ProfileScope.APIClients")
 
@@ -107,8 +113,7 @@ class RetryHandler:
                 except (
                     RequestException,
                     FacebookRequestError,
-                    tweepy.TweepyException,
-                ) as e:
+                ) + ((tweepy.TweepyException,) if tweepy else ()) as e:
                     retries += 1
                     if retries > self.max_retries:
                         logger.error(f"Max retries ({self.max_retries}) exceeded")
@@ -130,6 +135,15 @@ class TwitterClient:
         """Initialize Twitter API client"""
         import os
         from dotenv import load_dotenv
+        
+        # Check if tweepy is available
+        if tweepy is None:
+            logger.warning("tweepy not installed - Twitter client will not be functional")
+            self._api = None
+            self._client_v2 = None
+            self.rate_limiter = RateLimiter(calls=300, period=900)
+            self.retry_handler = RetryHandler()
+            return
         
         # Load environment variables
         load_dotenv()

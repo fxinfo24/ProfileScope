@@ -1,13 +1,11 @@
 # Railway-optimized requirements (excludes GUI and heavy ML packages)
-# Core dependencies
+# Core dependencies (minimal for Railway)
 setuptools>=65.5.1
 numpy<2.0.0
 pandas>=1.3.0
-scikit-learn>=1.0.0
 nltk>=3.6.0
-transformers>=4.5.0
-torch>=1.9.0
-matplotlib>=3.7.2
+# Removed transformers and torch to avoid spacy dependencies
+# matplotlib>=3.7.2
 
 # Web framework
 flask>=2.0.0

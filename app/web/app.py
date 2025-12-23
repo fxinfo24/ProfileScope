@@ -7,6 +7,7 @@ import os
 import logging
 from flask import Flask
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 # Setup logging - production-safe (logs to stdout if logs/ doesn't exist)
 log_file = None
@@ -66,6 +67,25 @@ def create_app(test_config=None):
     # Initialize extensions with app
     db.init_app(app)
     Migrate(app, db)
+    
+    # Configure CORS
+    cors_origins = os.environ.get("CORS_ORIGINS", "").split(",")
+    # Filter out empty strings and strip whitespace
+    cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
+    
+    # If no origins specified, allow all in development, none in production
+    if not cors_origins:
+        if app.config.get("DEBUG") or os.environ.get("FLASK_ENV") == "development":
+            cors_origins = ["*"]
+        else:
+            # In production without explicit CORS_ORIGINS, be restrictive
+            logger.warning("No CORS_ORIGINS configured. CORS will be restrictive.")
+    
+    CORS(app, 
+         resources={r"/api/*": {"origins": cors_origins}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     with app.app_context():
         # Import and register blueprints

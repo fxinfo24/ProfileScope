@@ -1,5 +1,6 @@
 # Ultra-minimal Railway requirements - just web API essentials
 flask>=2.0.0
+flask-cors>=3.0.10
 Jinja2>=3.1.0
 flask-sqlalchemy>=3.1.1
 flask-migrate>=3.0.0

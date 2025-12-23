@@ -83,7 +83,7 @@ python -c "from app.web.app import create_app; from app.web.models import db; ap
 
 5. Start development server:
 ```bash
-python run.py --web
+python3 bin/run.py --web
 ```
 
 ### Frontend Development
@@ -133,7 +133,7 @@ scripts/start_celery.sh
 ### Backend Tests
 ```bash
 pytest tests/
-python run_tests.py
+python3 bin/run_tests.py
 ```
 
 ### Frontend Tests

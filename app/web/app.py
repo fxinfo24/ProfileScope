@@ -6,6 +6,7 @@ Flask web interface for the ProfileScope analyzer
 import os
 import logging
 from flask import Flask
+from flask_migrate import Migrate
 
 # Setup logging
 logging.basicConfig(
@@ -15,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ProfileScope.Web")
 
-# Import db from models
+# Import db from models (shared SQLAlchemy instance)
 from app.web.models import db
 
 
@@ -54,6 +55,7 @@ def create_app(test_config=None):
 
     # Initialize extensions with app
     db.init_app(app)
+    Migrate(app, db)
 
     with app.app_context():
         # Import and register blueprints
@@ -73,8 +75,12 @@ def create_app(test_config=None):
 
         register_filters(app)
 
-        # Create database tables
-        db.create_all()
+        # Database schema management
+        # - In development/tests, `db.create_all()` is convenient.
+        # - In production (Railway/Postgres), prefer Alembic migrations:
+        #   `flask db upgrade`
+        if app.config.get("TESTING"):
+            db.create_all()
 
     return app
 

@@ -13,8 +13,8 @@ ProfileScope/
 ├── pytest.ini
 ├── start_desktop.sh
 ├── start_web.sh
-├── run.py
-├── run_tests.py
+├── run.py             # legacy (pre-reorg)
+├── run_tests.py       # legacy (pre-reorg)
 ├── *.log files
 └── 16 total files in root
 ```
@@ -186,7 +186,7 @@ filename="logs/profilescope_web.log"
 ### Startup Scripts
 ```bash
 # Before
-python3 run.py --desktop
+python3 bin/run.py --desktop
 
 # After
 python3 bin/run.py --desktop

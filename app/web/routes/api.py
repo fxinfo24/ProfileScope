@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 import threading
+import os
 import logging
 
 from app.core.analyzer import SocialMediaAnalyzer
@@ -33,29 +34,44 @@ def run_analysis(task_id: int, platform: str, profile_id: str):
             # Update task status
             task.status = TaskStatus.PROCESSING
             task.started_at = datetime.utcnow()
+            task.progress = 10
+            task.message = "Processing"
             db.session.commit()
 
             # Run the actual analysis
             result = analyzer.analyze_profile(platform, profile_id)
 
-            # Save result to file
-            result_path = Path(current_app.config["RESULTS_FOLDER"]) / f"{task_id}.json"
-            result_path.parent.mkdir(parents=True, exist_ok=True)
+            # Persist results in DB (production-grade)
+            task.result_data = result
+            task.has_result = True
 
-            with open(result_path, "w") as f:
-                json.dump(result, f, indent=2)
+            # Optional: also write a file in development environments
+            result_path = Path(current_app.config["RESULTS_FOLDER"]) / f"{task_id}.json"
+            try:
+                result_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(result_path, "w") as f:
+                    json.dump(result, f, indent=2)
+                task.result_path = str(result_path)
+            except Exception:
+                # File persistence is best-effort; DB persistence is canonical
+                task.result_path = None
 
             # Update task as complete
             task.status = TaskStatus.COMPLETED
             task.completed_at = datetime.utcnow()
-            task.result_path = str(result_path)
+            task.progress = 100
+            task.message = "Completed"
+            if task.started_at:
+                task.duration = (task.completed_at - task.started_at).total_seconds()
             db.session.commit()
 
         except Exception as e:
             logger.error(f"Analysis failed: {str(e)}", exc_info=True)
             task.status = TaskStatus.FAILED
-            task.error_message = str(e)
+            task.error = str(e)
             task.completed_at = datetime.utcnow()
+            if task.started_at:
+                task.duration = (task.completed_at - task.started_at).total_seconds()
             db.session.commit()
 
 
@@ -80,12 +96,28 @@ def start_analysis():
     db.session.add(task)
     db.session.commit()
 
-    # Start analysis in background
-    thread = threading.Thread(
-        target=run_analysis, args=(task.id, task.platform, task.profile_id)
-    )
-    thread.daemon = True
-    thread.start()
+    # Start analysis
+    # Production: if REDIS_URL is configured, enqueue via Celery so the work runs
+    # in a separate worker process (Railway-friendly).
+    # Development fallback: background thread.
+    if os.getenv("REDIS_URL"):
+        try:
+            from app.core.tasks import run_task_analysis
+
+            run_task_analysis.delay(task.id)
+        except Exception as e:
+            logger.error(f"Failed to enqueue Celery task, falling back to thread: {e}")
+            thread = threading.Thread(
+                target=run_analysis, args=(task.id, task.platform, task.profile_id)
+            )
+            thread.daemon = True
+            thread.start()
+    else:
+        thread = threading.Thread(
+            target=run_analysis, args=(task.id, task.platform, task.profile_id)
+        )
+        thread.daemon = True
+        thread.start()
 
     return (jsonify({"message": "Analysis task created", "task": task.to_dict()}), 202)
 
@@ -113,7 +145,8 @@ def list_tasks():
         query = query.filter_by(platform=platform.lower())
     if status:
         try:
-            task_status = TaskStatus(status.upper())
+            # TaskStatus values are lowercase ("pending", "processing", ...)
+            task_status = TaskStatus(status.lower())
             query = query.filter_by(status=task_status)
         except ValueError:
             return jsonify({"error": f"Invalid status: {status}"}), 400
@@ -159,8 +192,10 @@ def cancel_task(task_id):
         return jsonify({"error": msg}), 400
 
     task.status = TaskStatus.FAILED
-    task.error_message = "Task cancelled by user"
+    task.error = "Task cancelled by user"
     task.completed_at = datetime.utcnow()
+    if task.started_at:
+        task.duration = (task.completed_at - task.started_at).total_seconds()
     db.session.commit()
 
     return jsonify({"message": "Task cancelled", "task": task.to_dict()})
@@ -175,16 +210,20 @@ def get_results(task_id):
         msg = "Results only available for completed tasks"
         return jsonify({"error": msg}), 400
 
-    if not task.result_path or not Path(task.result_path).exists():
-        return jsonify({"error": "Result file not found"}), 404
+    # Canonical source: DB
+    if task.result_data is not None:
+        return jsonify(task.result_data)
 
-    try:
-        with open(task.result_path, "r") as f:
-            results = json.load(f)
-        return jsonify(results)
-    except Exception as e:
-        logger.error(f"Error reading results for task {task_id}: {e}")
-        return jsonify({"error": "Error reading results file"}), 500
+    # Backward-compatible fallback: file
+    if task.result_path and Path(task.result_path).exists():
+        try:
+            with open(task.result_path, "r") as f:
+                results = json.load(f)
+            return jsonify(results)
+        except Exception as e:
+            logger.error(f"Error reading results for task {task_id}: {e}")
+
+    return jsonify({"error": "Results not found"}), 404
 
 
 @api_bp.route("/tasks/<int:task_id>/download", methods=["GET"])
@@ -196,15 +235,27 @@ def download_results(task_id):
         msg = "Can only download results for completed tasks"
         return jsonify({"error": msg}), 400
 
-    if not task.result_path or not Path(task.result_path).exists():
-        return jsonify({"error": "Result file not found"}), 404
+    # Prefer DB results and stream as an attachment (Railway filesystem is ephemeral)
+    if task.result_data is not None:
+        payload = json.dumps(task.result_data, indent=2)
+        return current_app.response_class(
+            payload,
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=analysis_{task.platform}_{task.profile_id}.json"
+            },
+        )
 
-    return send_file(
-        task.result_path,
-        mimetype="application/json",
-        as_attachment=True,
-        download_name=f"analysis_{task.platform}_{task.profile_id}.json",
-    )
+    # Backward-compatible fallback to file
+    if task.result_path and Path(task.result_path).exists():
+        return send_file(
+            task.result_path,
+            mimetype="application/json",
+            as_attachment=True,
+            download_name=f"analysis_{task.platform}_{task.profile_id}.json",
+        )
+
+    return jsonify({"error": "Results not found"}), 404
 
 
 @api_bp.route("/stats/platform-distribution", methods=["GET"])

@@ -23,7 +23,7 @@ source venv/bin/activate
 
 # Start Celery worker in background
 echo "🔄 Starting Celery worker..."
-celery -A app.core.tasks worker --loglevel=info --queues=analysis,vision,reports,data &
+celery -A app.core.tasks worker --loglevel=info --queues=analysis &
 CELERY_PID=$!
 
 # Start Flower monitoring dashboard
@@ -40,9 +40,11 @@ echo "🌸 Flower Monitor PID: $FLOWER_PID"
 echo ""
 echo "📋 Available Queues:"
 echo "   • analysis  - Main profile analysis tasks"
-echo "   • vision    - Computer vision image processing"
-echo "   • reports   - Report generation"
-echo "   • data      - Data collection tasks"
+# Note: only the `analysis` queue is implemented in this repository's current Celery worker.
+# Other queues are placeholders for future expansion.
+# echo "   • vision    - Computer vision image processing"
+# echo "   • reports   - Report generation"
+# echo "   • data      - Data collection tasks"
 echo ""
 echo "To stop services:"
 echo "   kill $CELERY_PID $FLOWER_PID"

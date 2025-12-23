@@ -21,71 +21,58 @@ ProfileScope provides a comprehensive RESTful API for social media profile analy
 ## API Endpoints
 
 ### Authentication
-All API requests require authentication via JWT token or API key.
+This repository's Flask API routes do **not** currently implement authentication (JWT/API keys).
 
-```bash
-Authorization: Bearer <jwt_token>
-# OR
-X-API-Key: <api_key>
-```
+If you are deploying publicly, you should add auth at the Flask layer (e.g., `flask-login`, JWT middleware) or behind an API gateway.
 
-### Core Analysis Endpoints
-
-#### GET /api/status
-Check the service status and platform availability.
+### Core Task/Analysis Endpoints (implemented)
 
 #### POST /api/analyze
-Start a new profile analysis.
+Create a new analysis task.
 
 **Request Body:**
 ```json
 {
   "platform": "twitter",
-  "profile_id": "elonmusk",
-  "include_images": true,
-  "include_posts": true,
-  "post_count": 50
+  "profile_id": "elonmusk"
 }
 ```
 
-#### GET /api/analysis/{analysis_id}
-Get the status and results of an analysis.
+**Response:** `202 Accepted` with a `task` object.
 
-#### GET /api/analysis/{analysis_id}/status
-Get real-time status of ongoing analysis.
+#### GET /api/tasks
+List tasks with optional filters:
+- Query params: `platform`, `status`, `limit` (default 10), `offset` (default 0)
 
-#### DELETE /api/analysis/{analysis_id}
-Cancel or delete an analysis.
+#### GET /api/tasks/{task_id}
+Get full task details.
 
-### Team Management (Enterprise)
+#### GET /api/tasks/{task_id}/status
+Get task status for polling (lightweight).
 
-#### GET /api/teams
-List user's teams.
+#### POST /api/tasks/{task_id}/cancel
+Cancel a task (only if status is PENDING or PROCESSING).
 
-#### POST /api/teams
-Create a new team.
+#### GET /api/tasks/{task_id}/results
+Return JSON results for a completed task.
 
-#### GET /api/teams/{team_id}/members
-List team members.
+#### GET /api/tasks/{task_id}/download
+Download results as a `.json` file.
 
-#### POST /api/teams/{team_id}/invite
-Invite new team member.
+### Stats Endpoints (implemented)
 
-### Usage and Billing
+#### GET /api/stats/platform-distribution
+Returns a count of tasks by platform.
 
-#### GET /api/usage/stats
-Get usage statistics and billing information.
+#### GET /api/stats/completion-rate
+Returns completion-rate metrics for tasks.
 
-#### GET /api/invoices
-List invoices for the user.
-
-#### POST /api/subscriptions/upgrade
-Upgrade subscription plan.
-
-## WebSocket Endpoints
-
-### Real-time Analysis Updates
-Connect to `/ws/analysis/{analysis_id}` for live progress updates.
+### Not implemented in this repo (documentation placeholders)
+The following concepts are **not** implemented by the current Flask routes in this repository:
+- WebSockets for progress updates
+- Team management / enterprise endpoints
+- Usage/billing endpoints
+- Official Python/JS SDKs
 
 ## Rate Limits
 
@@ -105,18 +92,26 @@ Connect to `/ws/analysis/{analysis_id}` for live progress updates.
 
 ## SDKs and Libraries
 
-### Python
-```python
-from profilescope import ProfileScopeAPI
+There are no official Python/JS SDK packages included in this repository.
 
-client = ProfileScopeAPI(api_key="your-api-key")
-analysis = client.analyze_profile("twitter", "username")
+### Python (example using raw HTTP)
+```python
+import requests
+
+resp = requests.post(
+    "http://localhost:5000/api/analyze",
+    json={"platform": "twitter", "profile_id": "username"},
+)
+resp.raise_for_status()
+print(resp.json())
 ```
 
-### JavaScript
+### JavaScript (example using fetch)
 ```javascript
-import { ProfileScopeClient } from 'profilescope-js';
-
-const client = new ProfileScopeClient('your-api-key');
-const analysis = await client.analyzeProfile('twitter', 'username');
+const resp = await fetch('http://localhost:5000/api/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ platform: 'twitter', profile_id: 'username' }),
+});
+console.log(await resp.json());
 ```

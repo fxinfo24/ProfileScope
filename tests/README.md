@@ -9,7 +9,7 @@ First, install the project dependencies:
 pip install setuptools
 
 # And then
-python setup_env.py
+python scripts/setup_env.py
 
 # Install requirements with compatibility
 pip install -r requirements.txt
@@ -40,13 +40,13 @@ Alternatively, use our test runner script:
 
 ```bash
 # Run all tests with HTML report
-python run_tests.py
-
-# Run only unit tests with HTML report 
-python run_tests.py --unit --html=unit_tests_report.html
+python3 bin/run_tests.py --html-report
 
 # Run all tests in verbose mode
-python run_tests.py -v
+python3 bin/run_tests.py
+
+# Run a minimal verification test
+python3 bin/run_tests.py --simple
 ```
 
 ### HTML Test Reports

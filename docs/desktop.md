@@ -17,7 +17,7 @@ ProfileScope Desktop is a PyQt5-based application that provides a native desktop
 ### Installation
 ```bash
 # Desktop app is included in main installation
-python run.py --desktop
+python3 bin/run.py --desktop
 ```
 
 ### System Requirements
@@ -87,7 +87,7 @@ npx expo start --android
 ## Getting Started
 
 ### Desktop Quick Start
-1. Launch: `python run.py --desktop`
+1. Launch: `python3 bin/run.py --desktop`
 2. Enter platform and username
 3. Configure analysis options
 4. Start analysis and view real-time progress

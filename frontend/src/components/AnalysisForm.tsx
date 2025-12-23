@@ -1,10 +1,10 @@
 // Analysis Form Component for ProfileScope
 import React, { useState } from 'react';
-import { 
-  MagnifyingGlassIcon, 
-  PhotoIcon, 
+import {
+  MagnifyingGlassIcon,
+  PhotoIcon,
   DocumentTextIcon,
-  ExclamationTriangleIcon 
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { AnalysisRequest } from '@/types';
 import { apiService } from '@/services/api';
@@ -23,8 +23,6 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
     postCount: 20
   });
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(false);
-  const [profileExists, setProfileExists] = useState<boolean | null>(null);
   const [error, setError] = useState<string>('');
 
   const platforms = [
@@ -35,25 +33,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
     { id: 'facebook', name: 'Facebook', icon: '👥' }
   ];
 
-  const handleProfileIdChange = async (value: string) => {
+  const handleProfileIdChange = (value: string) => {
+    // The current backend does not implement profile validation.
+    // We optimistically accept the input and rely on the analysis task to fail
+    // if the profile/platform is invalid.
     setFormData(prev => ({ ...prev, profileId: value }));
-    setProfileExists(null);
     setError('');
-
-    // Validate profile if value is present
-    if (value.trim() && formData.platform) {
-      setValidating(true);
-      try {
-        const response = await apiService.validateProfile(formData.platform, value.trim());
-        if (response.success && response.data) {
-          setProfileExists(response.data.exists);
-        }
-      } catch (err) {
-        console.error('Profile validation error:', err);
-      } finally {
-        setValidating(false);
-      }
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,12 +48,13 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
 
     try {
       const response = await apiService.createAnalysis(formData);
-      if (response.success && response.data) {
-        onAnalysisCreated(response.data.id);
+      if (response.success && (response.data as any)?.task?.id) {
+        onAnalysisCreated((response.data as any).task.id);
+        onClose();
       } else {
         setError(response.error || 'Failed to create analysis');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -132,25 +118,11 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                   onChange={(e) => handleProfileIdChange(e.target.value)}
                   placeholder="elonmusk"
                   className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                    profileExists === false ? 'border-red-300' : 'border-gray-300'
+'border-gray-300'
                   }`}
                   required
                 />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  {validating && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                  )}
-                  {!validating && profileExists === true && (
-                    <div className="text-green-500">✓</div>
-                  )}
-                  {!validating && profileExists === false && (
-                    <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
               </div>
-              {profileExists === false && (
-                <p className="mt-1 text-sm text-red-600">Profile not found on this platform</p>
-              )}
             </div>
 
             {/* Analysis Options */}
@@ -225,7 +197,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
               </button>
               <button
                 type="submit"
-                disabled={loading || !formData.profileId.trim() || profileExists === false}
+                disabled={loading || !formData.profileId.trim()}
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {loading && (

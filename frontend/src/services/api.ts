@@ -1,19 +1,17 @@
+/// <reference types="vite/client" />
 // API Service for ProfileScope Frontend
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { 
-  User, 
-  Analysis, 
-  AnalysisRequest, 
-  ApiResponse, 
-  DashboardStats 
-} from '@/types';
+import axios, { AxiosInstance } from 'axios';
+import { AnalysisRequest, ApiResponse } from '@/types';
 
 class ApiService {
   private api: AxiosInstance;
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || '/api';
+    // In production (Vercel), set VITE_API_BASE_URL to your Railway backend base URL,
+    // e.g. https://<service>.up.railway.app
+    // In development, default to Vite proxy for /api.
+    this.baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
     
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -23,173 +21,96 @@ class ApiService {
       },
     });
 
-    // Request interceptor to add auth token
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
     // Response interceptor for error handling
     this.api.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
   }
 
-  // Authentication
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  // NOTE: This frontend currently integrates with the Flask API implemented in
+  // `app/web/routes/api.py`.
+  // Implemented endpoints:
+  // - POST   /api/analyze
+  // - GET    /api/tasks
+  // - GET    /api/tasks/:id
+  // - GET    /api/tasks/:id/status
+  // - POST   /api/tasks/:id/cancel
+  // - GET    /api/tasks/:id/results
+  // - GET    /api/tasks/:id/download
+  // - GET    /api/stats/*
+
+  // Task / Analysis
+  async createAnalysis(request: AnalysisRequest): Promise<ApiResponse<{ task: any }>> {
     try {
-      const response = await this.api.post('/auth/login', { email, password });
-      return response.data;
+      const payload = {
+        platform: request.platform,
+        profile_id: request.profileId,
+      };
+      const response = await this.api.post('/analyze', payload);
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  async register(userData: {
-    email: string;
-    password: string;
-    username?: string;
-    firstName?: string;
-    lastName?: string;
-  }): Promise<ApiResponse<{ user: User; token: string }>> {
+  async getTask(taskId: number): Promise<ApiResponse<any>> {
     try {
-      const response = await this.api.post('/auth/register', userData);
-      return response.data;
+      const response = await this.api.get(`/tasks/${taskId}`);
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  async getCurrentUser(): Promise<ApiResponse<User>> {
+  async listTasks(params?: { platform?: string; status?: string; limit?: number; offset?: number }): Promise<ApiResponse<any>> {
     try {
-      const response = await this.api.get('/auth/me');
-      return response.data;
+      const response = await this.api.get('/tasks', { params });
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  // Analysis Management
-  async createAnalysis(request: AnalysisRequest): Promise<ApiResponse<Analysis>> {
+  async getTaskStatus(taskId: number): Promise<ApiResponse<any>> {
     try {
-      const response = await this.api.post('/analysis', request);
-      return response.data;
+      const response = await this.api.get(`/tasks/${taskId}/status`);
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  async getAnalysis(analysisId: number): Promise<ApiResponse<Analysis>> {
+  async getTaskResults(taskId: number): Promise<ApiResponse<any>> {
     try {
-      const response = await this.api.get(`/analysis/${analysisId}`);
-      return response.data;
+      const response = await this.api.get(`/tasks/${taskId}/results`);
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  async getUserAnalyses(page = 1, limit = 10): Promise<ApiResponse<{
-    analyses: Analysis[];
-    total: number;
-    page: number;
-    pages: number;
-  }>> {
+  async downloadTaskResults(taskId: number): Promise<Blob> {
+    const response = await this.api.get(`/tasks/${taskId}/download`, { responseType: 'blob' });
+    return response.data;
+  }
+
+  async getPlatformDistribution(): Promise<ApiResponse<any>> {
     try {
-      const response = await this.api.get('/analysis', {
-        params: { page, limit }
-      });
-      return response.data;
+      const response = await this.api.get('/stats/platform-distribution');
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
-  async deleteAnalysis(analysisId: number): Promise<ApiResponse<void>> {
+  async getCompletionRate(): Promise<ApiResponse<any>> {
     try {
-      await this.api.delete(`/analysis/${analysisId}`);
-      return { success: true };
+      const response = await this.api.get('/stats/completion-rate');
+      return { success: true, data: response.data };
     } catch (error) {
       return this.handleError(error);
     }
-  }
-
-  // Dashboard & Statistics
-  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    try {
-      const response = await this.api.get('/dashboard/stats');
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-
-  // Real-time Analysis Status
-  async getAnalysisStatus(analysisId: number): Promise<ApiResponse<{
-    status: string;
-    progress: number;
-    message?: string;
-  }>> {
-    try {
-      const response = await this.api.get(`/analysis/${analysisId}/status`);
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-
-  // Profile Search/Validation
-  async validateProfile(platform: string, profileId: string): Promise<ApiResponse<{
-    exists: boolean;
-    displayName?: string;
-    verified?: boolean;
-  }>> {
-    try {
-      const response = await this.api.get('/profile/validate', {
-        params: { platform, profile_id: profileId }
-      });
-      return response.data;
-    } catch (error) {
-      return this.handleError(error);
-    }
-  }
-
-  // Export & Reports
-  async exportAnalysis(analysisId: number, format: 'json' | 'pdf' | 'csv'): Promise<Blob> {
-    try {
-      const response = await this.api.get(`/analysis/${analysisId}/export`, {
-        params: { format },
-        responseType: 'blob'
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // WebSocket connection for real-time updates
-  connectToAnalysisUpdates(analysisId: number, onUpdate: (data: any) => void): WebSocket {
-    const wsUrl = this.baseURL.replace('http', 'ws') + `/ws/analysis/${analysisId}`;
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      onUpdate(data);
-    };
-    
-    return ws;
   }
 
   // Error handling
@@ -208,16 +129,10 @@ class ApiService {
   }
 
   // Utility methods
-  setAuthToken(token: string): void {
-    localStorage.setItem('auth_token', token);
-  }
-
-  removeAuthToken(): void {
-    localStorage.removeItem('auth_token');
-  }
-
+  // Auth is not implemented in this repository's Flask API.
+  // If you deploy publicly, put auth in front of the API or add auth routes.
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('auth_token');
+    return true;
   }
 }
 

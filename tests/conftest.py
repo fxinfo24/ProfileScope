@@ -191,19 +191,36 @@ def client(app):
     return app.test_client()
 
 
-# Simple HTML report setup
-def pytest_html_report_title(report):
-    """Set the title for the HTML report"""
-    report.title = "ProfileScope Test Report"
+# Optional pytest-html integration
+#
+# Root cause of prior failures:
+# - These functions implement hooks that only exist when the `pytest-html` plugin
+#   is installed and *loaded*.
+# - If pytest-html is not loaded (common in minimal envs, or when plugin autoload
+#   is disabled for determinism), pytest treats these as unknown hooks and aborts
+#   collection with a PluginValidationError.
+#
+# Fix:
+# - Only register these hook implementations when pytest-html is present.
+
+def pytest_configure(config):
+    """Register optional plugins/hooks."""
+    if config.pluginmanager.hasplugin("html"):
+        config.pluginmanager.register(_ProfileScopePytestHtmlHooks(), "profilescope-pytest-html-hooks")
 
 
-def pytest_html_results_summary(prefix, summary, postfix):
-    """Add custom summary information to the HTML report"""
-    prefix.extend(
-        [
-            "<p>ProfileScope test results. Failures must be addressed before deployment.</p>",
-        ]
-    )
+class _ProfileScopePytestHtmlHooks:
+    def pytest_html_report_title(self, report):
+        """Set the title for the HTML report"""
+        report.title = "ProfileScope Test Report"
+
+    def pytest_html_results_summary(self, prefix, summary, postfix):
+        """Add custom summary information to the HTML report"""
+        prefix.extend(
+            [
+                "<p>ProfileScope test results. Failures must be addressed before deployment.</p>",
+            ]
+        )
 
 
 # Completely rewritten pytest_runtest_makereport hook to fix the KeyError: 'content' issue

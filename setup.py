@@ -37,7 +37,8 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "profilescope=app.run:main",
+            # CLI entrypoint (importable package module)
+            "profilescope=app:main",
         ],
     },
     include_package_data=True,

@@ -140,7 +140,7 @@ This index provides quick access to all documentation, guides, and references fo
 | **[tests/test_core/](../tests/test_core/)** | Core analysis engine tests | API clients, analyzers, data collection |
 | **[tests/test_web/](../tests/test_web/)** | Web application tests | Routes, models, authentication |
 | **[tests/test_utils/](../tests/test_utils/)** | Utility function tests | NLP utils, helpers, configuration |
-| **[run_tests.py](../run_tests.py)** | Main test runner | Executes full test suite |
+| **[bin/run_tests.py](../bin/run_tests.py)** | Main test runner | Executes full test suite |
 
 ### **Quality Tools**
 | File | Purpose | Usage |
@@ -226,7 +226,7 @@ ProfileScope/
 ├── 📋 README.md                      # Project overview
 ├── ⚙️ config.json                    # Application configuration
 ├── 🔐 .env.example                   # Environment template
-└── 🚀 run.py                         # Main application launcher
+└── 🚀 bin/run.py                    # Main application launcher
 ```
 
 ---
@@ -248,11 +248,11 @@ ProfileScope/
 ### **Common Tasks Quick Reference**
 | Task | Command/Location | Documentation |
 |------|------------------|---------------|
-| **Start Web App** | `python run.py --web` | `docs/setup_guide.md` |
-| **Start Desktop** | `python run.py --desktop` | `docs/desktop.md` |
+| **Start Web App** | `python3 bin/run.py --web` | `docs/setup_guide.md` |
+| **Start Desktop** | `python3 bin/run.py --desktop` | `docs/desktop.md` |
 | **Start Mobile Dev** | `cd mobile && npx expo start` | `docs/desktop.md` |
 | **Start Real-time** | `scripts/start_celery.sh` | `docs/development.md` |
-| **Run Tests** | `python run_tests.py` | `tests/README.md` |
+| **Run Tests** | `python3 bin/run_tests.py` | `tests/README.md` |
 | **Build Frontend** | `cd frontend && npm run build` | `docs/development.md` |
 
 ---

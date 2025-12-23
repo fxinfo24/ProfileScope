@@ -78,15 +78,16 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk
 
 Analyze a profile:
 ```bash
-python run.py --platform twitter --profile username
+# Main launcher (this repo uses bin/run.py)
+python3 bin/run.py --web
+# or
+python3 bin/run.py --desktop
 ```
 
-Options:
-- `--platform`: Social media platform (twitter/instagram/linkedin/tiktok/facebook/youtube/snapchat/pinterest/reddit/github)
-- `--profile`: Username or profile ID to analyze
-- `--config`: Path to custom config file
-- `--output`: Custom output file path
-- `--verbose`: Enable detailed logging
+Options (launcher):
+- `--web`: run the Flask web app
+- `--desktop`: run the desktop app
+- `--host`, `--port`, `--debug`: web server options
 
 ### Real-time Processing
 Start the Celery workers for background processing:
@@ -119,13 +120,41 @@ python -m app.desktop.app
 
 Start the web server:
 ```bash
-python -m app.web.app
+python3 bin/run.py --web
 ```
+
+### Database migrations (production)
+
+This repo includes Alembic/Flask-Migrate in `migrations/`.
+
+- In development/testing, the app may use `db.create_all()`.
+- In production (Railway/Postgres), run migrations instead (e.g., as a Railway **Release Command**):
+
+```bash
+export DATABASE_URI="postgresql://..."
+export FLASK_APP=app.web.app
+flask db upgrade
+```
+
+### Deployment notes (Vercel + Railway)
+
+- **Frontend (Vercel)**: set `VITE_API_BASE_URL` to your Railway web service URL, e.g.
+  `https://<your-service>.up.railway.app/api`
+- **Backend (Railway)**:
+  - Web process: run Flask via Gunicorn
+  - Worker process: run Celery worker
+  - Use Railway Redis + Railway Postgres
+
+### Results storage (production)
+
+- Task results are persisted in the database in `task.result_data` (Postgres JSONB).
+- The `task.result_data` column is **deferred** by default to keep task listing fast.
+- `/api/tasks/<id>/results` and `/api/tasks/<id>/download` serve results from the DB.
 ### Shortcut for Both
 
 ```bash
-python run.py --desktop  # For desktop app
-python run.py --web      # For web interface
+python3 bin/run.py --desktop  # Desktop app
+python3 bin/run.py --web      # Web interface
 ```
 
 Access the web interface at `http://localhost:5000`
@@ -148,8 +177,13 @@ Access the web interface at `http://localhost:5000`
 
 ### Running Tests
 
+Run tests inside the project virtualenv after installing dependencies:
+
 ```bash
-pytest tests/
+python3 bin/run_tests.py --simple
+python3 bin/run_tests.py
+# or
+python -m pytest
 ```
 
 ### Contributing

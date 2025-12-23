@@ -15,11 +15,28 @@ def run_cleanup_script():
     """Run the cleanup script before tests"""
     print("\n=== Running Cleanup Script ===\n")
 
-    # Path to the cleanup script
-    script_path = os.path.join(os.path.dirname(__file__), "scripts", "cleanup.sh")
+    # Resolve cleanup script path from repository root.
+    #
+    # Root cause: this script lives in `bin/`, but the cleanup script lives in
+    # `<repo>/scripts/cleanup.sh` (not `<repo>/bin/scripts/cleanup.sh`).
+    repo_root = Path(__file__).resolve().parent.parent
+    candidate_paths = [
+        repo_root / "scripts" / "cleanup.sh",  # expected location
+        Path(__file__).resolve().parent / "scripts" / "cleanup.sh",  # legacy fallback
+    ]
 
-    if not os.path.exists(script_path):
-        print(f"Warning: Cleanup script not found at: {script_path}")
+    from typing import Optional
+
+    script_path: Optional[str] = None
+    for candidate in candidate_paths:
+        if candidate.exists():
+            script_path = str(candidate)
+            break
+
+    if not script_path:
+        print("Warning: Cleanup script not found. Tried:")
+        for candidate in candidate_paths:
+            print(f"  - {candidate}")
         return False
 
     try:
@@ -42,7 +59,13 @@ def run_cleanup_script():
 
 
 def setup_test_environment():
-    """Set up the test environment"""
+    """Set up the test environment.
+
+    This script is intentionally conservative:
+    - It may install `pytest` if missing (so the runner can function).
+    - It does NOT auto-install the full application dependencies, because that
+      can be slow/unexpected. Instead, we fail fast with actionable guidance.
+    """
     print("\n=== Setting up Test Environment ===\n")
 
     # Create test directories if they don't exist
@@ -50,13 +73,58 @@ def setup_test_environment():
 
     # Install test dependencies if needed
     try:
-        import pytest
+        import pytest  # noqa: F401
     except ImportError:
         print("Installing pytest...")
-        subprocess.run([sys.executable, "-m", "pip", "install", "pytest"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pytest"])
 
-    # We won't require pytest-html by default to avoid the errors
     return True
+
+
+def _in_virtualenv() -> bool:
+    # Works for venv and virtualenv
+    return getattr(sys, "base_prefix", sys.prefix) != sys.prefix
+
+
+def _preflight_check_runtime_deps() -> bool:
+    """Fail fast if common runtime deps required by the test suite are missing."""
+    missing = []
+    required_modules = [
+        "requests",  # used by tweepy and API clients
+        "jinja2",  # Flask templates/tests
+        "flask",
+        "flask_sqlalchemy",
+        "flask_migrate",
+        "tweepy",
+    ]
+
+    for mod in required_modules:
+        try:
+            __import__(mod)
+        except Exception:
+            missing.append(mod)
+
+    if not missing:
+        return True
+
+    print("\n=== Missing Dependencies Detected ===\n")
+    print("The full test suite requires additional dependencies that are not available in this Python environment.")
+    print(f"Missing import(s): {', '.join(missing)}")
+    print("")
+
+    if not _in_virtualenv():
+        print("You do not appear to be running inside the project's virtualenv.")
+        print("Recommended setup:")
+        print("  python -m venv venv")
+        print("  source venv/bin/activate")
+
+    print("Install project dependencies:")
+    print("  pip install -r requirements.txt")
+    print("")
+    print("If you only want to verify the test runner itself, use:")
+    print("  python3 bin/run_tests.py --simple")
+
+    return False
 
 
 def run_simple_tests():
@@ -79,7 +147,13 @@ def test_simple():
     # Run the test with minimal options to avoid plugin conflicts
     cmd = [sys.executable, "-m", "pytest", "-v", test_file]
 
-    result = subprocess.run(cmd)
+    # Prevent globally-installed pytest plugins from interfering with this run.
+    # This is important in environments where pytest plugins (e.g. pytest-html)
+    # are installed system-wide but their dependencies are not available.
+    env_vars = os.environ.copy()
+    env_vars.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+
+    result = subprocess.run(cmd, env=env_vars)
 
     # Clean up the temporary test file
     try:
@@ -113,7 +187,11 @@ def main():
         help="Generate JUnit XML report at the specified path",
     )
     parser.add_argument("pytest_args", nargs="*", help="Additional pytest arguments")
-    args = parser.parse_args()
+    # Use parse_known_args so users can pass through arbitrary pytest flags
+    # (e.g. -q, -k, -m) without this wrapper rejecting them.
+    args, unknown_args = parser.parse_known_args()
+    if unknown_args:
+        args.pytest_args.extend(unknown_args)
 
     # Run cleanup script before tests unless skipped
     if not args.skip_cleanup and os.environ.get("PROFILESCOPE_CLEANUP_RUN") != "1":
@@ -138,21 +216,30 @@ def main():
             print("\n❌ Simple test failed.")
             return 1
 
+    # Preflight: avoid failing deep in pytest collection due to missing deps
+    if not _preflight_check_runtime_deps():
+        return 1
+
     # Build command for running tests
     cmd = [sys.executable, "-m", "pytest", "-v", "--no-header", "--tb=native"]
 
     # Create environment variables dictionary
     env_vars = os.environ.copy()
     env_vars["PROFILESCOPE_CLEANUP_RUN"] = "1"  # Prevents duplicate cleanup
+    # Prevent globally-installed pytest plugins from interfering with this run.
+    # (Makes test runs more deterministic across dev machines/CI images.)
+    env_vars.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
 
     # Add HTML reporting only if explicitly requested
     if args.html_report:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         html_report = f"test_results/pytest_report_{timestamp}.html"
+        # Explicitly enable pytest-html when plugin autoload is disabled.
+        # (This keeps non-HTML runs deterministic and avoids global plugin conflicts.)
         try:
-            import pytest_html
+            import pytest_html  # noqa: F401
 
-            cmd.extend(["--html", html_report, "--self-contained-html"])
+            cmd.extend(["-p", "pytest_html", "--html", html_report, "--self-contained-html"])
             print(f"HTML report will be saved to: {html_report}")
         except ImportError:
             print("Warning: pytest-html not installed. HTML report won't be generated.")

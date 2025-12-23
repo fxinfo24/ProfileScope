@@ -46,11 +46,11 @@ For direct API access (not recommended - use ScrapeCreators instead):
 # Test core functionality with universal APIs
 python -c "from app.core.scrape_client import get_scrape_client; from app.core.openrouter_client import openrouter_client; print('✅ Universal APIs ready')"
 
-# Start web interface (Flask + React)
-python run.py --web
+# Start web interface (Flask)
+python3 bin/run.py --web
 
 # Start desktop interface
-python run.py --desktop
+python3 bin/run.py --desktop
 
 # Start real-time processing
 scripts/start_celery.sh
@@ -105,7 +105,7 @@ ProfileScope/
 ### Automated Tests
 ```bash
 # Run all tests
-python run_tests.py
+python3 bin/run_tests.py
 
 # Run specific test categories
 pytest tests/test_core/
@@ -160,7 +160,7 @@ with app.app_context():
 ### Debug Mode
 ```bash
 # Run with debug logging
-python run.py --web --debug
+python3 bin/run.py --web --debug
 
 # Check logs
 tail -f data/logs/profilescope.log

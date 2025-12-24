@@ -227,3 +227,4 @@ backup-*
 ssl/
 monitoring/
 analytics_cache/
+*.log\nlog.txt

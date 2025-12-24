@@ -22,9 +22,19 @@ analyzer = SocialMediaAnalyzer()
 api_bp = Blueprint("api", __name__)
 
 
-def run_analysis(task_id: int, platform: str, profile_id: str):
-    """Run analysis in background thread"""
-    with current_app.app_context():
+def run_analysis(task_id: int, platform: str, profile_id: str, app=None):
+    """Run analysis in background thread
+    
+    Args:
+        task_id: ID of the task to process
+        platform: Social media platform
+        profile_id: Profile identifier
+        app: Flask app instance (required for thread context)
+    """
+    if app is None:
+        app = current_app._get_current_object()
+    
+    with app.app_context():
         task = Task.query.get(task_id)
         if not task:
             logger.error(f"Task {task_id} not found")
@@ -122,8 +132,11 @@ def start_analysis():
         # Use threading (default for Railway deployment without worker service)
         logger.info(f"Starting task {task.id} in background thread")
         try:
+            # Pass app instance to thread for context
+            app_instance = current_app._get_current_object()
             thread = threading.Thread(
-                target=run_analysis, args=(task.id, task.platform, task.profile_id)
+                target=run_analysis, 
+                args=(task.id, task.platform, task.profile_id, app_instance)
             )
             thread.daemon = True
             thread.start()
@@ -246,8 +259,11 @@ def retry_task(task_id):
 
     # Start task using threading (force bypass Celery)
     try:
+        # Pass app instance to thread for context
+        app_instance = current_app._get_current_object()
         thread = threading.Thread(
-            target=run_analysis, args=(task.id, task.platform, task.profile_id)
+            target=run_analysis, 
+            args=(task.id, task.platform, task.profile_id, app_instance)
         )
         thread.daemon = True
         thread.start()

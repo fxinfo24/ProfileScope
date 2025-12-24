@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
+import AnalysisForm from '@/components/AnalysisForm';
 
 interface Task {
   id: number;
@@ -17,6 +18,7 @@ const TasksList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ platform: '', status: '' });
+  const [showNewAnalysis, setShowNewAnalysis] = useState(false);
 
   useEffect(() => {
     loadTasks();
@@ -54,15 +56,15 @@ const TasksList: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Analysis Tasks</h1>
-          <Link 
-            to="/dashboard" 
+          <button 
+            onClick={() => setShowNewAnalysis(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             New Analysis
-          </Link>
+          </button>
         </div>
 
         {/* Main Content with Sidebar */}
@@ -258,6 +260,16 @@ const TasksList: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {showNewAnalysis && (
+        <AnalysisForm
+          onAnalysisCreated={() => {
+            setShowNewAnalysis(false);
+            loadTasks();
+          }}
+          onClose={() => setShowNewAnalysis(false)}
+        />
+      )}
     </div>
   );
 };

@@ -63,7 +63,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
 
   return (
     <div className="fixed inset-0 overflow-y-auto h-full w-full z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md" style={{ backgroundColor: 'var(--light-bg)', borderColor: 'var(--border-color)' }}>
         <div className="mt-3">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -96,7 +96,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                     onClick={() => setFormData(prev => ({ ...prev, platform: platform.id as any }))}
                     className="relative flex items-center justify-center rounded-md border p-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     style={{
-                      backgroundColor: formData.platform === platform.id ? 'var(--primary-light)' : 'var(--card-bg)',
+                      backgroundColor: formData.platform === platform.id ? 'var(--primary-light)' : 'transparent',
                       borderColor: formData.platform === platform.id ? 'var(--primary)' : 'var(--border-color)',
                       color: 'var(--text-primary)'
                     }}
@@ -121,9 +121,9 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                   placeholder="elonmusk"
                   className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                   style={{
-                    backgroundColor: 'var(--light-bg)',
+                    backgroundColor: 'white',
                     borderColor: 'var(--border-color)',
-                    color: 'var(--text-primary)'
+                    color: '#1e293b'
                   }}
                   required
                 />
@@ -157,9 +157,9 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                     onChange={(e) => setFormData(prev => ({ ...prev, postCount: parseInt(e.target.value) }))}
                     className="block w-32 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     style={{
-                      backgroundColor: 'var(--light-bg)',
+                      backgroundColor: 'white',
                       borderColor: 'var(--border-color)',
-                      color: 'var(--text-primary)'
+                      color: '#1e293b'
                     }}
                   >
                     <option value={10}>10 posts</option>
@@ -205,7 +205,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                 onClick={onClose}
                 className="px-4 py-2 border rounded-md shadow-sm text-sm font-medium hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 style={{
-                  backgroundColor: 'var(--card-bg)',
+                  backgroundColor: 'transparent',
                   borderColor: 'var(--border-color)',
                   color: 'var(--text-primary)'
                 }}

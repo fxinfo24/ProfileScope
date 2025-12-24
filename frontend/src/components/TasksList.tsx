@@ -51,6 +51,7 @@ const TasksList: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Analysis Tasks</h1>
           <Link 
@@ -64,49 +65,128 @@ const TasksList: React.FC = () => {
           </Link>
         </div>
 
-        {/* Filters */}
-        <div className="card rounded-lg shadow-sm mb-6 p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Platform</label>
-              <select 
-                className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
-                style={{ 
-                  backgroundColor: 'var(--light-bg)', 
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-                value={filter.platform}
-                onChange={(e) => setFilter({...filter, platform: e.target.value})}
+        {/* Main Content with Sidebar */}
+        <div className="flex gap-6">
+          {/* Sidebar Filters */}
+          <div className="w-80 flex-shrink-0">
+            <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+              <h3 className="text-lg font-semibold mb-6" style={{ color: 'var(--text-primary)' }}>Filters</h3>
+              
+              {/* Platform Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Platform</label>
+                <select 
+                  className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  style={{ 
+                    backgroundColor: 'var(--light-bg)', 
+                    color: 'var(--text-primary)',
+                    borderColor: 'var(--border-color)'
+                  }}
+                  value={filter.platform}
+                  onChange={(e) => setFilter({...filter, platform: e.target.value})}
+                >
+                  <option value="">All Platforms</option>
+                  <option value="twitter">Twitter</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="linkedin">LinkedIn</option>
+                </select>
+              </div>
+
+              {/* Status Filter with Dropdown */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Status</label>
+                <details className="relative">
+                  <summary 
+                    className="w-full px-3 py-2 rounded-md border cursor-pointer list-none flex items-center justify-between"
+                    style={{ 
+                      backgroundColor: 'var(--light-bg)', 
+                      color: 'var(--text-primary)',
+                      borderColor: 'var(--border-color)'
+                    }}
+                  >
+                    <span>{filter.status ? filter.status.charAt(0).toUpperCase() + filter.status.slice(1) : 'All Statuses'}</span>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div 
+                    className="absolute z-10 w-full mt-1 rounded-md shadow-lg border"
+                    style={{ 
+                      backgroundColor: 'var(--card-bg)',
+                      borderColor: 'var(--border-color)'
+                    }}
+                  >
+                    <button
+                      onClick={() => setFilter({...filter, status: ''})}
+                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        backgroundColor: !filter.status ? 'var(--primary-light)' : 'transparent'
+                      }}
+                    >
+                      All Statuses
+                    </button>
+                    <button
+                      onClick={() => setFilter({...filter, status: 'pending'})}
+                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        backgroundColor: filter.status === 'pending' ? 'var(--primary-light)' : 'transparent'
+                      }}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => setFilter({...filter, status: 'processing'})}
+                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        backgroundColor: filter.status === 'processing' ? 'var(--primary-light)' : 'transparent'
+                      }}
+                    >
+                      Processing
+                    </button>
+                    <button
+                      onClick={() => setFilter({...filter, status: 'completed'})}
+                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        backgroundColor: filter.status === 'completed' ? 'var(--primary-light)' : 'transparent'
+                      }}
+                    >
+                      Completed
+                    </button>
+                    <button
+                      onClick={() => setFilter({...filter, status: 'failed'})}
+                      className="w-full text-left px-3 py-2 hover:bg-opacity-80"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        backgroundColor: filter.status === 'failed' ? 'var(--primary-light)' : 'transparent'
+                      }}
+                    >
+                      Failed
+                    </button>
+                  </div>
+                </details>
+              </div>
+
+              {/* Apply Filters Button */}
+              <button
+                onClick={loadTasks}
+                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                <option value="">All Platforms</option>
-                <option value="twitter">Twitter</option>
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-                <option value="linkedin">LinkedIn</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Status</label>
-              <select 
-                className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
-                style={{ 
-                  backgroundColor: 'var(--light-bg)', 
-                  color: 'var(--text-primary)',
-                  borderColor: 'var(--border-color)'
-                }}
-                value={filter.status}
-                onChange={(e) => setFilter({...filter, status: e.target.value})}
-              >
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-              </select>
+                Apply Filters
+              </button>
             </div>
           </div>
-        </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1">
 
         {/* Tasks Table */}
         {loading ? (
@@ -175,6 +255,8 @@ const TasksList: React.FC = () => {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

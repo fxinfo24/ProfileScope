@@ -27,14 +27,21 @@ const Layout: React.FC = () => {
                 <span className="ml-2 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>ProfileScope</span>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <a
-                  href="/dashboard"
-                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  style={{ borderColor: 'var(--primary)', color: 'var(--text-primary)' }}
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium hover:opacity-80"
+                  style={{ borderColor: 'var(--primary)', color: 'var(--text-primary)', background: 'transparent' }}
                 >
                   <ChartBarIcon className="h-4 w-4 mr-2" />
                   Dashboard
-                </a>
+                </button>
+                <button
+                  onClick={() => navigate('/tasks')}
+                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium hover:opacity-80"
+                  style={{ borderColor: 'transparent', color: 'var(--text-secondary)', background: 'transparent' }}
+                >
+                  Tasks
+                </button>
               </div>
             </div>
             <div className="ml-6 flex items-center">

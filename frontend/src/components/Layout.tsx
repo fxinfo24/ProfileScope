@@ -36,7 +36,7 @@ const Layout: React.FC = () => {
                 </a>
               </div>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:items-center">
+            <div className="ml-6 flex items-center">
               <div className="ml-3 relative">
                 <div className="flex items-center space-x-4">
                   {/* Dark Mode Toggle */}

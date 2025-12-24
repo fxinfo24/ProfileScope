@@ -11,5 +11,5 @@
 #
 # Note: Using --pool=solo to avoid mmap dependency issues in containerized environments
 
-web: gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+web: gunicorn -b 0.0.0.0:$PORT --workers=1 --threads=4 --timeout=120 app.web.app:create_app()
 worker: celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis

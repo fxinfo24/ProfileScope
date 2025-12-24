@@ -1,7 +1,8 @@
 {
-  "$comment": "Last updated: 2025-12-24 - Force redeploy for SPA routing fix",
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "$comment": "ProfileScope Frontend Deployment - React SPA with API proxy",
+  "buildCommand": "npm install --prefix frontend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
+  "installCommand": "echo 'Skipping root install'",
   "rewrites": [
     {
       "source": "/api/:path*",

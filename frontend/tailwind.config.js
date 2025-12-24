@@ -33,3 +33,8 @@ export default {
   },
   plugins: [],
 }
+// Dark mode configuration
+module.exports = {
+  darkMode: ['class', '[data-theme="dark"]'],
+  // ... rest of config
+}

@@ -1,13 +1,17 @@
-// Layout Component for ProfileScope
+// Layout Component for ProfileScope with Dark Mode
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
+  MoonIcon,
+  SunIcon,
 } from '@heroicons/react/24/outline';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,6 +39,20 @@ const Layout: React.FC = () => {
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
               <div className="ml-3 relative">
                 <div className="flex items-center space-x-4">
+                  {/* Dark Mode Toggle */}
+                  <button
+                    onClick={toggleTheme}
+                    className="bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                    aria-label="Toggle theme"
+                  >
+                    {theme === 'light' ? (
+                      <MoonIcon className="h-6 w-6" />
+                    ) : (
+                      <SunIcon className="h-6 w-6" />
+                    )}
+                  </button>
+                  
                   <button
                     onClick={() => navigate('/dashboard')}
                     className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"

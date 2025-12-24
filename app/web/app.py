@@ -73,13 +73,19 @@ def create_app(test_config=None):
     # Filter out empty strings and strip whitespace
     cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
     
-    # If no origins specified, allow all in development, none in production
+    # If no origins specified, use smart defaults
     if not cors_origins:
         if app.config.get("DEBUG") or os.environ.get("FLASK_ENV") == "development":
             cors_origins = ["*"]
         else:
-            # In production without explicit CORS_ORIGINS, be restrictive
-            logger.warning("No CORS_ORIGINS configured. CORS will be restrictive.")
+            # In production, default to allowing Vercel frontends
+            cors_origins = [
+                "https://profile-scope.vercel.app",
+                "https://profile-scope-git-main-fxinfo24s-projects.vercel.app",
+                "http://localhost:5173",  # Vite dev server
+                "http://127.0.0.1:5173",
+            ]
+            logger.info(f"Using default CORS origins: {cors_origins}")
     
     CORS(app, 
          resources={r"/api/*": {"origins": cors_origins}},

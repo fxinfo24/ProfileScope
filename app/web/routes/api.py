@@ -35,6 +35,10 @@ def run_analysis(task_id: int, platform: str, profile_id: str, app=None):
         app = current_app._get_current_object()
     
     with app.app_context():
+        # Force new database connection for this thread
+        # SQLAlchemy connections are not thread-safe
+        db.session.remove()  # Remove any existing session
+        
         task = Task.query.get(task_id)
         if not task:
             logger.error(f"Task {task_id} not found")

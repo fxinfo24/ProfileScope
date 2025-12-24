@@ -228,3 +228,13 @@ ssl/
 monitoring/
 analytics_cache/
 *.log\nlog.txt
+
+# Log files
+*.log
+logs/*.log
+profilescope.log
+log.txt
+
+# Temporary files
+tmp_*
+.DS_Store

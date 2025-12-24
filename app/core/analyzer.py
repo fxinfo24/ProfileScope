@@ -130,7 +130,7 @@ class SocialMediaAnalyzer:
                 "confidence_threshold": 0.65,
             },
             "output": {"save_raw_data": True, "export_format": "json"},
-            "logging": {"level": "INFO", "file": "profilescope.log"},
+            "logging": {"level": "INFO", "file": "logs/profilescope.log"},
         }
 
         if not config_path:

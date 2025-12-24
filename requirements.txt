@@ -1,3 +1,8 @@
+# ProfileScope Requirements - Railway Production (Minimal)
+# This file is used by Railway for production deployment
+# Includes only essential packages for running the web API
+# For local development, use requirements-full.txt instead
+
 # Ultra-minimal Railway requirements - just web API essentials
 flask>=2.0.0
 flask-cors>=3.0.10

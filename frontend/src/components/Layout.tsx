@@ -14,22 +14,23 @@ const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="card shadow-sm border-b" style={{ borderColor: 'var(--border-color)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <div className="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--primary)' }}>
                   <span className="text-white font-bold text-lg">P</span>
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">ProfileScope</span>
+                <span className="ml-2 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>ProfileScope</span>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <a
                   href="/dashboard"
-                  className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  style={{ borderColor: 'var(--primary)', color: 'var(--text-primary)' }}
                 >
                   <ChartBarIcon className="h-4 w-4 mr-2" />
                   Dashboard
@@ -42,7 +43,13 @@ const Layout: React.FC = () => {
                   {/* Dark Mode Toggle */}
                   <button
                     onClick={toggleTheme}
-                    className="bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    className="p-2 rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style={{ 
+                      backgroundColor: 'var(--light-bg)', 
+                      color: 'var(--text-secondary)',
+                      borderColor: 'var(--border-color)',
+                      border: '1px solid'
+                    }}
                     title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
                     aria-label="Toggle theme"
                   >
@@ -55,7 +62,13 @@ const Layout: React.FC = () => {
                   
                   <button
                     onClick={() => navigate('/dashboard')}
-                    className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    className="p-1 rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style={{ 
+                      backgroundColor: 'var(--light-bg)', 
+                      color: 'var(--text-secondary)',
+                      borderColor: 'var(--border-color)',
+                      border: '1px solid'
+                    }}
                     title="Dashboard"
                   >
                     <ArrowRightOnRectangleIcon className="h-6 w-6" />

@@ -223,6 +223,44 @@ def cancel_task(task_id):
     return jsonify({"message": "Task cancelled", "task": task.to_dict()})
 
 
+@api_bp.route("/tasks/<int:task_id>/retry", methods=["POST"])
+def retry_task(task_id):
+    """Retry a stuck or failed task using threading (bypass Celery)"""
+    task = Task.query.get_or_404(task_id)
+
+    # Only allow retrying pending, failed, or stuck processing tasks
+    if task.status not in [TaskStatus.PENDING, TaskStatus.FAILED, TaskStatus.PROCESSING]:
+        msg = "Can only retry pending, failed, or processing tasks"
+        return jsonify({"error": msg}), 400
+
+    logger.info(f"Retrying task {task.id} (status: {task.status.value})")
+    
+    # Reset task to pending state
+    task.status = TaskStatus.PENDING
+    task.error = None
+    task.started_at = None
+    task.completed_at = None
+    task.progress = 0
+    task.message = "Retrying"
+    db.session.commit()
+
+    # Start task using threading (force bypass Celery)
+    try:
+        thread = threading.Thread(
+            target=run_analysis, args=(task.id, task.platform, task.profile_id)
+        )
+        thread.daemon = True
+        thread.start()
+        logger.info(f"Task {task.id} retry started in background thread")
+        return jsonify({"message": "Task retry started", "task": task.to_dict()}), 200
+    except Exception as e:
+        logger.error(f"Failed to retry task {task.id}: {e}", exc_info=True)
+        task.status = TaskStatus.FAILED
+        task.error = f"Failed to retry: {str(e)}"
+        db.session.commit()
+        return jsonify({"error": "Failed to retry task", "details": str(e)}), 500
+
+
 @api_bp.route("/tasks/<int:task_id>/results", methods=["GET"])
 def get_results(task_id):
     """Get analysis results for a completed task"""

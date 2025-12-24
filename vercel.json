@@ -1,4 +1,5 @@
 {
+  "$comment": "Last updated: 2025-12-24 - Force redeploy for SPA routing fix",
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [

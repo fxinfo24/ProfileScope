@@ -1,6 +1,4 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -10,8 +8,5 @@
       "source": "/:path*",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_API_BASE_URL": "https://profilescope-production.up.railway.app/api"
-  }
+  ]
 }

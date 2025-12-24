@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--light-bg)' }}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -71,15 +71,15 @@ const Dashboard: React.FC = () => {
   const pieData = platformDist.map((p) => ({ name: p.platform, value: p.count }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
+      <div className="card shadow" style={{ backgroundColor: 'var(--card-bg)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6 md:flex md:items-center md:justify-between">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+              <h1 className="text-2xl font-bold leading-7 sm:text-3xl sm:truncate" style={{ color: 'var(--text-primary)' }}>
                 Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Recent analysis tasks and platform distribution.
               </p>
             </div>
@@ -98,47 +98,47 @@ const Dashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
             <div className="flex items-center">
               <ChartBarIcon className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <div className="text-sm text-gray-500">Total Tasks</div>
-                <div className="text-2xl font-semibold text-gray-900">{completionRate?.total ?? tasks.length}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Tasks</div>
+                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.total ?? tasks.length}</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
             <div className="flex items-center">
               <CheckCircleIcon className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <div className="text-sm text-gray-500">Completed</div>
-                <div className="text-2xl font-semibold text-gray-900">{completionRate?.completed ?? 0}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Completed</div>
+                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.completed ?? 0}</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
             <div className="flex items-center">
               <ClockIcon className="h-8 w-8 text-yellow-600" />
               <div className="ml-4">
-                <div className="text-sm text-gray-500">Completion Rate</div>
-                <div className="text-2xl font-semibold text-gray-900">{(completionRate?.completion_rate ?? 0).toFixed(1)}%</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Completion Rate</div>
+                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{(completionRate?.completion_rate ?? 0).toFixed(1)}%</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
             <div className="flex items-center">
               <ChartBarIcon className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <div className="text-sm text-gray-500">Failed</div>
-                <div className="text-2xl font-semibold text-gray-900">{completionRate?.failed ?? 0}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Failed</div>
+                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.failed ?? 0}</div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Platform Breakdown</h3>
+          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+            <h3 className="text-lg font-medium mb-4" style={{ color: 'var(--text-primary)' }}>Platform Breakdown</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -159,28 +159,28 @@ const Dashboard: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Recent Tasks</h3>
+          <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+              <h3 className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>Recent Tasks</h3>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
               {tasks.length ? (
                 tasks.map((t) => (
                   <div key={t.id} className="px-6 py-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                           {t.platform} / {(t.profile_id ?? t.profileId) ?? ''}
                         </div>
-                        <div className="text-sm text-gray-500">{t.status}{t.progress != null ? ` • ${t.progress}%` : ''}{t.message ? ` • ${t.message}` : ''}</div>
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.status}{t.progress != null ? ` • ${t.progress}%` : ''}{t.message ? ` • ${t.message}` : ''}</div>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="px-6 py-8 text-center">
-                  <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No tasks yet</h3>
+                  <ChartBarIcon className="mx-auto h-12 w-12" style={{ color: 'var(--text-secondary)' }} />
+                  <h3 className="mt-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No tasks yet</h3>
                 </div>
               )}
             </div>

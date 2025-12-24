@@ -86,12 +86,12 @@ def start_analysis():
             400,
         )
 
-    # Create new task
+    # Create new task (Task.__init__ only accepts platform and profile_id)
     task = Task(
         platform=data["platform"].lower(),
-        profile_id=data["profile_id"],
-        status=TaskStatus.PENDING,
+        profile_id=data["profile_id"]
     )
+    # Status is set to PENDING by default in __init__
 
     db.session.add(task)
     db.session.commit()

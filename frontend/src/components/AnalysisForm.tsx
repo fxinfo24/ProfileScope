@@ -62,17 +62,18 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+    <div className="fixed inset-0 overflow-y-auto h-full w-full z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
         <div className="mt-3">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
               Create New Analysis
             </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="hover:opacity-70"
+              style={{ color: 'var(--text-secondary)' }}
             >
               <span className="sr-only">Close</span>
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +85,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Platform Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                 Social Media Platform
               </label>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -93,11 +94,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                     key={platform.id}
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, platform: platform.id as any }))}
-                    className={`${
-                      formData.platform === platform.id
-                        ? 'bg-primary-50 border-primary-200 text-primary-900'
-                        : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'
-                    } relative flex items-center justify-center rounded-md border p-4 focus:outline-none focus:ring-2 focus:ring-primary-500`}
+                    className="relative flex items-center justify-center rounded-md border p-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    style={{
+                      backgroundColor: formData.platform === platform.id ? 'var(--primary-light)' : 'var(--card-bg)',
+                      borderColor: formData.platform === platform.id ? 'var(--primary)' : 'var(--border-color)',
+                      color: 'var(--text-primary)'
+                    }}
                   >
                     <span className="text-lg mr-2">{platform.icon}</span>
                     <span className="text-sm font-medium">{platform.name}</span>
@@ -108,7 +110,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
 
             {/* Profile ID */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                 Profile Username (without @)
               </label>
               <div className="relative">
@@ -117,9 +119,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                   value={formData.profileId}
                   onChange={(e) => handleProfileIdChange(e.target.value)}
                   placeholder="elonmusk"
-                  className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-'border-gray-300'
-                  }`}
+                  className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  style={{
+                    backgroundColor: 'var(--light-bg)',
+                    borderColor: 'var(--border-color)',
+                    color: 'var(--text-primary)'
+                  }}
                   required
                 />
               </div>
@@ -127,7 +132,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
 
             {/* Analysis Options */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Analysis Options</h4>
+              <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Analysis Options</h4>
               
               <div className="flex items-center">
                 <input
@@ -135,21 +140,27 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                   type="checkbox"
                   checked={formData.includePosts}
                   onChange={(e) => setFormData(prev => ({ ...prev, includePosts: e.target.checked }))}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 rounded"
+                  style={{ borderColor: 'var(--border-color)' }}
                 />
                 <label htmlFor="include-posts" className="ml-3 flex items-center">
-                  <DocumentTextIcon className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-sm text-gray-700">Analyze recent posts</span>
+                  <DocumentTextIcon className="h-4 w-4 mr-2" style={{ color: 'var(--text-secondary)' }} />
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Analyze recent posts</span>
                 </label>
               </div>
 
               {formData.includePosts && (
                 <div className="ml-7">
-                  <label className="block text-sm text-gray-700 mb-1">Number of posts to analyze</label>
+                  <label className="block text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Number of posts to analyze</label>
                   <select
                     value={formData.postCount}
                     onChange={(e) => setFormData(prev => ({ ...prev, postCount: parseInt(e.target.value) }))}
-                    className="block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    className="block w-32 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    style={{
+                      backgroundColor: 'var(--light-bg)',
+                      borderColor: 'var(--border-color)',
+                      color: 'var(--text-primary)'
+                    }}
                   >
                     <option value={10}>10 posts</option>
                     <option value={20}>20 posts</option>
@@ -165,11 +176,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                   type="checkbox"
                   checked={formData.includeImages}
                   onChange={(e) => setFormData(prev => ({ ...prev, includeImages: e.target.checked }))}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 rounded"
+                  style={{ borderColor: 'var(--border-color)' }}
                 />
                 <label htmlFor="include-images" className="ml-3 flex items-center">
-                  <PhotoIcon className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-sm text-gray-700">Analyze profile images</span>
+                  <PhotoIcon className="h-4 w-4 mr-2" style={{ color: 'var(--text-secondary)' }} />
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Analyze profile images</span>
                 </label>
               </div>
             </div>
@@ -191,7 +203,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="px-4 py-2 border rounded-md shadow-sm text-sm font-medium hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                style={{
+                  backgroundColor: 'var(--card-bg)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)'
+                }}
               >
                 Cancel
               </button>

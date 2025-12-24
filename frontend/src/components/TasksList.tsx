@@ -38,33 +38,44 @@ const TasksList: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, string> = {
-      pending: 'bg-warning',
-      processing: 'bg-info',
-      completed: 'bg-success',
-      failed: 'bg-danger'
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     };
-    return badges[status] || 'bg-secondary';
+    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
   };
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Analysis Tasks</h1>
-        <Link to="/dashboard" className="btn btn-primary">
-          <i className="bi bi-plus-circle me-2"></i>New Analysis
-        </Link>
-      </div>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Analysis Tasks</h1>
+          <Link 
+            to="/dashboard" 
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Analysis
+          </Link>
+        </div>
 
-      {/* Filters */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Platform</label>
+        {/* Filters */}
+        <div className="card rounded-lg shadow-sm mb-6 p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Platform</label>
               <select 
-                className="form-select"
+                className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
+                style={{ 
+                  backgroundColor: 'var(--light-bg)', 
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-color)'
+                }}
                 value={filter.platform}
                 onChange={(e) => setFilter({...filter, platform: e.target.value})}
               >
@@ -75,10 +86,15 @@ const TasksList: React.FC = () => {
                 <option value="linkedin">LinkedIn</option>
               </select>
             </div>
-            <div className="col-md-4">
-              <label className="form-label">Status</label>
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Status</label>
               <select 
-                className="form-select"
+                className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
+                style={{ 
+                  backgroundColor: 'var(--light-bg)', 
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-color)'
+                }}
                 value={filter.status}
                 onChange={(e) => setFilter({...filter, status: e.target.value})}
               >
@@ -91,78 +107,75 @@ const TasksList: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Tasks Table */}
-      {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+        {/* Tasks Table */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
-        </div>
-      ) : tasks.length === 0 ? (
-        <div className="alert alert-info">
-          <i className="bi bi-info-circle me-2"></i>
-          No tasks found. Create a new analysis to get started!
-        </div>
-      ) : (
-        <div className="card">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Platform</th>
-                  <th>Profile</th>
-                  <th>Status</th>
-                  <th>Progress</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map(task => (
-                  <tr key={task.id}>
-                    <td>#{task.id}</td>
-                    <td>
-                      <span className="text-capitalize">{task.platform}</span>
-                    </td>
-                    <td>{task.profile_id}</td>
-                    <td>
-                      <span className={`badge ${getStatusBadge(task.status)}`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="progress" style={{ width: '100px', height: '20px' }}>
-                        <div 
-                          className="progress-bar" 
-                          role="progressbar" 
-                          style={{ width: `${task.progress}%` }}
-                          aria-valuenow={task.progress} 
-                          aria-valuemin={0} 
-                          aria-valuemax={100}
-                        >
-                          {task.progress}%
-                        </div>
-                      </div>
-                    </td>
-                    <td>{new Date(task.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <Link 
-                        to={`/tasks/${task.id}`} 
-                        className="btn btn-sm btn-outline-primary"
-                      >
-                        View
-                      </Link>
-                    </td>
+        ) : tasks.length === 0 ? (
+          <div className="card rounded-lg p-6 flex items-center" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+            <svg className="h-5 w-5 mr-2" style={{ color: 'var(--primary)' }} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span style={{ color: 'var(--text-primary)' }}>No tasks found. Create a new analysis to get started!</span>
+          </div>
+        ) : (
+          <div className="card rounded-lg shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-color)' }}>
+                <thead style={{ backgroundColor: 'var(--light-bg)' }}>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Platform</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Profile</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Progress</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Created</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
+                  {tasks.map(task => (
+                    <tr key={task.id} className="hover:bg-opacity-50" style={{ backgroundColor: 'var(--card-bg)' }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: 'var(--text-primary)' }}>#{task.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" style={{ color: 'var(--text-primary)' }}>{task.platform}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-primary)' }}>{task.profile_id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-24 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                            <div 
+                              className="bg-primary-600 h-2 rounded-full" 
+                              style={{ width: `${task.progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="ml-2 text-sm" style={{ color: 'var(--text-secondary)' }}>{task.progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {new Date(task.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Link 
+                          to={`/tasks/${task.id}`} 
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

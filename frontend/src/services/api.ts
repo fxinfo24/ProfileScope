@@ -95,6 +95,34 @@ class ApiService {
     return response.data;
   }
 
+  async retryTask(taskId: number): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.post(`/tasks/${taskId}/retry`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async cancelTask(taskId: number): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.post(`/tasks/${taskId}/cancel`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async getTasks(params?: string): Promise<ApiResponse<any>> {
+    try {
+      const url = params ? `/tasks?${params}` : '/tasks';
+      const response = await this.api.get(url);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
   async getPlatformDistribution(): Promise<ApiResponse<any>> {
     try {
       const response = await this.api.get('/stats/platform-distribution');

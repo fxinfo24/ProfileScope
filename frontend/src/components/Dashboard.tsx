@@ -1,4 +1,5 @@
-// Dashboard Component for ProfileScope (tasks-based)
+// Dashboard Component for ProfileScope
+// Shows recent tasks and platform breakdown
 import React, { useEffect, useState } from 'react';
 import {
   ChartBarIcon,

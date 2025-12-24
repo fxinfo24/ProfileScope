@@ -97,14 +97,18 @@ def start_analysis():
     db.session.commit()
 
     # Start analysis
-    # Production: if REDIS_URL is configured, enqueue via Celery so the work runs
-    # in a separate worker process (Railway-friendly).
-    # Development fallback: background thread.
+    # FIXED: Use threading by default for Railway single-service deployment.
+    # Celery requires a separate worker service which adds complexity and cost.
+    # Threading is sufficient for current scale and works immediately.
+    # 
+    # To enable Celery in future: set FORCE_CELERY=true environment variable
+    # and deploy a separate Railway worker service.
+    force_celery = os.getenv("FORCE_CELERY", "").lower() == "true"
     redis_url = os.getenv("REDIS_URL")
     task_started = False
     
-    if redis_url:
-        logger.info(f"REDIS_URL configured, attempting Celery enqueue for task {task.id}")
+    if force_celery and redis_url:
+        logger.info(f"FORCE_CELERY enabled, attempting Celery enqueue for task {task.id}")
         try:
             from app.core.tasks import run_task_analysis
             run_task_analysis.delay(task.id)
@@ -112,10 +116,11 @@ def start_analysis():
             logger.info(f"Task {task.id} enqueued to Celery successfully")
         except Exception as e:
             logger.error(f"Failed to enqueue Celery task {task.id}: {e}", exc_info=True)
+            logger.info(f"Falling back to threading for task {task.id}")
     
     if not task_started:
-        # Fallback to threading
-        logger.info(f"Starting task {task.id} in background thread (fallback)")
+        # Use threading (default for Railway deployment without worker service)
+        logger.info(f"Starting task {task.id} in background thread")
         try:
             thread = threading.Thread(
                 target=run_analysis, args=(task.id, task.platform, task.profile_id)
@@ -123,7 +128,7 @@ def start_analysis():
             thread.daemon = True
             thread.start()
             task_started = True
-            logger.info(f"Task {task.id} started in background thread")
+            logger.info(f"Task {task.id} started in background thread successfully")
         except Exception as e:
             logger.error(f"Failed to start background thread for task {task.id}: {e}", exc_info=True)
             # Update task as failed

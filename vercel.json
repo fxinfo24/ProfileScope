@@ -1,5 +1,4 @@
 {
-  "$comment": "ProfileScope Frontend Deployment - React SPA with API proxy",
   "buildCommand": "npm install --prefix frontend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "installCommand": "echo 'Skipping root install'",

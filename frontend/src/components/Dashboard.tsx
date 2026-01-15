@@ -5,13 +5,14 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   ClockIcon,
-  PlusIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { apiService } from '@/services/api';
 import AnalysisForm from '@/components/AnalysisForm';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+// Neon Palette for Charts
+const COLORS = ['#6366f1', '#8b5cf6', '#d946ef', '#06b6d4', '#10b981'];
 
 type Task = {
   id: number;
@@ -32,6 +33,8 @@ const Dashboard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [platformDist, setPlatformDist] = useState<Array<{ platform: string; count: number }>>([]);
   const [completionRate, setCompletionRate] = useState<{ total: number; completed: number; failed: number; completion_rate: number } | null>(null);
+
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -62,8 +65,11 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full"></div>
+          <div className="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
       </div>
     );
   }
@@ -71,119 +77,149 @@ const Dashboard: React.FC = () => {
   const pieData = platformDist.map((p) => ({ name: p.platform, value: p.count }));
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-      <div className="card shadow" style={{ backgroundColor: 'var(--card-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6 md:flex md:items-center md:justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold leading-7 sm:text-3xl sm:truncate" style={{ color: 'var(--text-primary)' }}>
-                Dashboard
-              </h1>
-              <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Recent analysis tasks and platform distribution.
-              </p>
-            </div>
-            <div className="mt-4 flex md:mt-0 md:ml-4">
-              <button
-                onClick={() => setShowNewAnalysis(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <PlusIcon className="h-4 w-4 mr-2" />
-                New Analysis
-              </button>
-            </div>
+    <div className="space-y-8 animate-fade-in-up">
+      {/* Header Section */}
+      <div className="glass-panel rounded-2xl p-8 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-700 group-hover:bg-primary-500/20"></div>
+
+        <div className="relative z-10 md:flex md:items-center md:justify-between">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 font-display">
+              Analysis Dashboard
+            </h1>
+            <p className="mt-2 text-primary-200">
+              Overview of your social media intelligence operations.
+            </p>
+          </div>
+          <div className="mt-6 md:mt-0 md:ml-4">
+            <button
+              onClick={() => setShowNewAnalysis(true)}
+              className="group glass-button flex items-center space-x-2 text-white bg-primary-600/20 hover:bg-primary-600/40 border-primary-500/30 hover:border-primary-500/60"
+            >
+              <SparklesIcon className="h-5 w-5 text-primary-300 group-hover:text-white transition-colors" />
+              <span>New Analysis</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="flex items-center">
-              <ChartBarIcon className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Tasks</div>
-                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.total ?? tasks.length}</div>
-              </div>
-            </div>
-          </div>
-          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="flex items-center">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Completed</div>
-                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.completed ?? 0}</div>
-              </div>
-            </div>
-          </div>
-          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="flex items-center">
-              <ClockIcon className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Completion Rate</div>
-                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{(completionRate?.completion_rate ?? 0).toFixed(1)}%</div>
-              </div>
-            </div>
-          </div>
-          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="flex items-center">
-              <ChartBarIcon className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Failed</div>
-                <div className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>{completionRate?.failed ?? 0}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { icon: ChartBarIcon, label: 'Total Tasks', value: completionRate?.total ?? tasks.length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { icon: CheckCircleIcon, label: 'Completed', value: completionRate?.completed ?? 0, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { icon: ClockIcon, label: 'Success Rate', value: `${(completionRate?.completion_rate ?? 0).toFixed(1)}%`, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+          { icon: ChartBarIcon, label: 'Failed', value: completionRate?.failed ?? 0, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+        ].map((item, index) => (
+          <div
+            key={item.label}
+            className="glass-card p-6 relative overflow-hidden group"
+            onMouseEnter={() => setHoveredCard(index)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${item.bg} blur-2xl transition-all duration-500 ${hoveredCard === index ? 'opacity-100 scale-125' : 'opacity-0 scale-100'}`} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <h3 className="text-lg font-medium mb-4" style={{ color: 'var(--text-primary)' }}>Platform Breakdown</h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <div className="relative z-10 flex items-center">
+              <div className={`p-3 rounded-lg ${item.bg} border border-white/5`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
+              </div>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-white/50">{item.label}</div>
+                <div className="text-2xl font-bold text-white tracking-tight">{item.value}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts & Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Platform Breakdown */}
+        <div className="glass-card p-6 h-[400px] flex flex-col">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
+            <span className="w-1.5 h-6 bg-primary-500 rounded-full mr-3"></span>
+            Platform Distribution
+          </h3>
+          <div className="flex-1 w-full min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={90}
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
                   dataKey="value"
                   nameKey="name"
-                  label={({ name, percent }) => `${name} ${Math.round((percent ?? 0) * 100)}%`}
+                  stroke="none"
                 >
                   {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+                      filter="url(#glow)"
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                  itemStyle={{ color: '#fff' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
-          <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-              <h3 className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>Recent Tasks</h3>
-            </div>
-            <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
-              {tasks.length ? (
-                tasks.map((t) => (
-                  <div key={t.id} className="px-6 py-4">
+        {/* Recent Tasks */}
+        <div className="glass-card flex flex-col h-[400px]">
+          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <span className="w-1.5 h-6 bg-secondary-500 rounded-full mr-3"></span>
+              Recent Tasks
+            </h3>
+            <button className="text-xs text-primary-400 hover:text-primary-300 transition-colors">View All</button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+            {tasks.length ? (
+              <div className="space-y-2">
+                {tasks.map((t) => (
+                  <div key={t.id} className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-transparent hover:border-white/5 group cursor-pointer">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {t.platform} / {(t.profile_id ?? t.profileId) ?? ''}
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-2 h-2 rounded-full ${t.status === 'completed' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : t.status === 'failed' ? 'bg-rose-400' : 'bg-amber-400 animate-pulse'}`} />
+                        <div>
+                          <div className="text-sm font-medium text-white group-hover:text-primary-300 transition-colors">
+                            {t.platform}
+                          </div>
+                          <div className="text-xs text-white/40">
+                            ID: {(t.profile_id ?? t.profileId) || 'N/A'}
+                          </div>
                         </div>
-                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.status}{t.progress != null ? ` • ${t.progress}%` : ''}{t.message ? ` • ${t.message}` : ''}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs px-2 py-1 rounded-full border ${t.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                          t.status === 'failed' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                            'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                          }`}>
+                          {t.status}
+                        </span>
                       </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="px-6 py-8 text-center">
-                  <ChartBarIcon className="mx-auto h-12 w-12" style={{ color: 'var(--text-secondary)' }} />
-                  <h3 className="mt-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No tasks yet</h3>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                  <ChartBarIcon className="h-8 w-8 text-white/20" />
                 </div>
-              )}
-            </div>
+                <h3 className="text-white font-medium">No tasks yet</h3>
+                <p className="text-sm text-white/40 mt-1">Start a new analysis to see data.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

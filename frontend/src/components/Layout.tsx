@@ -1,94 +1,81 @@
-// Layout Component for ProfileScope with Dark Mode
+// Premium Glass Layout Component
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   ChartBarIcon,
-  ArrowRightOnRectangleIcon,
-  MoonIcon,
-  SunIcon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline';
-import { useTheme } from '../contexts/ThemeContext';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-      {/* Navigation */}
-      <nav className="card shadow-sm border-b" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--primary)' }}>
-                  <span className="text-white font-bold text-lg">P</span>
-                </div>
-                <span className="ml-2 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>ProfileScope</span>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium hover:opacity-80"
-                  style={{ borderColor: 'var(--primary)', color: 'var(--text-primary)', background: 'transparent' }}
-                >
-                  <ChartBarIcon className="h-4 w-4 mr-2" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => navigate('/tasks')}
-                  className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium hover:opacity-80"
-                  style={{ borderColor: 'transparent', color: 'var(--text-secondary)', background: 'transparent' }}
-                >
-                  Tasks
-                </button>
+    <div className="min-h-screen relative overflow-hidden font-sans text-white">
+      {/* Ambient background glow effects */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary-500/20 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '1.5s' }} />
+      </div>
+
+      {/* Floating Glass Navigation */}
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 transition-all duration-300">
+        <div className="glass-panel rounded-2xl px-6 py-3 flex items-center justify-between">
+
+          {/* Logo Area */}
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => navigate('/')}>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="relative h-10 w-10 bg-black/40 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/10 text-white font-bold text-xl group-hover:scale-105 transition-transform duration-300">
+                P
               </div>
             </div>
-            <div className="ml-6 flex items-center">
-              <div className="ml-3 relative">
-                <div className="flex items-center space-x-4">
-                  {/* Dark Mode Toggle */}
-                  <button
-                    onClick={toggleTheme}
-                    className="p-2 rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                    style={{ 
-                      backgroundColor: 'var(--light-bg)', 
-                      color: 'var(--text-secondary)',
-                      borderColor: 'var(--border-color)',
-                      border: '1px solid'
-                    }}
-                    title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                    aria-label="Toggle theme"
-                  >
-                    {theme === 'light' ? (
-                      <MoonIcon className="h-6 w-6" />
-                    ) : (
-                      <SunIcon className="h-6 w-6" />
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={() => navigate('/dashboard')}
-                    className="p-1 rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                    style={{ 
-                      backgroundColor: 'var(--light-bg)', 
-                      color: 'var(--text-secondary)',
-                      borderColor: 'var(--border-color)',
-                      border: '1px solid'
-                    }}
-                    title="Dashboard"
-                  >
-                    <ArrowRightOnRectangleIcon className="h-6 w-6" />
-                  </button>
-                </div>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-tight font-display">
+              ProfileScope
+            </span>
+          </div>
+
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-1 bg-black/20 rounded-xl p-1 border border-white/5">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive('/dashboard') || isActive('/')
+                ? 'bg-primary-500/20 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] border border-primary-500/30'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <ChartBarIcon className="h-4 w-4 mr-2" />
+              Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/tasks')}
+              className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive('/tasks')
+                ? 'bg-primary-500/20 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] border border-primary-500/30'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <ListBulletIcon className="h-4 w-4 mr-2" />
+              Tasks
+            </button>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center space-x-4">
+            <div className="h-8 w-[1px] bg-white/10 hidden sm:block"></div>
+            <div className="flex items-center space-x-3">
+              <div className="px-3 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_10px_#4ade80]" />
+                <span className="text-xs font-medium text-primary-200">System Online</span>
               </div>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main>
+      {/* Main Content Area */}
+      <main className="pt-28 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen relative z-0">
         <Outlet />
       </main>
     </div>

@@ -1,7 +1,15 @@
-// ResultView Component - Shows detailed analysis results
+// ResultView Component - Premium Glass UI
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '@/services/api';
+import {
+  ArrowDownTrayIcon,
+  UserIcon,
+  ChatBubbleLeftRightIcon,
+  ShieldCheckIcon,
+  HashtagIcon,
+  LanguageIcon,
+} from '@heroicons/react/24/outline';
 
 interface AnalysisResult {
   profile_info?: {
@@ -63,298 +71,198 @@ const ResultView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="relative">
+          <div className="absolute inset-0 bg-secondary-500/20 blur-xl rounded-full"></div>
+          <div className="relative animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary-500"></div>
+        </div>
       </div>
     );
   }
 
   if (error || !task) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="card rounded-lg p-4 mb-4 border border-red-400" style={{ backgroundColor: 'var(--card-bg)' }}>
-            <div className="flex items-center text-red-600">
-              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>{error || 'Task not found'}</span>
-            </div>
-          </div>
-          <Link to="/tasks" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
-            Back to Tasks
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (task.status !== 'completed') {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="card rounded-lg p-4 mb-4 border border-yellow-400" style={{ backgroundColor: 'var(--card-bg)' }}>
-            <div className="flex items-center text-yellow-700">
-              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
-              <span>Task is {task.status}. Results will be available once analysis completes.</span>
-            </div>
-          </div>
-          <Link to={`/tasks/${id}`} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
-            View Task Status
-          </Link>
-        </div>
+      <div className="glass-panel p-8 rounded-2xl text-center max-w-lg mx-auto mt-20">
+        <h2 className="text-xl font-bold text-white mb-2">Unavailable</h2>
+        <p className="text-white/60 mb-6">{error || 'Task not found'}</p>
+        <Link to="/tasks" className="text-primary-400 hover:text-primary-300">Return to Tasks</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="mb-6">
-          <ol className="flex items-center space-x-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <li><Link to="/dashboard" className="hover:underline" style={{ color: 'var(--primary)' }}>Dashboard</Link></li>
-            <li>/</li>
-            <li><Link to="/tasks" className="hover:underline" style={{ color: 'var(--primary)' }}>Tasks</Link></li>
-            <li>/</li>
-            <li><Link to={`/tasks/${id}`} className="hover:underline" style={{ color: 'var(--primary)' }}>Task #{id}</Link></li>
-            <li>/</li>
-            <li style={{ color: 'var(--text-primary)' }}>Results</li>
-          </ol>
-        </nav>
+    <div className="space-y-8 animate-fade-in-up pb-12">
+      {/* Header */}
+      <div className="glass-panel p-8 rounded-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Analysis Results</h1>
-          <div className="flex space-x-2">
-            <button 
-              onClick={() => handleExport('json')} 
-              className="inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium hover:opacity-80"
-              style={{ 
-                backgroundColor: 'var(--card-bg)', 
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-primary)'
-              }}
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 text-white/40 text-sm mb-2">
+              <span className="uppercase tracking-wider">Analysis Report</span>
+              <span>•</span>
+              <span className="font-mono">#{id}</span>
+            </div>
+            <h1 className="text-4xl font-bold text-white font-display mb-2">
+              Deep Profile Analysis
+            </h1>
+            <p className="text-lg text-white/60">
+              Intelligence report for <span className="text-white font-medium">@{task.profile_id}</span> on <span className="capitalize">{task.platform}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleExport('json')}
+              className="glass-button bg-white/5 hover:bg-white/10 text-white flex items-center"
             >
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export JSON
+              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+              JSON
             </button>
-            <button 
-              onClick={() => handleExport('pdf')} 
-              className="inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium hover:opacity-80"
-              style={{ 
-                backgroundColor: 'var(--card-bg)', 
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-primary)'
-              }}
+            <button
+              onClick={() => handleExport('pdf')}
+              className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center shadow-[0_0_15px_rgba(99,102,241,0.3)]"
             >
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Export PDF
+              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+              Export Report
             </button>
           </div>
         </div>
-
-        {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Profile Information */}
-          {results?.profile_info && (
-            <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-              <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Profile Information</h5>
-              </div>
-              <div className="p-6">
-                <dl className="space-y-3">
-                  {results.profile_info.username && (
-                    <div className="flex justify-between">
-                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Username:</dt>
-                      <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>@{results.profile_info.username}</dd>
-                    </div>
-                  )}
-                  {results.profile_info.followers !== undefined && (
-                    <div className="flex justify-between">
-                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Followers:</dt>
-                      <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{results.profile_info.followers.toLocaleString()}</dd>
-                    </div>
-                  )}
-                  {results.profile_info.following !== undefined && (
-                    <div className="flex justify-between">
-                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Following:</dt>
-                      <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{results.profile_info.following.toLocaleString()}</dd>
-                    </div>
-                  )}
-                  {results.profile_info.posts !== undefined && (
-                    <div className="flex justify-between">
-                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Posts:</dt>
-                      <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{results.profile_info.posts.toLocaleString()}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            </div>
-          )}
-
-          {/* Sentiment Analysis */}
-          {results?.sentiment && (
-            <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-              <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Sentiment Analysis</h5>
-              </div>
-              <div className="p-6 space-y-4">
-                {results.sentiment.overall && (
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Overall:</span>
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      results.sentiment.overall === 'positive' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                      results.sentiment.overall === 'negative' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 
-                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                    }`}>
-                      {results.sentiment.overall}
-                    </span>
-                  </div>
-                )}
-                {results.sentiment.positive !== undefined && (
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Positive</label>
-                      <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{results.sentiment.positive}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${results.sentiment.positive}%` }}></div>
-                    </div>
-                  </div>
-                )}
-                {results.sentiment.neutral !== undefined && (
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Neutral</label>
-                      <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{results.sentiment.neutral}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                      <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${results.sentiment.neutral}%` }}></div>
-                    </div>
-                  </div>
-                )}
-                {results.sentiment.negative !== undefined && (
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Negative</label>
-                      <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{results.sentiment.negative}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                      <div className="bg-red-600 h-2 rounded-full" style={{ width: `${results.sentiment.negative}%` }}></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Authenticity Score */}
-          {results?.authenticity && (
-            <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-              <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Authenticity Score</h5>
-              </div>
-              <div className="p-6">
-                {results.authenticity.score !== undefined && (
-                  <div className="text-center mb-4">
-                    <h2 className={`text-6xl font-bold ${
-                      results.authenticity.score >= 80 ? 'text-green-600' :
-                      results.authenticity.score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {results.authenticity.score}%
-                    </h2>
-                  </div>
-                )}
-                {results.authenticity.indicators && results.authenticity.indicators.length > 0 && (
-                  <div>
-                    <h6 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Indicators:</h6>
-                    <ul className="space-y-2">
-                      {results.authenticity.indicators.map((indicator: string, idx: number) => (
-                        <li key={idx} className="flex items-start">
-                          <svg className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{indicator}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Content Analysis */}
-        {results?.content_analysis && (
-          <div className="card rounded-lg shadow-sm mt-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-              <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Content Analysis</h5>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {results.content_analysis.topics && results.content_analysis.topics.length > 0 && (
-                  <div>
-                    <h6 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Topics:</h6>
-                    <div className="flex flex-wrap gap-2">
-                      {results.content_analysis.topics.map((topic: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {results.content_analysis.keywords && results.content_analysis.keywords.length > 0 && (
-                  <div>
-                    <h6 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Keywords:</h6>
-                    <div className="flex flex-wrap gap-2">
-                      {results.content_analysis.keywords.map((keyword: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {results.content_analysis.languages && results.content_analysis.languages.length > 0 && (
-                  <div>
-                    <h6 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Languages:</h6>
-                    <div className="flex flex-wrap gap-2">
-                      {results.content_analysis.languages.map((lang: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Raw Data (if no structured results) */}
-        {!results?.profile_info && !results?.sentiment && (
-          <div className="card rounded-lg shadow-sm mt-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-              <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Raw Results</h5>
-            </div>
-            <div className="p-6">
-              <pre className="p-4 rounded overflow-x-auto text-sm" style={{ backgroundColor: 'var(--light-bg)', color: 'var(--text-primary)' }}>
-                {JSON.stringify(results, null, 2)}
-              </pre>
-            </div>
-          </div>
-        )}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Profile Card */}
+        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400">
+              <UserIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-white">Identity</h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+              <span className="text-white/60">Followers</span>
+              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.followers?.toLocaleString() ?? '-'}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+              <span className="text-white/60">Following</span>
+              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.following?.toLocaleString() ?? '-'}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+              <span className="text-white/60">Posts</span>
+              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.posts?.toLocaleString() ?? '-'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Authenticity Card */}
+        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"></div>
+          <div className="flex items-center gap-3 mb-6 relative z-10">
+            <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
+              <ShieldCheckIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-white">Trust Score</h3>
+          </div>
+
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="relative">
+              <svg className="w-32 h-32 transform -rotate-90">
+                <circle cx="64" cy="64" r="60" stroke="currentColor" strokeWidth="8" className="text-white/5" fill="none" />
+                <circle
+                  cx="64" cy="64" r="60" stroke="currentColor" strokeWidth="8"
+                  className={`${(results?.authenticity?.score ?? 0) >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}
+                  fill="none"
+                  strokeDasharray={377}
+                  strokeDashoffset={377 - (377 * (results?.authenticity?.score ?? 0)) / 100}
+                  style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
+                {results?.authenticity?.score ?? 0}%
+              </div>
+            </div>
+            <p className="mt-4 text-white/50 text-sm text-center">Based on behavioral patterns and content analysis</p>
+          </div>
+        </div>
+
+        {/* Sentiment Card */}
+        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-xl bg-purple-500/20 text-purple-400">
+              <ChatBubbleLeftRightIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-white">Sentiment</h3>
+          </div>
+
+          <div className="space-y-6">
+            {[
+              { label: 'Positive', val: results?.sentiment?.positive ?? 0, color: 'bg-emerald-500' },
+              { label: 'Neutral', val: results?.sentiment?.neutral ?? 0, color: 'bg-gray-500' },
+              { label: 'Negative', val: results?.sentiment?.negative ?? 0, color: 'bg-rose-500' },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-white/80">{item.label}</span>
+                  <span className="text-white/40">{item.val}%</span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${item.color} transition-all duration-1000 ease-out`}
+                    style={{ width: `${item.val}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Deep Content Analysis */}
+      <div className="glass-panel p-8 rounded-2xl">
+        <h3 className="text-2xl font-bold text-white mb-8 border-b border-white/5 pb-4">Content Intelligence</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4 text-primary-300">
+              <HashtagIcon className="w-5 h-5" />
+              <h4 className="font-semibold uppercase tracking-wider text-xs">Top Topics</h4>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {results?.content_analysis?.topics?.map((topic, i) => (
+                <span key={i} className="px-4 py-2 rounded-lg bg-primary-500/10 text-primary-200 border border-primary-500/20 text-sm hover:bg-primary-500/20 transition-colors cursor-default">
+                  {topic}
+                </span>
+              ))}
+              {!results?.content_analysis?.topics?.length && <span className="text-white/30 text-sm">No topics detected</span>}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-4 text-secondary-300">
+              <LanguageIcon className="w-5 h-5" />
+              <h4 className="font-semibold uppercase tracking-wider text-xs">Keywords</h4>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {results?.content_analysis?.keywords?.map((kw, i) => (
+                <span key={i} className="px-3 py-1.5 rounded-lg bg-secondary-500/10 text-secondary-200 border border-secondary-500/20 text-sm hover:bg-secondary-500/20 transition-colors cursor-default">
+                  {kw}
+                </span>
+              ))}
+              {!results?.content_analysis?.keywords?.length && <span className="text-white/30 text-sm">No keywords detected</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Raw JSON Fallback */}
+      {!results && (
+        <div className="glass-panel p-6 rounded-xl">
+          <pre className="text-xs text-white/50 overflow-x-auto font-mono">
+            {JSON.stringify(task, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 };

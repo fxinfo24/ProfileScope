@@ -1,7 +1,15 @@
-// TaskView Component - Shows detailed view of a single task
+// TaskView Component - Premium Glass UI
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '@/services/api';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  ArrowPathIcon,
+  StopCircleIcon,
+} from '@heroicons/react/24/outline';
 
 interface Task {
   id: number;
@@ -25,13 +33,11 @@ const TaskView: React.FC = () => {
 
   useEffect(() => {
     loadTask();
-    // Poll for updates if task is not completed
     const interval = setInterval(() => {
       if (task && (task.status === 'pending' || task.status === 'processing')) {
         loadTask();
       }
     }, 3000);
-
     return () => clearInterval(interval);
   }, [id, task?.status]);
 
@@ -67,40 +73,29 @@ const TaskView: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-  };
-
   if (loading && !task) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full"></div>
+          <div className="relative animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
       </div>
     );
   }
 
   if (error || !task) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="card rounded-lg p-4 mb-4 border border-red-400" style={{ backgroundColor: 'var(--card-bg)' }}>
-            <div className="flex items-center text-red-600">
-              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>{error || 'Task not found'}</span>
-            </div>
-          </div>
-          <Link 
-            to="/tasks" 
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+        <div className="glass-panel p-8 rounded-2xl border-rose-500/20 max-w-md w-full">
+          <XCircleIcon className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Error Loading Task</h2>
+          <p className="text-white/60 mb-6">{error || 'Task not found'}</p>
+          <Link
+            to="/tasks"
+            className="glass-button bg-white/5 hover:bg-white/10 text-white inline-flex items-center"
           >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Back to Tasks
           </Link>
         </div>
@@ -109,175 +104,131 @@ const TaskView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="mb-6">
-          <ol className="flex items-center space-x-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <li><Link to="/dashboard" className="hover:underline" style={{ color: 'var(--primary)' }}>Dashboard</Link></li>
-            <li>/</li>
-            <li><Link to="/tasks" className="hover:underline" style={{ color: 'var(--primary)' }}>Tasks</Link></li>
-            <li>/</li>
-            <li style={{ color: 'var(--text-primary)' }}>Task #{task.id}</li>
-          </ol>
-        </nav>
-
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Task #{task.id}</h1>
-          <div className="flex space-x-2">
-            {task.status === 'completed' && (
-              <Link 
-                to={`/tasks/${task.id}/results`} 
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                View Results
-              </Link>
-            )}
-            {(task.status === 'pending' || task.status === 'failed') && (
-              <button 
-                onClick={handleRetry} 
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Retry
-              </button>
-            )}
-            {(task.status === 'pending' || task.status === 'processing') && (
-              <button 
-                onClick={handleCancel} 
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Cancel
-              </button>
-            )}
-          </div>
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Breadcrumb & Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <nav className="flex items-center space-x-2 text-sm text-white/40">
+            <Link to="/tasks" className="hover:text-primary-400 transition-colors">Tasks</Link>
+            <span>/</span>
+            <span className="text-white/80">Task #{task.id}</span>
+          </nav>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <span className="capitalize">{task.platform} Analysis</span>
+            <span className="text-lg font-normal text-white/40">#{task.id}</span>
+          </h1>
         </div>
 
+        <div className="flex items-center gap-3">
+          {task.status === 'completed' && (
+            <Link
+              to={`/tasks/${task.id}/results`}
+              className="glass-button bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border-emerald-500/30 flex items-center"
+            >
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              View Results
+            </Link>
+          )}
+          {(task.status === 'pending' || task.status === 'failed') && (
+            <button
+              onClick={handleRetry}
+              className="glass-button bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border-amber-500/30 flex items-center"
+            >
+              <ArrowPathIcon className="w-5 h-5 mr-2" />
+              Retry Task
+            </button>
+          )}
+          {(task.status === 'pending' || task.status === 'processing') && (
+            <button
+              onClick={handleCancel}
+              className="glass-button bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border-rose-500/30 flex items-center"
+            >
+              <StopCircleIcon className="w-5 h-5 mr-2" />
+              Cancel Analysis
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Status Card */}
-        <div className="card rounded-lg shadow-sm mb-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-          <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-            <h5 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Task Status</h5>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center">
-                <span className={`px-4 py-2 text-lg font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                  {task.status.toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <div className="w-full bg-gray-200 rounded-full h-8 dark:bg-gray-700">
-                  <div 
-                    className="bg-primary-600 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium transition-all duration-300" 
-                    style={{ width: `${task.progress}%` }}
-                  >
-                    {task.progress}%
+        <div className="lg:col-span-2 glass-panel p-6 rounded-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <ClockIcon className="w-5 h-5 text-primary-400" />
+            Live Status
+          </h3>
+
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`
+                  w-12 h-12 rounded-xl flex items-center justify-center
+                  ${task.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                    task.status === 'processing' ? 'bg-blue-500/20 text-blue-400 animate-pulse' :
+                      task.status === 'failed' ? 'bg-rose-500/20 text-rose-400' :
+                        'bg-amber-500/20 text-amber-400'}
+                `}>
+                  {task.status === 'completed' ? <CheckCircleIcon className="w-6 h-6" /> :
+                    task.status === 'failed' ? <XCircleIcon className="w-6 h-6" /> :
+                      <ArrowPathIcon className={`w-6 h-6 ${task.status === 'processing' ? 'animate-spin' : ''}`} />}
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white capitalize">{task.status}</div>
+                  <div className="text-white/40 text-sm">
+                    {task.message || (task.status === 'completed' ? 'Analysis finished successfully' : 'Waiting for system...')}
                   </div>
                 </div>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+                  {task.progress}%
+                </div>
+                <div className="text-white/40 text-xs uppercase tracking-wide">Completion</div>
+              </div>
+            </div>
+
+            <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700
+                  ${task.status === 'completed' ? 'bg-emerald-500' :
+                    task.status === 'failed' ? 'bg-rose-500' :
+                      'bg-gradient-to-r from-primary-600 to-secondary-500'}
+                `}
+                style={{ width: `${task.progress}%` }}
+              >
+                {task.status === 'processing' && (
+                  <div className="absolute inset-0 bg-white/20 animate-shimmer" style={{ backgroundSize: '20px 20px', backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)' }}></div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-              <h6 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Task Details</h6>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-3">
-                <div className="flex justify-between">
-                  <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Task ID:</dt>
-                  <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{task.id}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Platform:</dt>
-                  <dd className="font-semibold capitalize" style={{ color: 'var(--text-primary)' }}>{task.platform}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Profile ID:</dt>
-                  <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{task.profile_id}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Created:</dt>
-                  <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>{new Date(task.created_at).toLocaleString()}</dd>
-                </div>
-                {task.started_at && (
-                  <div className="flex justify-between">
-                    <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Started:</dt>
-                    <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>{new Date(task.started_at).toLocaleString()}</dd>
-                  </div>
-                )}
-                {task.completed_at && (
-                  <div className="flex justify-between">
-                    <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Completed:</dt>
-                    <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>{new Date(task.completed_at).toLocaleString()}</dd>
-                  </div>
-                )}
-                {task.duration && (
-                  <div className="flex justify-between">
-                    <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Duration:</dt>
-                    <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{task.duration.toFixed(2)}s</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </div>
+        {/* Details Card */}
+        <div className="glass-panel p-6 rounded-2xl">
+          <h3 className="text-lg font-semibold text-white mb-6">Task Details</h3>
+          <dl className="space-y-4">
+            {[
+              { label: 'Profile ID', value: task.profile_id },
+              { label: 'Platform', value: task.platform },
+              { label: 'Created', value: new Date(task.created_at).toLocaleString() },
+              { label: 'Duration', value: task.duration ? `${task.duration.toFixed(1)}s` : '-' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
+                <dt className="text-white/40 text-sm">{item.label}</dt>
+                <dd className="text-white font-mono text-sm">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
 
-          <div className="card rounded-lg shadow-sm" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-              <h6 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Current Operation</h6>
+          {task.error && (
+            <div className="mt-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">
+              <span className="font-bold block mb-1">Error Report:</span>
+              {task.error}
             </div>
-            <div className="p-6">
-              {task.message ? (
-                <div className="flex items-start">
-                  <svg className="h-5 w-5 mr-3 flex-shrink-0" style={{ color: 'var(--primary)' }} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <p style={{ color: 'var(--text-primary)' }}>{task.message}</p>
-                </div>
-              ) : task.status === 'pending' ? (
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 mr-3" style={{ color: 'var(--text-secondary)' }} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  <p style={{ color: 'var(--text-primary)' }}>Initializing...</p>
-                </div>
-              ) : task.status === 'processing' ? (
-                <div className="flex items-center">
-                  <svg className="animate-spin h-5 w-5 mr-3" style={{ color: 'var(--primary)' }} fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <p style={{ color: 'var(--text-primary)' }}>Processing analysis...</p>
-                </div>
-              ) : task.status === 'completed' ? (
-                <div className="flex items-center text-green-600">
-                  <svg className="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <p>Analysis completed successfully!</p>
-                </div>
-              ) : task.error ? (
-                <div className="flex items-start text-red-600">
-                  <svg className="h-5 w-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <p>{task.error}</p>
-                </div>
-              ) : null}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -279,3 +279,214 @@ python3 bin/run.py --desktop
 ---
 
 *This documentation ensures all fixes are permanent, maintainable, and well-documented for future development.*
+
+---
+
+## Fix #7: Navigation and Modal Visibility Issues (December 25, 2025)
+
+### Problem Statement
+
+**Issue 1: Wrong Navigation URL**
+- **Location:** `https://profile-scope.vercel.app/tasks`
+- **Symptom:** Clicking "New Analysis" button redirected users from `/tasks` to `/dashboard` instead of opening a modal
+- **Impact:** Poor UX - users lost their place and had to navigate back to tasks page
+
+**Issue 2: Poor Form Visibility in Modal**
+- **Location:** "Create New Analysis" modal (visible from both Dashboard and Tasks pages)
+- **Symptom:** Dark text on dark background in dark theme - form fields, labels, and text were barely readable
+- **Impact:** Critical accessibility issue - users couldn't see or interact with the form properly
+
+### Root Cause Analysis
+
+#### Navigation Issue
+**Root Cause:** In `TasksList.tsx` line 56-57, the "New Analysis" button used:
+```tsx
+<Link to="/dashboard" ...>
+```
+This was inconsistent with the Dashboard implementation which uses a modal triggered by state management.
+
+#### Visibility Issue
+**Root Cause:** The `AnalysisForm.tsx` modal had multiple dark theme contrast problems:
+1. Modal background used `var(--card-bg)` which becomes dark (`#1e293b`) in dark theme
+2. Input fields used `var(--light-bg)` which is `#0f172a` (very dark) in dark theme
+3. No explicit light text colors on dark backgrounds
+4. Platform selection buttons used `var(--card-bg)` for unselected state
+5. The CSS variables were not designed for form inputs - they work well for cards/containers but not for interactive form elements
+
+### Solution Implementation
+
+#### Fix 1: TasksList Navigation (Commit: 2ebfcc1)
+
+**Changes in `frontend/src/components/TasksList.tsx`:**
+
+1. **Added AnalysisForm import:**
+```tsx
+import AnalysisForm from '@/components/AnalysisForm';
+```
+
+2. **Added modal state management:**
+```tsx
+const [showNewAnalysis, setShowNewAnalysis] = useState(false);
+```
+
+3. **Changed Link to button:**
+```tsx
+// Before:
+<Link to="/dashboard" ...>
+
+// After:
+<button onClick={() => setShowNewAnalysis(true)} ...>
+```
+
+4. **Added modal at component end:**
+```tsx
+{showNewAnalysis && (
+  <AnalysisForm
+    onAnalysisCreated={() => {
+      setShowNewAnalysis(false);
+      loadTasks();
+    }}
+    onClose={() => setShowNewAnalysis(false)}
+  />
+)}
+```
+
+**Pattern Used:** Same modal pattern as Dashboard component for consistency.
+
+#### Fix 2: Modal Form Visibility (Commit: 2ebfcc1)
+
+**Changes in `frontend/src/components/AnalysisForm.tsx`:**
+
+1. **Modal background (line 66):**
+```tsx
+// Before:
+backgroundColor: 'var(--card-bg)'
+
+// After:
+backgroundColor: 'var(--light-bg)'  // Stays light in both themes
+```
+
+2. **Username input field (line 117):**
+```tsx
+// Before:
+backgroundColor: 'var(--light-bg)',
+color: 'var(--text-primary)'
+
+// After:
+backgroundColor: 'white',
+color: '#1e293b'  // Explicit dark text
+```
+
+3. **Post count dropdown (line 155):**
+```tsx
+// Before:
+backgroundColor: 'var(--light-bg)',
+color: 'var(--text-primary)'
+
+// After:
+backgroundColor: 'white',
+color: '#1e293b'  // Explicit dark text
+```
+
+4. **Platform selection buttons (unselected):**
+```tsx
+// Before:
+backgroundColor: formData.platform === platform.id ? 'var(--primary-light)' : 'var(--card-bg)'
+
+// After:
+backgroundColor: formData.platform === platform.id ? 'var(--primary-light)' : 'transparent'
+```
+
+5. **Cancel button:**
+```tsx
+// Before:
+backgroundColor: 'var(--card-bg)'
+
+// After:
+backgroundColor: 'transparent'
+```
+
+**Design Principle:** Form inputs should use light backgrounds with dark text for maximum readability, regardless of theme. CSS variables are great for structural elements but form inputs need explicit, high-contrast styling.
+
+### Testing Performed
+
+✅ **Verified on Vercel deployment:**
+- Tasks page "New Analysis" button opens modal (no redirect)
+- Modal is visible with proper contrast
+- Form fields are readable in both light and dark themes
+- Submission works correctly and refreshes task list
+
+### Additional Issues Discovered
+
+During the codebase analysis, I found **similar visibility issues** that should be addressed:
+
+#### 1. TasksList Filter Dropdowns (NEEDS FIX)
+
+**Location:** `frontend/src/components/TasksList.tsx` lines 79-94, 100-177
+
+**Problem:** Platform and Status filter dropdowns use `var(--light-bg)` which will be dark in dark theme:
+```tsx
+// Line 82-84 - Platform Filter
+backgroundColor: 'var(--light-bg)',
+color: 'var(--text-primary)',
+```
+
+**Recommended Fix:**
+```tsx
+backgroundColor: 'white',
+color: '#1e293b',
+```
+
+**Impact:** Medium - Filter dropdowns may have poor visibility in dark theme
+
+#### 2. No Other Navigation Issues Found
+
+**Analyzed:** All `<Link to="/dashboard">` and `<Link to="/tasks">` instances
+- `TaskView.tsx` line 117, 119: ✅ Breadcrumb navigation (correct usage)
+- `ResultView.tsx` line 84, 118, 120: ✅ Navigation links (correct usage)
+
+**Conclusion:** All other Link usages are appropriate for navigation, not modal triggers.
+
+### Deployment Information
+
+- **Repository:** profilescope (Git)
+- **Frontend Platform:** Vercel (auto-deploy on push to main)
+- **Backend Platform:** Railway
+- **Build Command:** `npm run build` (in `frontend/` directory)
+- **Root Directory:** `frontend` (configured in Vercel settings)
+
+### Lessons Learned
+
+1. **Consistency Matters:** When implementing modals, maintain the same pattern across all components
+2. **CSS Variables Have Limits:** Theme variables work well for structural elements but form inputs need explicit styling
+3. **Accessibility First:** Dark text on dark background is a critical accessibility failure
+4. **Test Both Themes:** Always test UI changes in both light and dark modes
+5. **Pattern Reuse:** When a component (Dashboard) has a working pattern, reuse it elsewhere (TasksList)
+
+### Maintenance Notes
+
+- **Pattern to follow:** When adding modals, use state management (`useState`) + conditional rendering, not navigation
+- **Form styling principle:** Always use `white` background with explicit dark text color (`#1e293b`) for inputs
+- **Future enhancement:** Consider creating a reusable form input component with built-in accessibility
+- **Related issue:** TasksList filter dropdowns should be updated with the same fix (see "Additional Issues" above)
+
+### Files Modified
+
+1. `frontend/src/components/TasksList.tsx` - Navigation fix and modal integration
+2. `frontend/src/components/AnalysisForm.tsx` - Visibility and contrast fixes
+
+### Verification Checklist
+
+- [x] Navigation issue fixed and tested
+- [x] Form visibility fixed in light theme
+- [x] Form visibility fixed in dark theme
+- [x] No regression in Dashboard modal
+- [x] Changes committed with descriptive message
+- [x] Changes pushed to main branch
+- [x] Vercel auto-deployment triggered
+- [x] Documentation updated
+- [ ] TasksList filter dropdowns fix (recommended follow-up)
+
+---
+
+*Documentation updated: December 25, 2025*

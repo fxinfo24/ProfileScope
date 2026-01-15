@@ -1,8 +1,16 @@
-// TasksList Component - Shows all analysis tasks
+// TasksList Component - Premium Glass UI
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
 import AnalysisForm from '@/components/AnalysisForm';
+import {
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  ArrowRightIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 
 interface Task {
   id: number;
@@ -30,7 +38,7 @@ const TasksList: React.FC = () => {
       const params = new URLSearchParams();
       if (filter.platform) params.append('platform', filter.platform);
       if (filter.status) params.append('status', filter.status);
-      
+
       const response = await api.getTasks(params.toString());
       setTasks(response.data.tasks || []);
     } catch (error) {
@@ -40,224 +48,196 @@ const TasksList: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return (
+          <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <CheckCircleIcon className="w-3 h-3" />
+            <span>Completed</span>
+          </span>
+        );
+      case 'processing':
+        return (
+          <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+            <span>Processing</span>
+          </span>
+        );
+      case 'failed':
+        return (
+          <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <XCircleIcon className="w-3 h-3" />
+            <span>Failed</span>
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <ClockIcon className="w-3 h-3" />
+            <span>Pending</span>
+          </span>
+        );
+    }
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--light-bg)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Analysis Tasks</h1>
-          <button 
-            onClick={() => setShowNewAnalysis(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Analysis
-          </button>
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 font-display">
+            Analysis Tasks
+          </h1>
+          <p className="mt-1 text-primary-200 text-sm">
+            Manage and monitor your intelligence gathering operations.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowNewAnalysis(true)}
+          className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+        >
+          <MagnifyingGlassIcon className="h-4 w-4" />
+          <span>New Analysis</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar Filters */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="glass-panel p-5 rounded-xl sticky top-24">
+            <div className="flex items-center space-x-2 text-white/90 mb-6 border-b border-white/10 pb-4">
+              <FunnelIcon className="h-5 w-5 text-primary-400" />
+              <h3 className="font-semibold">Filters</h3>
+            </div>
+
+            <div className="space-y-6">
+              {/* Platform */}
+              <div>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-3">Platform</label>
+                <div className="space-y-2">
+                  {[
+                    { id: '', label: 'All Platforms' },
+                    { id: 'twitter', label: 'Twitter/X' },
+                    { id: 'instagram', label: 'Instagram' },
+                    { id: 'facebook', label: 'Facebook' },
+                    { id: 'linkedin', label: 'LinkedIn' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setFilter({ ...filter, platform: opt.id })}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filter.platform === opt.id
+                          ? 'bg-primary-500/20 text-white border border-primary-500/30'
+                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-3">Status</label>
+                <div className="space-y-2">
+                  {[
+                    { id: '', label: 'All Statuses' },
+                    { id: 'completed', label: 'Completed' },
+                    { id: 'processing', label: 'Processing' },
+                    { id: 'failed', label: 'Failed' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setFilter({ ...filter, status: opt.id })}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filter.status === opt.id
+                          ? 'bg-secondary-500/20 text-white border border-secondary-500/30'
+                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content with Sidebar */}
-        <div className="flex gap-6">
-          {/* Sidebar Filters */}
-          <div className="w-80 flex-shrink-0">
-            <div className="card rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-              <h3 className="text-lg font-semibold mb-6" style={{ color: 'var(--text-primary)' }}>Filters</h3>
-              
-              {/* Platform Filter */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Platform</label>
-                <select 
-                  className="w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  style={{ 
-                    backgroundColor: 'var(--light-bg)', 
-                    color: 'var(--text-primary)',
-                    borderColor: 'var(--border-color)'
-                  }}
-                  value={filter.platform}
-                  onChange={(e) => setFilter({...filter, platform: e.target.value})}
+        {/* Tasks Grid/List */}
+        <div className="lg:col-span-3">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full"></div>
+                <div className="relative animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+              </div>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="glass-panel rounded-xl p-12 text-center flex flex-col items-center justify-center border border-dashed border-white/10">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                <MagnifyingGlassIcon className="h-8 w-8 text-white/20" />
+              </div>
+              <h3 className="text-lg font-medium text-white">No tasks found</h3>
+              <p className="text-white/40 mt-1 max-w-sm">
+                Try adjusting your filters or start a new analysis to generate data.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="glass-card p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between group gap-4"
                 >
-                  <option value="">All Platforms</option>
-                  <option value="twitter">Twitter</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="linkedin">LinkedIn</option>
-                </select>
-              </div>
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className={`
+                      w-12 h-12 rounded-lg flex items-center justify-center text-xl
+                      ${task.platform === 'twitter' ? 'bg-black/40 text-white' :
+                        task.platform === 'instagram' ? 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 text-white' :
+                          task.platform === 'linkedin' ? 'bg-blue-600 text-white' :
+                            'bg-gray-700 text-white'}
+                    `}>
+                      {task.platform === 'twitter' ? '𝕏' : task.platform.charAt(0).toUpperCase()}
+                    </div>
 
-              {/* Status Filter with Dropdown */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Status</label>
-                <details className="relative">
-                  <summary 
-                    className="w-full px-3 py-2 rounded-md border cursor-pointer list-none flex items-center justify-between"
-                    style={{ 
-                      backgroundColor: 'var(--light-bg)', 
-                      color: 'var(--text-primary)',
-                      borderColor: 'var(--border-color)'
-                    }}
-                  >
-                    <span>{filter.status ? filter.status.charAt(0).toUpperCase() + filter.status.slice(1) : 'All Statuses'}</span>
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
-                  <div 
-                    className="absolute z-10 w-full mt-1 rounded-md shadow-lg border"
-                    style={{ 
-                      backgroundColor: 'var(--card-bg)',
-                      borderColor: 'var(--border-color)'
-                    }}
-                  >
-                    <button
-                      onClick={() => setFilter({...filter, status: ''})}
-                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
-                      style={{ 
-                        color: 'var(--text-primary)',
-                        borderColor: 'var(--border-color)',
-                        backgroundColor: !filter.status ? 'var(--primary-light)' : 'transparent'
-                      }}
-                    >
-                      All Statuses
-                    </button>
-                    <button
-                      onClick={() => setFilter({...filter, status: 'pending'})}
-                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
-                      style={{ 
-                        color: 'var(--text-primary)',
-                        borderColor: 'var(--border-color)',
-                        backgroundColor: filter.status === 'pending' ? 'var(--primary-light)' : 'transparent'
-                      }}
-                    >
-                      Pending
-                    </button>
-                    <button
-                      onClick={() => setFilter({...filter, status: 'processing'})}
-                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
-                      style={{ 
-                        color: 'var(--text-primary)',
-                        borderColor: 'var(--border-color)',
-                        backgroundColor: filter.status === 'processing' ? 'var(--primary-light)' : 'transparent'
-                      }}
-                    >
-                      Processing
-                    </button>
-                    <button
-                      onClick={() => setFilter({...filter, status: 'completed'})}
-                      className="w-full text-left px-3 py-2 hover:bg-opacity-80 border-b"
-                      style={{ 
-                        color: 'var(--text-primary)',
-                        borderColor: 'var(--border-color)',
-                        backgroundColor: filter.status === 'completed' ? 'var(--primary-light)' : 'transparent'
-                      }}
-                    >
-                      Completed
-                    </button>
-                    <button
-                      onClick={() => setFilter({...filter, status: 'failed'})}
-                      className="w-full text-left px-3 py-2 hover:bg-opacity-80"
-                      style={{ 
-                        color: 'var(--text-primary)',
-                        backgroundColor: filter.status === 'failed' ? 'var(--primary-light)' : 'transparent'
-                      }}
-                    >
-                      Failed
-                    </button>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-white">{task.profile_id}</h4>
+                        <span className="text-white/30 text-xs">#{task.id}</span>
+                      </div>
+                      <div className="text-sm text-white/50 flex items-center gap-2">
+                        <span>{new Date(task.created_at).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className="capitalize">{task.platform}</span>
+                      </div>
+                    </div>
                   </div>
-                </details>
-              </div>
 
-              {/* Apply Filters Button */}
-              <button
-                onClick={loadTasks}
-                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1">
-
-        {/* Tasks Table */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : tasks.length === 0 ? (
-          <div className="card rounded-lg p-6 flex items-center" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <svg className="h-5 w-5 mr-2" style={{ color: 'var(--primary)' }} fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <span style={{ color: 'var(--text-primary)' }}>No tasks found. Create a new analysis to get started!</span>
-          </div>
-        ) : (
-          <div className="card rounded-lg shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', border: '1px solid' }}>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-color)' }}>
-                <thead style={{ backgroundColor: 'var(--light-bg)' }}>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Platform</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Profile</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Progress</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
-                  {tasks.map(task => (
-                    <tr key={task.id} className="hover:bg-opacity-50" style={{ backgroundColor: 'var(--card-bg)' }}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: 'var(--text-primary)' }}>#{task.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" style={{ color: 'var(--text-primary)' }}>{task.platform}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-primary)' }}>{task.profile_id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                          {task.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-24 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                            <div 
-                              className="bg-primary-600 h-2 rounded-full" 
-                              style={{ width: `${task.progress}%` }}
-                            ></div>
-                          </div>
-                          <span className="ml-2 text-sm" style={{ color: 'var(--text-secondary)' }}>{task.progress}%</span>
+                  <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div className="flex flex-col items-end gap-1 min-w-[100px]">
+                      {getStatusBadge(task.status)}
+                      {task.status === 'processing' && (
+                        <div className="w-24 h-1 bg-white/10 rounded-full mt-1 overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                            style={{ width: `${task.progress}%` }}
+                          />
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-secondary)' }}>
-                        {new Date(task.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Link 
-                          to={`/tasks/${task.id}`} 
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      )}
+                    </div>
+
+                    <Link
+                      to={`/tasks/${task.id}`}
+                      className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                    >
+                      <ArrowRightIcon className="w-5 h-5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        )}
-          </div>
+          )}
         </div>
       </div>
 

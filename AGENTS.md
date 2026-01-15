@@ -314,8 +314,7 @@ Here’s how I want you to respond:
 
 ## Documentation index
 
-- `docs/setup_guide.md`: setup & API keys
-- `docs/development.md`: dev workflows and architecture
-- `docs/api.md`: API overview
-- `docs/desktop.md`: desktop/mobile notes
-- `docs/DOCUMENTATION_INDEX.md`: full documentation map
+- `directives/setup_guide.md`: setup & API keys
+- `directives/development.md`: dev workflows and architecture
+- `directives/api.md`: API overview
+- `directives/desktop_mobile.md`: desktop/mobile notes

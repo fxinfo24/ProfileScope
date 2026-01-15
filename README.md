@@ -333,13 +333,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Documentation
 
-### Complete Documentation
-- **Setup Guide**: `docs/setup_guide.md` - Comprehensive installation and configuration
-- **API Documentation**: `docs/api.md` - Complete REST API reference
-- **Development Guide**: `docs/development.md` - Developer setup and contribution guide  
-- **Desktop & Mobile**: `docs/desktop.md` - Desktop and mobile application documentation
-- **🚀 Implementation Progress**: `docs/IMPLEMENTATION_TRACKER.md` - Platform achievements and development progress
-- **Implementation Tracker**: `docs/IMPLEMENTATION_TRACKER.md` - Development progress and milestones
+### Directives (SOPs)
+- **Setup Guide**: `directives/setup_guide.md` - Installation, API configuration, and verification
+- **API Documentation**: `directives/api.md` - Complete REST API reference
+- **Development Guide**: `directives/development.md` - Developer setup and contribution guide  
+- **Desktop & Mobile**: `directives/desktop_mobile.md` - Desktop and mobile application documentation
+- **Agent Guide**: `AGENTS.md` - Core operating principles and architecture
 
 ## Achievements Summary
 
@@ -355,8 +354,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, please:
-1. Check the comprehensive documentation in the `docs/` directory
-2. Review the transformational achievements document for platform capabilities
+1. Check the comprehensive documentation in the `directives/` directory
+2. Review `AGENTS.md` for core operating principles
 3. Open an issue on GitHub with detailed information
 4. Contact the development team for enterprise inquiries
-# Force redeploy - Wed Dec 24 05:55:11 +06 2025

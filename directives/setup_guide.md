@@ -127,53 +127,64 @@ curl http://127.0.0.1:5000/api/tasks
 
 ## Production Deployment
 
-### Railway Deployment (Recommended)
+### Backend Hosting Options
 
-#### Step 1: Environment Variables
-Set these in your Railway service dashboard:
+Choose ONE of the following options for hosting the Flask backend:
+
+#### Option A: Render.com (Recommended - Free Tier)
+
+1. Go to https://render.com and create an account
+2. Create a new "Web Service" and connect your GitHub repository
+3. Configure:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
+4. Add environment variables:
+   ```bash
+   SECRET_KEY=your-secure-random-key
+   CORS_ORIGINS=https://profile-scope.vercel.app
+   OPENROUTER_API_KEY=your-openrouter-key
+   SCRAPECREATORS_API_KEY=your-scrapecreators-key
+   DATABASE_URI=sqlite:///data/profilescope.db
+   ```
+5. Deploy and note your backend URL
+
+#### Option B: Fly.io (Free Tier)
+
+1. Install CLI: `brew install flyctl`
+2. Login: `fly auth login`
+3. Launch: `fly launch` in project root
+4. Set secrets:
+   ```bash
+   fly secrets set SECRET_KEY=your-secure-key
+   fly secrets set CORS_ORIGINS=https://profile-scope.vercel.app
+   fly secrets set OPENROUTER_API_KEY=your-key
+   fly secrets set SCRAPECREATORS_API_KEY=your-key
+   ```
+5. Deploy: `fly deploy`
+
+#### Option C: Railway (Paid - $5/month)
+
+1. Go to https://railway.app and create a project
+2. Connect your GitHub repository
+3. Add PostgreSQL and Redis add-ons (optional)
+4. Configure environment variables
+5. Deploy (auto-deploys from main branch)
+
+#### Option D: Local Development
 
 ```bash
-# Required
-SECRET_KEY=your-secure-random-key-here
-DATABASE_URI=postgresql://user:pass@host:port/dbname  # Auto-provided by Railway Postgres
-REDIS_URL=redis://:password@host:port                  # Auto-provided by Railway Redis
-CORS_ORIGINS=https://your-frontend.vercel.app,https://yourdomain.com
+# Backend (Terminal 1)
+source venv/bin/activate
+python3 bin/run.py --web
 
-# Optional
-FLASK_DEBUG=false
-SCRAPECREATORS_API_KEY=your_api_key_here
-OPENROUTER_API_KEY=your_api_key_here
+# Frontend (Terminal 2)
+cd frontend && npm run dev
 ```
 
-#### Step 2: Deploy Web Service
-1. Connect your GitHub repository to Railway
-2. Railway auto-detects Procfile and uses the "web" command
-3. Command: `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
-4. Railway provides $PORT automatically
-
-#### Step 3: Enable Redis Add-on
-1. In Railway dashboard, click "New" → "Database" → "Add Redis"
-2. Railway automatically:
-   - Creates Redis service
-   - Sets REDIS_URL environment variable
-   - Links it to your web service
-
-#### Step 4: Deploy Worker Service (for async tasks)
-1. Create NEW service in Railway from the SAME repository
-2. Set custom start command: `celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis`
-3. Ensure these environment variables are set:
-   - `REDIS_URL` (from Redis add-on)
-   - `DATABASE_URI` (from Postgres add-on)
-4. Deploy the worker service
-
-**Important**: 
-- Web and Worker must be SEPARATE Railway services pointing to the same repo
-- Uses `--pool=solo` to avoid mmap dependency issues in Railway's containerized environment
-- Solo pool processes 1 task at a time (sufficient for ProfileScope's I/O-bound workload)
-
 ### Frontend Setup (Vercel)
-Set `VITE_API_BASE_URL` to your Railway backend URL + `/api`, e.g.
-`https://<your-service>.up.railway.app/api`
+
+Set `VITE_API_BASE_URL` to your backend URL + `/api`, e.g.:
+`https://your-backend.onrender.com/api`
 
 ### Database Setup
 ```bash
@@ -192,11 +203,7 @@ flask db upgrade
 4. **Database Issues**:
    - SQLite (dev): delete `data/profilescope.db` and restart
    - Postgres (prod): run `flask db upgrade` and verify `DATABASE_URI`
-5. **Celery Worker Crashes on Railway** (`ModuleNotFoundError: No module named 'mmap'`):
-   - Railway's Nixpacks Python build may lack the mmap module for multiprocessing
-   - Solution: Use `--pool=solo` flag in worker start command (already in Procfile)
-   - This runs single-threaded but is sufficient for ProfileScope's workload
-   - Verify logs show "concurrency: 1 (solo)" instead of "concurrency: 48 (prefork)"
+5. **CORS Errors**: Ensure `CORS_ORIGINS` includes your exact frontend URL
 
 ### Debug Mode
 ```bash

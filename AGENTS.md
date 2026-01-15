@@ -245,12 +245,13 @@ Here’s how I want you to respond:
 ## Deployment (recommended)
 
 - **Frontend (Vercel)**
-  - Set `VITE_API_BASE_URL` to your Railway backend base URL, e.g. `https://<service>.up.railway.app/api`.
-- **Backend (Railway)**
-  - Web command: `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
-  - Worker command: `celery -A app.core.tasks worker --loglevel=info --queues=analysis`
-  - Add-ons: Railway Postgres + Railway Redis
-  - Release command: `flask db upgrade`
+  - Set `VITE_API_BASE_URL` to your backend base URL (e.g., `https://your-backend.com/api`)
+- **Backend** (choose one):
+  - **Render.com** (recommended, free tier): `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
+  - **Fly.io** (free tier): Use `fly launch` and `fly deploy`
+  - **Railway** (paid): Auto-deploys from GitHub
+  - **Local**: `python3 bin/run.py --web`
+- See `directives/HANDOVER.md` for detailed deployment instructions and current project state.
 
 ## Postgres results storage notes
 

@@ -147,130 +147,124 @@ flask db upgrade
 
 ## Production Deployment
 
-### Complete Railway + Vercel Deployment Guide
+### Architecture Overview
 
-#### Prerequisites
-- GitHub repository connected to Railway
-- Vercel account connected to GitHub
-- Railway project with Postgres and Redis add-ons
+ProfileScope uses a **split deployment**:
+- **Frontend**: Vercel (React/TypeScript static site)
+- **Backend**: Any Python-capable hosting (Flask API)
 
-#### Step 1: Railway Backend Setup
+### Backend Hosting Options
 
-**1.1 Create Web Service**
+Choose ONE of the following options for hosting the Flask backend:
+
+#### Option A: Render.com (Recommended - Free Tier Available)
+
+1. **Create Account**: Go to https://render.com and sign up
+2. **New Web Service**: Connect your GitHub repository
+3. **Configure Build**:
+   ```
+   Build Command: pip install -r requirements.txt
+   Start Command: gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+   ```
+4. **Environment Variables**:
+   ```bash
+   SECRET_KEY=your-secure-random-key
+   CORS_ORIGINS=https://profile-scope.vercel.app
+   OPENROUTER_API_KEY=your-openrouter-key
+   SCRAPECREATORS_API_KEY=your-scrapecreators-key
+   DATABASE_URI=sqlite:///data/profilescope.db
+   ```
+5. **Deploy** and note your backend URL
+
+#### Option B: Fly.io (Free Tier Available)
+
+1. **Install CLI**: `brew install flyctl` (or see https://fly.io/docs/hands-on/install-flyctl/)
+2. **Login**: `fly auth login`
+3. **Launch**: `fly launch` in project root
+4. **Set Secrets**:
+   ```bash
+   fly secrets set SECRET_KEY=your-secure-key
+   fly secrets set CORS_ORIGINS=https://profile-scope.vercel.app
+   fly secrets set OPENROUTER_API_KEY=your-key
+   fly secrets set SCRAPECREATORS_API_KEY=your-key
+   ```
+5. **Deploy**: `fly deploy`
+
+#### Option C: Railway (Paid - $5/month)
+
+1. **Create Project**: Go to https://railway.app
+2. **Connect GitHub**: Link your repository
+3. **Add Services**: PostgreSQL and Redis (optional)
+4. **Configure Environment Variables** (same as above)
+5. **Deploy**: Railway auto-deploys from main branch
+
+#### Option D: Local Development
+
 ```bash
-# Railway auto-detects Procfile and runs "web" command
-# Command: gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()
+# Backend (Terminal 1)
+source venv/bin/activate
+python3 bin/run.py --web
+# Runs on http://localhost:5000
+
+# Frontend (Terminal 2)
+cd frontend && npm run dev
+# Runs on http://localhost:5173
 ```
 
-**1.2 Add Database Services**
-- Click "New" → "Database" → "Add PostgreSQL"
-- Click "New" → "Database" → "Add Redis"
-- Railway automatically sets `DATABASE_URI` and `REDIS_URL`
+### Frontend Setup (Vercel)
 
-**1.3 Configure Environment Variables**
+1. **Connect Repository**: Import `fxinfo24/ProfileScope` to Vercel
+2. **Configure**:
+   - Framework: Vite
+   - Root Directory: `frontend`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+3. **Environment Variables**:
+   ```bash
+   VITE_API_BASE_URL=https://your-backend-url.com/api
+   ```
+4. **Deploy**: Auto-deploys on push to main
+
+### Environment Variables Reference
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SECRET_KEY` | Yes | Flask secret key for sessions |
+| `CORS_ORIGINS` | Yes | Comma-separated frontend URLs |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter API for AI (Grok 4.1 Fast) |
+| `SCRAPECREATORS_API_KEY` | Yes | ScrapeCreators API for social data |
+| `DATABASE_URI` | No | PostgreSQL URL (defaults to SQLite) |
+| `REDIS_URL` | No | For Celery background tasks |
+| `FORCE_CELERY` | No | Set to "true" to use Celery over threading |
+
+### Verify Deployment
+
 ```bash
-# Required
-SECRET_KEY=your-secure-random-key-here
-CORS_ORIGINS=https://your-frontend.vercel.app,https://yourdomain.com
+# Test backend health
+curl https://your-backend.com/api/stats/completion-rate
 
-# Optional API Keys
-SCRAPECREATORS_API_KEY=your_api_key
-OPENROUTER_API_KEY=your_api_key
-```
-
-**1.4 Enable Database Migrations**
-Set Railway release command:
-```bash
-flask db upgrade
-```
-
-**1.5 Deploy Worker Service (Optional - for async tasks)**
-- Create NEW Railway service from SAME GitHub repo
-- Set custom start command:
-  ```bash
-  celery -A app.core.tasks worker --pool=solo --loglevel=info --queues=analysis
-  ```
-- Ensure `REDIS_URL` and `DATABASE_URI` are available
-- Deploy alongside web service
-
-**Important**: 
-- Uses `--pool=solo` to avoid mmap dependency issues in containerized environments
-  - Railway's Nixpacks Python build may be missing the `mmap` module required for multiprocessing
-  - Solo pool runs single-threaded (1 task at a time) but uses less memory and works reliably
-  - Sufficient for ProfileScope's I/O-bound tasks (~120-180 tasks/hour)
-  - Scale horizontally by adding more worker services if higher throughput is needed
-- Without Redis/Worker, the app uses threading fallback (works fine for moderate load)
-
-#### Step 2: Vercel Frontend Setup
-
-**2.1 Connect Repository**
-- Import your GitHub repository to Vercel
-- Framework preset: Vite
-- Root directory: `frontend`
-
-**2.2 Configure Build Settings**
-```bash
-Build command: npm run build
-Output directory: dist
-Install command: npm install
-```
-
-**2.3 Set Environment Variables**
-```bash
-VITE_API_BASE_URL=https://your-service.up.railway.app/api
-```
-
-**2.4 Deploy**
-- Vercel auto-deploys on push to main
-- Preview deployments for pull requests
-
-#### Step 3: Verify Deployment
-
-**3.1 Test CORS**
-```bash
-curl -I https://your-service.up.railway.app/api/stats/completion-rate \
-  -H "Origin: https://your-frontend.vercel.app"
-# Should return: Access-Control-Allow-Origin header
-```
-
-**3.2 Test API Endpoints**
-```bash
-# Health check
-curl https://your-service.up.railway.app/api/tasks
+# Test CORS
+curl -I https://your-backend.com/api/tasks \
+  -H "Origin: https://profile-scope.vercel.app"
 
 # Create analysis
-curl -X POST https://your-service.up.railway.app/api/analyze \
+curl -X POST https://your-backend.com/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"platform":"twitter","profile_id":"test"}'
+  -d '{"platform":"twitter","profile_id":"elonmusk"}'
 ```
 
-**3.3 Monitor Services**
-- Railway: Check deployment logs and metrics
-- Vercel: Monitor function invocations
-- Database: Monitor connection pool usage
-
-#### Troubleshooting
+### Troubleshooting
 
 **CORS Issues**
-- Verify `CORS_ORIGINS` matches your Vercel URL exactly
-- Check browser console for specific error messages
-- Ensure no trailing slashes in URLs
+- Ensure `CORS_ORIGINS` includes your exact Vercel URL
+- No trailing slashes in URLs
+- Check browser console for specific errors
 
-**Database Connection**
-- Railway Postgres auto-configures `DATABASE_URI`
-- Run migrations: `flask db upgrade`
-- Check connection pool settings
+**API Errors**
+- Verify `OPENROUTER_API_KEY` is set correctly
+- Check backend logs for detailed error messages
 
-**Worker Not Processing**
-- Verify Redis is running and `REDIS_URL` is set
-- Check worker service logs in Railway
-- If worker crashes with "ModuleNotFoundError: No module named 'mmap'":
-  - Ensure you're using `--pool=solo` flag in the worker start command
-  - Railway's Python may lack the mmap module needed for prefork multiprocessing
-  - Solo pool is the recommended solution for containerized environments
-- Without worker, tasks run via threading (acceptable for low/medium load)
-
-For detailed setup instructions, see `docs/setup_guide.md`.
+For detailed setup instructions, see `directives/setup_guide.md`.
 
 ### Results storage (production)
 
@@ -338,6 +332,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **API Documentation**: `directives/api.md` - Complete REST API reference
 - **Development Guide**: `directives/development.md` - Developer setup and contribution guide  
 - **Desktop & Mobile**: `directives/desktop_mobile.md` - Desktop and mobile application documentation
+- **Session Handover**: `directives/HANDOVER.md` - Project state and deployment options
 - **Agent Guide**: `AGENTS.md` - Core operating principles and architecture
 
 ## Achievements Summary

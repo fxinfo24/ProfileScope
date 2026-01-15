@@ -13,7 +13,7 @@ ProfileScope is the most comprehensive AI-powered social media intelligence plat
 - **Comprehensive Analysis**: Profile data, content analysis, engagement metrics across all platforms
 
 ### 🤖 Advanced AI Intelligence  
-- **Universal AI Access**: OpenRouter integration (GPT-4, Claude-3, Gemini, Llama-2)
+- **Universal AI Access**: OpenRouter integration (Grok 4.1 Fast, GPT-4, Gemini, Llama-2)
 - **Multi-dimensional Analysis**: Content, authenticity, personality, predictions
 - **Computer Vision**: OpenCV-powered image analysis and authenticity detection
 - **Specialized Models**: Platform-specific analysis optimization
@@ -344,7 +344,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 🌍 **10+ Platform Coverage** - More comprehensive than any competitor  
 ⚡ **Real-time Processing** - 10x faster than traditional batch processing  
-🤖 **Universal AI Integration** - Access to GPT-4, Claude-3, Gemini, Llama-2  
+🤖 **Universal AI Integration** - Access to Grok 4.1 Fast, GPT-4, Gemini, Llama-2  
 📱 **Mobile-First Design** - Cross-platform iOS and Android apps  
 🏢 **Enterprise Ready** - Team collaboration and white-label solutions  
 💰 **Complete Monetization** - Usage-based billing and revenue analytics  

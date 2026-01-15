@@ -42,22 +42,23 @@ class OpenRouterClient:
             "gpt-4": "openai/gpt-4",
             "gpt-4-turbo": "openai/gpt-4-turbo",
             "gpt-3.5-turbo": "openai/gpt-3.5-turbo", 
-            "claude-3-opus": "anthropic/claude-3-opus",
-            "claude-3-sonnet": "anthropic/claude-3-sonnet",
-            "claude-3-haiku": "anthropic/claude-3-haiku",
+            "grok-4.1-fast": "x-ai/grok-4.1-fast",  # xAI's best agentic model - 2M context
+            "grok-4-fast": "x-ai/grok-4-fast",      # Multimodal with SOTA cost-efficiency
+            "grok-code-fast": "x-ai/grok-code-fast-1",  # Specialized for coding
             "gemini-pro": "google/gemini-pro",
             "llama-2-70b": "meta-llama/llama-2-70b-chat",
             "mixtral-8x7b": "mistralai/mixtral-8x7b-instruct"
         }
         
         # Default model for different analysis types
+        # Using xAI Grok 4.1 Fast as primary model for best performance/cost ratio
         self.default_models = {
-            "content_analysis": "openai/gpt-4-turbo",
-            "personality_analysis": "anthropic/claude-3-sonnet", 
-            "authenticity_analysis": "openai/gpt-4",
-            "sentiment_analysis": "openai/gpt-3.5-turbo",
-            "trend_analysis": "anthropic/claude-3-haiku",
-            "general": "openai/gpt-4-turbo"
+            "content_analysis": "x-ai/grok-4.1-fast",
+            "personality_analysis": "x-ai/grok-4.1-fast", 
+            "authenticity_analysis": "x-ai/grok-4.1-fast",
+            "sentiment_analysis": "x-ai/grok-4-fast",
+            "trend_analysis": "x-ai/grok-4-fast",
+            "general": "x-ai/grok-4.1-fast"
         }
     
     def _make_request(self, messages: List[Dict[str, str]], model: str = None, 
@@ -176,7 +177,7 @@ Be thorough but concise. Use numerical scores where applicable (0-1 scale)."""
             raise OpenRouterError(f"Analysis failed: {str(e)}")
     
     def analyze_authenticity(self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Authenticity analysis using Claude-3"""
+        """Authenticity analysis using Grok 4.1 Fast"""
         
         profile_metrics = f"""
 Username: @{profile_data.get('username')}

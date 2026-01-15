@@ -17,7 +17,7 @@
 - **Authentication**: JWT tokens with bcrypt password hashing
 - **Real-time Processing**: Celery with Redis backend
 - **Data Collection**: ScrapeCreators universal API (10+ platforms)
-- **AI Analysis**: OpenRouter (GPT-4, Claude-3, Gemini, Llama-2)
+- **AI Analysis**: OpenRouter (Grok 4.1 Fast, GPT-4, Gemini, Llama-2)
 - **Computer Vision**: OpenCV with PIL for image analysis
 - **Task Monitoring**: Flower dashboard
 

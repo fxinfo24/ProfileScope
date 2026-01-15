@@ -30,7 +30,7 @@ ProfileScope uses ScrapeCreators for universal access to 10+ social media platfo
 ProfileScope uses OpenRouter for access to multiple AI models:
 
 1. **Configuration Required**: Add your OpenRouter API key to .env file
-2. **Available Models**: GPT-4, Claude-3, Gemini, Llama-2, Mixtral
+2. **Available Models**: Grok 4.1 Fast, GPT-4, Gemini, Llama-2, Mixtral
 3. **Setup Instructions**:
    ```
    # Add your OpenRouter API key to .env file
@@ -78,7 +78,7 @@ The following critical issues have been resolved:
 - ✅ **Mobile Applications**: React Native + Expo (iOS/Android)
 - ✅ **Desktop Application**: PyQt5 GUI with advanced visualizations
 - ✅ **10+ Platform Support**: Universal data collection via ScrapeCreators
-- ✅ **Universal AI**: GPT-4, Claude-3, Gemini, Llama-2 via OpenRouter
+- ✅ **Universal AI**: Grok 4.1 Fast, GPT-4, Gemini, Llama-2 via OpenRouter
 - ✅ **Real-time Processing**: Celery + Redis with Flower monitoring
 - ✅ **Enterprise Features**: Team management and white-label ready
 - ✅ **Database**: PostgreSQL (production), SQLite (development)

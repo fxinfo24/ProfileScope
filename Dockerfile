@@ -1,4 +1,4 @@
-# ProfileScope Docker Configuration
+# Vanta Docker Configuration
 # Multi-stage build for optimized production image
 
 FROM python:3.11-slim as builder

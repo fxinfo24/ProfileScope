@@ -1,3 +1,12 @@
+```text
+██╗   ██╗ █████╗ ███╗   ██╗████████╗ █████╗ 
+██║   ██║██╔══██╗████╗  ██║╚══██╔══╝██╔══██╗
+██║   ██║███████║██╔██╗ ██║   ██║   ███████║
+╚██╗ ██╔╝██╔══██║██║╚██╗██║   ██║   ██╔══██║
+ ╚████╔╝ ██║  ██║██║ ╚████║   ██║   ██║  ██║
+  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝
+```
+
 # Vanta
 
 Vanta is the most comprehensive AI-powered social media intelligence platform, providing advanced analysis across 21+ major social platforms including Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, GitHub, and major commerce channels. Using cutting-edge machine learning, universal data collection, and real-time processing, Vanta delivers immediate insights into profile authenticity, engagement patterns, content analysis, and predictive analytics.

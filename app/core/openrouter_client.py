@@ -108,9 +108,12 @@ class OpenRouterClient:
                 
             return json.loads(clean_response)
             
+        except json.JSONDecodeError as e:
+            logger.error(f"Generic analysis JSON parse failed: {e}")
+            return {"error": "JSON parse error", "raw_response": clean_response}
         except Exception as e:
             logger.error(f"Generic analysis failed: {e}")
-            return {"error": str(e), "raw_response": str(e)}
+            return {"error": str(e)}
     
     def _make_request(self, messages: List[Dict[str, str]], model: str = None, 
                      temperature: float = 0.7, max_tokens: int = 2000) -> str:
@@ -237,7 +240,8 @@ Profile Image: {'Present' if profile_data.get('profile_image_url') else 'Missing
                 "role": "system",
                 "content": """You are a cybersecurity expert specializing in fake account detection and 
                 social media authenticity analysis. Analyze profiles for signs of automation, bot behavior, 
-                purchased followers, and other authenticity issues."""
+                purchased followers, and other authenticity issues.
+                CRITICAL: If 'Verified' is True, start with a high base trust score (>0.8) unless you find specific evidence of compromise (hacked verified account)."""
             },
             {
                 "role": "user",
@@ -272,13 +276,20 @@ Be thorough in detecting fake accounts, bot networks, and purchased engagement."
                 max_tokens=2000
             )
             
-            return json.loads(response)
+            # Clean possible markdown
+            clean_response = response.strip()
+            if clean_response.startswith("```json"): clean_response = clean_response[7:]
+            if clean_response.startswith("```"): clean_response = clean_response[3:]
+            if clean_response.endswith("```"): clean_response = clean_response[:-3]
+
+            return json.loads(clean_response)
             
-        except json.JSONDecodeError:
-            logger.warning("Failed to parse authenticity analysis JSON")
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse authenticity analysis JSON: {e}")
             return {
                 "overall_authenticity": {"score": 0.5, "confidence": 0.3},
-                "error": "Failed to parse structured response"
+                "error": "Failed to parse structured response",
+                "raw_response": response
             }
         except Exception as e:
             logger.error(f"Authenticity analysis failed: {e}")

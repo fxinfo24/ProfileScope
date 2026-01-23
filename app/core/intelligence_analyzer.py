@@ -112,7 +112,9 @@ class IntelligenceAnalyzer:
     def _generate_executive_summary(self, report_data: Dict) -> str:
         """Generate a high-level executive summary of the entire report"""
         
-        system_prompt = "You are an Intelligence Analyst briefing a stakeholder. Write a concise, high-impact executive summary."
+        system_prompt = """You are an Intelligence Analyst briefing a stakeholder. 
+        You MUST provide your output in valid JSON format with a single key 'summary' containing the text.
+        """
         
         prompt = f"""
         Summarize this digital intelligence report into a cohesive narrative.
@@ -130,14 +132,17 @@ class IntelligenceAnalyzer:
         3. Predictive Outlook (What will they likely do next?)
         
         Keep it under 300 words. Professional tone.
+        
+        REQUIRED OUTPUT FORMAT:
+        {{
+            "summary": "Your executive summary text here..."
+        }}
         """
         
         try:
-            return self.ai.analyze(prompt, system_prompt, model_type="general").get("summary", "Summary generation failed")
+            result = self.ai.analyze(prompt, system_prompt, model_type="general")
+            return result.get("summary") or result.get("raw_response") or "Summary generation failed"
         except:
-            # Fallback if specific key fails (analyze returns dict, but we depend on prompt instruction)
-            # Actually analyze returns a JSON dict, so let's adjust prompt to ask for JSON string wrapper or handle direct string
-            # For simplicity here, assume text response or simple dict
             return "Executive summary could not be generated."
 
 import json

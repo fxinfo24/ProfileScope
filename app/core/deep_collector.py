@@ -191,6 +191,40 @@ class DeepDossierCollector:
             'comments_method': None,
             'transcript_method': None,
         },
+        'google': {
+            'name': 'Google',
+            'profile_method': 'get_google_profile',
+            'deep_methods': [
+                ('search_results', 'search_google', {'count': 20}),
+            ],
+            'content_method': None,
+            'comments_method': None,
+            'transcript_method': None,
+        },
+        'komi': {
+            'name': 'Komi',
+            'profile_method': 'get_komi_profile',
+            'deep_methods': [],
+            'content_method': None,
+            'comments_method': None,
+            'transcript_method': None,
+        },
+        'pillar': {
+            'name': 'Pillar',
+            'profile_method': 'get_pillar_profile',
+            'deep_methods': [],
+            'content_method': None,
+            'comments_method': None,
+            'transcript_method': None,
+        },
+        'linkbio': {
+            'name': 'Linkbio',
+            'profile_method': 'get_linkbio_profile',
+            'deep_methods': [],
+            'content_method': None,
+            'comments_method': None,
+            'transcript_method': None,
+        },
     }
 
     def __init__(self, client: ScrapeCreatorsClient = None):

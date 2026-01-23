@@ -313,6 +313,71 @@ class ScrapeCreatorsClient:
             logger.error(f"Failed to get Amazon Shop profile {username}: {e}")
             raise
 
+    # --- Search & Link-in-Bio Profiles ---
+
+    def get_google_profile(self, query: str) -> Dict[str, Any]:
+        """Get Google Knowledge Graph/Search profile"""
+        try:
+            # Use search as proxy for profile
+            data = self.search_google(query, count=1)
+            results = data.get('results', [])
+            if not results:
+                return {"platform": "google", "username": query, "error": "Not found"}
+            
+            top_result = results[0]
+            return {
+                "platform": "google",
+                "username": query,
+                "display_name": top_result.get("title", query),
+                "bio": top_result.get("snippet", ""),
+                "website_url": top_result.get("link"),
+                "profile_image_url": None,
+                "raw_data": top_result
+            }
+        except Exception as e:
+            logger.error(f"Failed to get Google profile {query}: {e}")
+            return {}
+
+    def get_linktree_profile(self, username: str) -> Dict[str, Any]:
+        """Get Linktree profile data"""
+        endpoint = "v1/linktree/profile"
+        try:
+            response = self._make_request("GET", endpoint, params={"handle": username})
+            return self._normalize_generic_data(response, "linktree")
+        except Exception as e:
+            logger.warning(f"Failed to get Linktree profile {username}: {e}")
+            return {}
+
+    def get_komi_profile(self, username: str) -> Dict[str, Any]:
+        """Get Komi profile data"""
+        endpoint = "v1/komi/profile"
+        try:
+            response = self._make_request("GET", endpoint, params={"handle": username})
+            return self._normalize_generic_data(response, "komi")
+        except Exception as e:
+            logger.warning(f"Failed to get Komi profile {username}: {e}")
+            return {}
+
+    def get_pillar_profile(self, username: str) -> Dict[str, Any]:
+        """Get Pillar profile data"""
+        endpoint = "v1/pillar/profile"
+        try:
+            response = self._make_request("GET", endpoint, params={"handle": username})
+            return self._normalize_generic_data(response, "pillar")
+        except Exception as e:
+            logger.warning(f"Failed to get Pillar profile {username}: {e}")
+            return {}
+
+    def get_linkbio_profile(self, username: str) -> Dict[str, Any]:
+        """Get Linkbio profile data"""
+        endpoint = "v1/linkbio/profile"
+        try:
+            response = self._make_request("GET", endpoint, params={"handle": username})
+            return self._normalize_generic_data(response, "linkbio")
+        except Exception as e:
+            logger.warning(f"Failed to get Linkbio profile {username}: {e}")
+            return {}
+
     # --- Ad Libraries ---
     def get_facebook_ad_library(self, advertiser: str) -> Dict[str, Any]:
         """Get Facebook Ad Library data for an advertiser"""

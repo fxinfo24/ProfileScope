@@ -82,7 +82,7 @@ Current status:
 - Branding: Fully rebranded to "Vanta" with premium logo.png and dark-mode UI.
 - Capabilities: "Deep Mind" profiling implemented for TikTok (Comments), YouTube (Transcripts), and Instagram (Deep Posts).
 - Backend: Python 3.13 + Hybrid AI Engine (OpenRouter Grok 4.1 / GPT-4 + Heuristic Fallback).
-- Fixed: Resolved the "Empty/Blank Results" UI bug and "Stuck Processing" worker crash.
+- Fixed: Resolved "Empty/Blank Results" bug, "Summary Generation Failed" error, Authenticity false positives, Input/Button lagging, Real-time Polling, Deep PDF Reports, and Mobile/Network Scalability.
 
 My goal: [describe what you want to do]
 ```

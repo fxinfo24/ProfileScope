@@ -89,35 +89,36 @@ const ResultView: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in-up pb-12">
       {/* Header */}
-      <div className="glass-panel p-8 rounded-2xl relative overflow-hidden">
+      {/* Header */}
+      <div className="glass-panel p-6 md:p-8 rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="relative z-10 flex justify-between items-start">
-          <div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-6">
+          <div className="flex-1">
             <div className="flex items-center gap-2 text-white/40 text-sm mb-2">
               <span className="uppercase tracking-wider">Intelligence Dossier</span>
               <span className="px-2 py-0.5 rounded bg-primary-500/20 text-primary-300 text-xs">
                 {results.metadata?.collection_mode === 'deep' ? 'DEEP SCAN' : 'QUICK SCAN'}
               </span>
             </div>
-            <h1 className="text-4xl font-bold text-white font-display mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white font-display mb-2 break-all">
               @{results.profile_info?.username}
             </h1>
-            <p className="text-lg text-white/60 max-w-2xl">
+            <p className="text-base md:text-lg text-white/60 max-w-2xl">
               {results.executive_summary || results.profile_info?.bio || "No summary available."}
             </p>
           </div>
-          <div className="flex gap-3">
-            <button onClick={() => handleExport('html')} className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center">
-              <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" /> View Dossier
+          <div className="flex gap-3 w-full md:w-auto">
+            <button onClick={() => handleExport('html')} className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center justify-center flex-1 md:flex-initial shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all">
+              <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" /> Print (PDF)
             </button>
-            <button onClick={() => handleExport('json')} className="glass-button bg-white/5 hover:bg-white/10 text-white flex items-center">
+            <button onClick={() => handleExport('json')} className="glass-button bg-white/5 hover:bg-white/10 text-white flex items-center justify-center flex-1 md:flex-initial">
               <ArrowDownTrayIcon className="h-4 w-4 mr-2" /> JSON
             </button>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-6 mt-8 border-b border-white/10">
+        <div className="flex gap-6 mt-8 border-b border-white/10 overflow-x-auto no-scrollbar pb-1">
           {[
             { id: 'overview', label: 'Overview', icon: UserIcon },
             { id: 'network', label: 'Network', icon: ShareIcon },
@@ -129,7 +130,7 @@ const ResultView: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 flex items-center gap-2 transition-all ${activeTab === tab.id
+              className={`pb-3 flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === tab.id
                 ? 'text-primary-400 border-b-2 border-primary-500'
                 : 'text-white/50 hover:text-white'
                 }`}

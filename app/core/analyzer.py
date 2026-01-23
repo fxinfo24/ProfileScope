@@ -83,6 +83,10 @@ class SocialMediaAnalyzer:
                 )
             
             # ═══════════════════════════════════════════════════════════════
+            self.logger.info(f"Dossier Data Keys: {list(dossier_data.keys())}")
+            self.logger.info(f"Profile Data collected: {dossier_data.get('profile', {})}")
+
+            # ═══════════════════════════════════════════════════════════════
             # PHASE 3: MASTER INTELLIGENCE ANALYSIS
             # ═══════════════════════════════════════════════════════════════
             from .intelligence_analyzer import create_intelligence_analyzer

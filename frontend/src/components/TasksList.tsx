@@ -28,13 +28,31 @@ const TasksList: React.FC = () => {
   const [filter, setFilter] = useState({ platform: '', status: '' });
   const [showNewAnalysis, setShowNewAnalysis] = useState(false);
 
+  // Polling for updates
   useEffect(() => {
-    loadTasks();
-  }, [filter]);
+    // Initial load
+    loadTasks(true);
 
-  const loadTasks = async () => {
+    const intervalId = setInterval(() => {
+      // Check if we have active tasks that need monitoring
+      const hasActiveTasks = tasks.some(t => ['pending', 'processing'].includes(t.status));
+
+      // We poll if:
+      // 1. There are active tasks (to see progress/completion)
+      // 2. OR we are on the 'processing' or 'pending' filter (to catch new ones)
+      // 3. OR simply to keep the list fresh (every 2s is fine for local dev/docker)
+      if (hasActiveTasks || filter.status === 'processing' || filter.status === 'pending') {
+        loadTasks(false); // Silent update
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [filter, tasks.length > 0 ? 'monitor' : 'idle']);
+
+  // Optimize loadTasks to handle silent updates
+  const loadTasks = async (isManual = false) => {
     try {
-      setLoading(true);
+      if (isManual) setLoading(true);
       const params = new URLSearchParams();
       if (filter.platform) params.append('platform', filter.platform);
       if (filter.status) params.append('status', filter.status);
@@ -44,7 +62,7 @@ const TasksList: React.FC = () => {
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
-      setLoading(false);
+      if (isManual) setLoading(false);
     }
   };
 
@@ -275,7 +293,7 @@ const TasksList: React.FC = () => {
         <AnalysisForm
           onAnalysisCreated={() => {
             setShowNewAnalysis(false);
-            loadTasks();
+            loadTasks(true);
           }}
           onClose={() => setShowNewAnalysis(false)}
         />

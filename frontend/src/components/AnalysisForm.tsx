@@ -144,7 +144,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
               Profile Username (without @)
             </label>
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000 pointer-events-none"></div>
               <input
                 type="text"
                 value={formData.profileId}
@@ -152,6 +152,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
                 placeholder="e.g. elonmusk"
                 className="relative block w-full bg-black/50 border border-white/10 rounded-lg py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all font-mono"
                 required
+                autoFocus
               />
             </div>
           </div>

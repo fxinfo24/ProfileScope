@@ -16,6 +16,7 @@ services:
       - DATABASE_URI=sqlite:////app/data/vanta.db
       - FLASK_ENV=development
       - FLASK_DEBUG=true
+      - FORCE_CELERY=true
 
       # API Keys (from .env file)
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}

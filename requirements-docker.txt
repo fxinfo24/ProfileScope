@@ -1,0 +1,30 @@
+# ProfileScope Docker Requirements (Optimized)
+# Lightweight production build relying on OpenRouter AI
+# Excludes heavy local ML libraries (Torch, Transformers) for speed
+
+# Core Framework
+flask>=2.0.0
+flask-cors>=3.0.10
+flask-sqlalchemy>=3.1.1
+flask-migrate>=3.0.0
+gunicorn>=20.1.0
+python-dotenv>=0.19.0
+
+# Database & Queue
+psycopg2-binary>=2.9.9
+redis>=4.0.0
+celery>=5.1.0
+SQLAlchemy>=2.0.16
+alembic>=1.12.0
+
+# Data & Utilities
+requests>=2.25.0
+numpy>=1.26.0
+pandas>=1.5.0
+python-dateutil>=2.8.0
+pytz>=2021.1
+PyJWT==2.6.0
+beautifulsoup4>=4.9.0
+
+# Security
+bcrypt==4.0.1

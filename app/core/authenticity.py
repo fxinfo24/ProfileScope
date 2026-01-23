@@ -32,9 +32,7 @@ class ProfileAuthenticityAnalyzer:
         self.logger.info("Analyzing profile authenticity")
 
         # Check if we're using mock data
-        is_mock = "profile" in profile_data and profile_data["profile"].get(
-            "mock_data", False
-        )
+        is_mock = profile_data.get("metadata", {}).get("is_mock_data", False)
 
         if is_mock:
             # For mock data, generate complete authenticity analysis
@@ -353,7 +351,10 @@ class ProfileAuthenticityAnalyzer:
         language_score = 0.8
 
         # Extract all content
-        all_content = " ".join([post.get("content", "") for post in posts])
+        all_content = " ".join([
+            str(post.get("text") or post.get("content") or post.get("full_text") or "")
+            for post in posts
+        ])
 
         # Check for repeated phrases
         repeated_phrases = self._find_repeated_phrases(all_content)
@@ -474,7 +475,7 @@ class ProfileAuthenticityAnalyzer:
         hashtag_length = 0
 
         for post in posts:
-            content = post.get("content", "")
+            content = str(post.get("text") or post.get("content") or post.get("full_text") or "")
             total_length += len(content)
 
             # Count hashtags

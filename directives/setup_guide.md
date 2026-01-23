@@ -4,12 +4,16 @@
 
 ### 1. Environment Setup
 ```bash
-# Activate virtual environment
+# Ensure Python 3.12+ is installed
+python3 --version
+
+# Create and activate virtual environment
+python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies (already done if following from README)
+# Install dependencies
 pip install -r requirements-full.txt  # For local development
-# OR: pip install -r requirements.txt  # For Railway (minimal)
+# OR: pip install -r requirements.txt  # For Railway production (minimal)
 ```
 
 ### 2. Universal API Configuration

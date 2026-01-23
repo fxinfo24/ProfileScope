@@ -11,6 +11,7 @@ from .data_collector import DataCollector
 from .content_analyzer import ContentAnalyzer
 from .authenticity import ProfileAuthenticityAnalyzer
 from .prediction import PredictionEngine
+from .openrouter_client import openrouter_client, OpenRouterError
 from ..utils.logger import setup_logger
 
 
@@ -26,13 +27,8 @@ class SocialMediaAnalyzer:
         self.config = self._load_config(config_path)
         self.logger = setup_logger("ProfileScope.Analyzer", self.config["logging"])
 
-        # Initialize components
-        self.collectors = {
-            "twitter": DataCollector("twitter", self.config["rate_limits"]["twitter"]),
-            "facebook": DataCollector(
-                "facebook", self.config["rate_limits"]["facebook"]
-            ),
-        }
+        # Collectors are now initialized dynamically per platform
+        self._collector_cache = {}
 
         self.content_analyzer = ContentAnalyzer(
             nlp_model=self.config["analysis"]["nlp_model"],
@@ -44,54 +40,107 @@ class SocialMediaAnalyzer:
         threshold = self.config["analysis"]["confidence_threshold"]
         self.prediction_engine = PredictionEngine(confidence_threshold=threshold)
 
-    def analyze_profile(self, platform: str, profile_id: str) -> Dict[str, Any]:
+    def _get_collector(self, platform: str) -> DataCollector:
+        """Get or create a collector for the specified platform"""
+        platform = platform.lower()
+        if platform not in self._collector_cache:
+            # Get specific rate limit if configured, otherwise use default
+            rate_limit = self.config["rate_limits"].get(platform, 60)
+            self._collector_cache[platform] = DataCollector(platform, rate_limit)
+        return self._collector_cache[platform]
+
+    def analyze_profile(self, platform: str, profile_id: str, mode: str = "deep") -> Dict[str, Any]:
         """
-        Perform complete analysis of a social media profile
+        Perform complete analysis of a social media profile using Enhanced Engines (Phase 2 & 3)
         Args:
-            platform: Social platform name (e.g., 'twitter', 'facebook')
-            profile_id: Username or ID of the profile
+            platform: Social platform name
+            profile_id: Username or ID
+            mode: 'quick' (10s) or 'deep' (2-5m)
         Returns:
             Complete analysis results
         """
-        self.logger.info(f"Starting analysis of {profile_id} on {platform}")
+        self.logger.info(f"Starting {mode.upper()} analysis of {profile_id} on {platform}")
 
         try:
-            # Step 1: Collect profile data
-            if platform.lower() not in self.collectors:
-                raise ValueError(f"Unsupported platform: {platform}")
-
-            collector = self.collectors[platform.lower()]
-            profile_data = collector.collect_profile_data(profile_id)
-
-            # Step 2: Analyze content
-            content_analysis = self.content_analyzer.analyze_profile(profile_data)
-
-            # Step 3: Analyze authenticity
-            authenticity_analysis = self.authenticity_analyzer.analyze_authenticity(
-                profile_data, content_analysis
-            )
-
-            # Step 4: Generate predictions
-            predictions = self.prediction_engine.generate_predictions(
-                profile_data, content_analysis
-            )
-
-            # Compile complete results
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2: DATA COLLECTION
+            # ═══════════════════════════════════════════════════════════════
+            from .deep_collector import create_deep_collector
+            
+            # Use the new Deep Dossier Collector
+            collector = create_deep_collector()
+            
+            if mode == 'quick':
+                # Quick Scan: 10 seconds, limited data
+                dossier_data = collector.quick_scan(platform, profile_id)
+            else:
+                # Deep Dossier: 2-5 mins, full data
+                dossier_data = collector.deep_dossier(
+                    platform=platform, 
+                    username=profile_id,
+                    include_comments=True,
+                    include_transcripts=True
+                )
+            
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 3: MASTER INTELLIGENCE ANALYSIS
+            # ═══════════════════════════════════════════════════════════════
+            from .intelligence_analyzer import create_intelligence_analyzer
+            
+            # Use the new Master Intelligence Analyzer
+            intelligence_engine = create_intelligence_analyzer()
+            
+            # Generate the full comprehensive report
+            full_report = intelligence_engine.generate_full_report(dossier_data)
+            
+            # ═══════════════════════════════════════════════════════════════
+            # MAP TO FRONTEND SCHEMA
+            # ═══════════════════════════════════════════════════════════════
+            
+            core_intel = full_report.get("core_intelligence", {})
+            profile_data = dossier_data.get("profile", {}) or {}
+            
             results = {
+                "profile_info": {
+                    "username": profile_data.get("username", profile_id),
+                    "followers": profile_data.get("followers_count", 0),
+                    "following": profile_data.get("following_count", 0),
+                    "posts": profile_data.get("posts_count", 0),
+                    "display_name": profile_data.get("display_name"),
+                    "bio": profile_data.get("bio"),
+                    "profile_image_url": profile_data.get("profile_image_url") or profile_data.get("avatar_url"),
+                    "is_verified": profile_data.get("verified", False),
+                    "location": profile_data.get("location"),
+                    "website": profile_data.get("website")
+                },
+                "connected_accounts": dossier_data.get("connected_accounts", []),
+                "sentiment": core_intel.get("general_analysis", {}).get("sentiment", {
+                    "overall": "neutral",
+                    "positive": 0, "neutral": 100, "negative": 0
+                }),
+                "content_analysis": core_intel.get("general_analysis", {}),
+                "authenticity": core_intel.get("authenticity", {}),
+                "predictions": core_intel.get("predictions", {}),
+                # New Vanta Intelligence Sections
+                "belief_system": full_report.get("belief_system", {}),
+                "consumer_profile": full_report.get("consumer_profile", {}),
+                "executive_summary": full_report.get("executive_summary", ""),
+                
                 "metadata": {
                     "profile_id": profile_id,
                     "platform": platform,
                     "analysis_date": datetime.now().isoformat(),
-                    "analyzer_version": "1.0.0",
+                    "analyzer_version": "2.0.0 (Vanta Deep Intelligence)",
+                    "collection_mode": mode.lower(),
                 },
-                "content_analysis": content_analysis,
-                "authenticity_analysis": authenticity_analysis,
-                "predictions": predictions,
+                
+                # Debug data
+                "raw_stats": dossier_data.get("statistics", {})
             }
 
             # Save raw data if configured
             if self.config["output"]["save_raw_data"]:
-                results["raw_data"] = profile_data
+                results["raw_dossier"] = dossier_data
 
             self.logger.info(f"Analysis completed for {profile_id}")
             return results

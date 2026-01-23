@@ -13,11 +13,12 @@ export interface User {
 }
 
 export interface AnalysisRequest {
-  platform: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'tiktok';
+  platform: string;
   profileId: string;
   includeImages?: boolean;
   includePosts?: boolean;
   postCount?: number;
+  mode?: 'quick' | 'deep';
 }
 
 export interface Analysis {

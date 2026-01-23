@@ -1,0 +1,131 @@
+# ProfileScope Docker Compose
+# Full stack: Backend API + Redis (for caching/sessions)
+
+services:
+  # Flask Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profilescope-api
+    ports:
+      - "5000:5000"
+    environment:
+      # Core Settings
+      - SECRET_KEY=${SECRET_KEY:-ProfileScope2024SecureKey}
+      - DATABASE_URI=sqlite:////app/data/profilescope.db
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+
+      # API Keys (from .env file)
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SCRAPECREATORS_API_KEY=${SCRAPECREATORS_API_KEY}
+      - SCRAPECREATORS_BASE_URL=${SCRAPECREATORS_BASE_URL:-https://api.scrapecreators.com}
+
+      # CORS (allow local frontend)
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+
+      # Redis connection
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # Redis for caching and background tasks
+  redis:
+    image: redis:7-alpine
+    container_name: profilescope-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Celery Worker for background processing
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profilescope-worker
+    command: celery -A app.core.tasks worker --loglevel=info --queues=analysis
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-ProfileScope2024SecureKey}
+      - DATABASE_URI=sqlite:////app/data/profilescope.db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SCRAPECREATORS_API_KEY=${SCRAPECREATORS_API_KEY}
+      - SCRAPECREATORS_BASE_URL=${SCRAPECREATORS_BASE_URL:-https://api.scrapecreators.com}
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # Flower for monitoring Celery tasks
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profilescope-flower
+    command: celery -A app.core.tasks flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - worker
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Frontend Web Interface
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: profilescope-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+volumes:
+  redis_data:

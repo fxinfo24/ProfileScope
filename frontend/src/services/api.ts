@@ -12,7 +12,7 @@ class ApiService {
     // e.g. https://<service>.up.railway.app
     // In development, default to Vite proxy for /api.
     this.baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
-    
+
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,
@@ -46,6 +46,7 @@ class ApiService {
       const payload = {
         platform: request.platform,
         profile_id: request.profileId,
+        mode: request.mode || 'deep'
       };
       const response = await this.api.post('/analyze', payload);
       return { success: true, data: response.data };
@@ -144,12 +145,12 @@ class ApiService {
   // Error handling
   private handleError(error: any): ApiResponse<never> {
     console.error('API Error:', error);
-    
-    const message = error.response?.data?.message || 
-                   error.response?.data?.error || 
-                   error.message || 
-                   'An unexpected error occurred';
-                   
+
+    const message = error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'An unexpected error occurred';
+
     return {
       success: false,
       error: message

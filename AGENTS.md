@@ -70,6 +70,34 @@ Be pragmatic. Be reliable. Self-anneal.
 
 # AGENTS.md (Developer Guide)
 
+## 📞 Session Resume Prompt (Vanta Special)
+
+Copy this to start a new session:
+
+```
+I'm resuming work on the "Best in Class" social intelligence platform, Vanta (formerly ProfileScope). Please read HANDOVER.md and AGENTS.md immediately.
+
+Current status:
+- Infrastructure: Docker Compose (Full Stack - Verified Healthy)
+- Branding: Fully rebranded to "Vanta" with premium logo.png and dark-mode UI.
+- Capabilities: "Deep Mind" profiling implemented for TikTok (Comments), YouTube (Transcripts), and Instagram (Deep Posts).
+- Backend: Python 3.13 + Hybrid AI Engine (OpenRouter Grok 4.1 / GPT-4 + Heuristic Fallback).
+- Fixed: Resolved the "Empty/Blank Results" UI bug and "Stuck Processing" worker crash.
+
+My goal: [describe what you want to do]
+```
+
+## 🌌 The Vanta Evolution (Best in Class)
+
+ProfileScope has evolved into **Vanta**—the industry's most advanced social intelligence platform.
+
+### 🌌 Vanta Design Language
+- **Brand**: Vanta (Total data absorption, stealth intelligence).
+- **Aesthetics**: Premium Glassmorphism, Deep Dark Mode (#020617 background), Vibrant Cyan/Indigo accents.
+- **Logo**: Futuro-Vortex `/logo.png` representing the ingestion of global social datasets.
+
+---
+
 ## You must follow ALL of these principles:
 
 1. Practice systematic problem solving
@@ -315,6 +343,7 @@ Here’s how I want you to respond:
 
 ## Documentation index
 
+- `directives/CODEBASE_ASSESSMENT.md`: strategic analysis & roadmap
 - `directives/setup_guide.md`: setup & API keys
 - `directives/development.md`: dev workflows and architecture
 - `directives/api.md`: API overview

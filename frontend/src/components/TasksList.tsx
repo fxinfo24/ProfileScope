@@ -115,20 +115,50 @@ const TasksList: React.FC = () => {
               {/* Platform */}
               <div>
                 <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-3">Platform</label>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <button
+                    onClick={() => setFilter({ ...filter, platform: '' })}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filter.platform === ''
+                      ? 'bg-primary-500/20 text-white border border-primary-500/30'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    All Platforms
+                  </button>
                   {[
-                    { id: '', label: 'All Platforms' },
+                    // Social
                     { id: 'twitter', label: 'Twitter/X' },
                     { id: 'instagram', label: 'Instagram' },
                     { id: 'facebook', label: 'Facebook' },
+                    { id: 'threads', label: 'Threads' },
+                    { id: 'bluesky', label: 'Bluesky' },
+                    { id: 'reddit', label: 'Reddit' },
+                    { id: 'pinterest', label: 'Pinterest' },
+                    { id: 'snapchat', label: 'Snapchat' },
+                    // Video
+                    { id: 'tiktok', label: 'TikTok' },
+                    { id: 'youtube', label: 'YouTube' },
+                    { id: 'twitch', label: 'Twitch' },
+                    { id: 'kick', label: 'Kick' },
+                    // Professional
                     { id: 'linkedin', label: 'LinkedIn' },
+                    { id: 'github', label: 'GitHub' },
+                    { id: 'google', label: 'Google' },
+                    // Commerce
+                    { id: 'tiktok_shop', label: 'TikTok Shop' },
+                    { id: 'amazon_shop', label: 'Amazon Shop' },
+                    // Link In Bio
+                    { id: 'linktree', label: 'Linktree' },
+                    { id: 'komi', label: 'Komi' },
+                    { id: 'pillar', label: 'Pillar' },
+                    { id: 'linkbio', label: 'Linkbio' },
                   ].map((opt) => (
                     <button
                       key={opt.id}
                       onClick={() => setFilter({ ...filter, platform: opt.id })}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filter.platform === opt.id
-                          ? 'bg-primary-500/20 text-white border border-primary-500/30'
-                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-primary-500/20 text-white border border-primary-500/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
                     >
                       {opt.label}
@@ -151,8 +181,8 @@ const TasksList: React.FC = () => {
                       key={opt.id}
                       onClick={() => setFilter({ ...filter, status: opt.id })}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filter.status === opt.id
-                          ? 'bg-secondary-500/20 text-white border border-secondary-500/30'
-                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-secondary-500/20 text-white border border-secondary-500/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
                     >
                       {opt.label}

@@ -106,3 +106,6 @@ class Task(db.Model):
 
     def __repr__(self):
         return f"<Task {self.id}: {self.platform}/{self.profile_id} - {self.status}>"
+
+# Import other models to ensure they are registered
+from .dossier import DossierSnapshot, CrossPlatformProfile

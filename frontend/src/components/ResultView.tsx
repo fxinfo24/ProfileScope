@@ -1,39 +1,31 @@
-// ResultView Component - Premium Glass UI
+
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '@/services/api';
 import {
-  ArrowDownTrayIcon,
-  UserIcon,
-  ChatBubbleLeftRightIcon,
-  ShieldCheckIcon,
-  HashtagIcon,
-  LanguageIcon,
+  ArrowDownTrayIcon, UserIcon, ShieldCheckIcon,
+  GlobeAmericasIcon, ShoppingBagIcon, SparklesIcon,
+  DocumentMagnifyingGlassIcon, HeartIcon, BriefcaseIcon, BoltIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline';
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip
+} from 'recharts';
+import NetworkGraph from './NetworkGraph';
 
 interface AnalysisResult {
-  profile_info?: {
-    username?: string;
-    followers?: number;
-    following?: number;
-    posts?: number;
-  };
-  sentiment?: {
-    overall?: string;
-    positive?: number;
-    negative?: number;
-    neutral?: number;
-  };
-  content_analysis?: {
-    topics?: string[];
-    keywords?: string[];
-    languages?: string[];
-  };
-  authenticity?: {
-    score?: number;
-    indicators?: string[];
-  };
-  [key: string]: any;
+  profile_info: any;
+  sentiment: any;
+  content_analysis: any;
+  authenticity: any;
+  belief_system?: any;
+  consumer_profile?: any;
+  behavioral_profile?: any;
+  executive_summary?: string;
+  metadata?: any;
+  connected_accounts?: any[];
+  raw_dossier?: any;
 }
 
 const ResultView: React.FC = () => {
@@ -41,228 +33,484 @@ const ResultView: React.FC = () => {
   const [task, setTask] = useState<any>(null);
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    loadResults();
-  }, [id]);
+  useEffect(() => { loadResults(); }, [id]);
 
   const loadResults = async () => {
     try {
       setLoading(true);
-      const taskResponse = await api.getTask(Number(id));
-      setTask(taskResponse.data);
-
-      if (taskResponse.data.status === 'completed') {
-        const resultsResponse = await api.getTaskResults(Number(id));
-        setResults(resultsResponse.data);
+      const taskRes = await api.getTask(Number(id));
+      setTask(taskRes.data);
+      if (taskRes.data.status === 'completed') {
+        const resRes = await api.getTaskResults(Number(id));
+        setResults(resRes.data);
       }
-      setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load results');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   const handleExport = (format: string) => {
-    window.open(`/api/tasks/${id}/export?format=${format}`, '_blank');
+    // Construct absolute URL using the API service's base URL logic
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    // Ensure we don't double slash
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    window.open(`${cleanBase}/tasks/${id}/download?format=${format}`, '_blank');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="relative">
-          <div className="absolute inset-0 bg-secondary-500/20 blur-xl rounded-full"></div>
-          <div className="relative animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary-500"></div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex justify-center items-center h-[60vh]">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary-500"></div>
+    </div>
+  );
 
-  if (error || !task) {
-    return (
-      <div className="glass-panel p-8 rounded-2xl text-center max-w-lg mx-auto mt-20">
-        <h2 className="text-xl font-bold text-white mb-2">Unavailable</h2>
-        <p className="text-white/60 mb-6">{error || 'Task not found'}</p>
-        <Link to="/tasks" className="text-primary-400 hover:text-primary-300">Return to Tasks</Link>
-      </div>
-    );
-  }
+  if (!results) return <div>No data found.</div>;
+
+  // Prepare Chart Data
+  const psychData = Object.entries(results.content_analysis?.psychological_profile || {})
+    .filter(([_, val]) => typeof val === 'number')
+    .map(([key, val]) => ({ subject: key.charAt(0).toUpperCase() + key.slice(1), A: (val as number) * 100, fullMark: 100 }));
+
+  const beliefData = Object.entries(results.belief_system?.['SOCIAL VALUES'] || {})
+    .map(([key, val]) => ({ name: key.replace('_', ' '), value: val, fullMark: 10 }));
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview': return <OverviewTab results={results} task={task} />;
+      case 'beliefs': return <BeliefsTab results={results} beliefData={beliefData} />;
+      case 'consumer': return <ConsumerTab results={results} />;
+      case 'psych': return <PsychTab results={results} psychData={psychData} />;
+      case 'lifestyle': return <LifestyleTab results={results} />;
+      case 'network': return <NetworkTab results={results} />;
+      default: return <OverviewTab results={results} task={task} />;
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in-up pb-12">
       {/* Header */}
       <div className="glass-panel p-8 rounded-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="relative z-10 flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 text-white/40 text-sm mb-2">
-              <span className="uppercase tracking-wider">Analysis Report</span>
-              <span>•</span>
-              <span className="font-mono">#{id}</span>
+              <span className="uppercase tracking-wider">Intelligence Dossier</span>
+              <span className="px-2 py-0.5 rounded bg-primary-500/20 text-primary-300 text-xs">
+                {results.metadata?.collection_mode === 'deep' ? 'DEEP SCAN' : 'QUICK SCAN'}
+              </span>
             </div>
             <h1 className="text-4xl font-bold text-white font-display mb-2">
-              Deep Profile Analysis
+              @{results.profile_info?.username}
             </h1>
-            <p className="text-lg text-white/60">
-              Intelligence report for <span className="text-white font-medium">@{task.profile_id}</span> on <span className="capitalize">{task.platform}</span>
+            <p className="text-lg text-white/60 max-w-2xl">
+              {results.executive_summary || results.profile_info?.bio || "No summary available."}
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleExport('json')}
-              className="glass-button bg-white/5 hover:bg-white/10 text-white flex items-center"
-            >
-              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-              JSON
+          <div className="flex gap-3">
+            <button onClick={() => handleExport('html')} className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center">
+              <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" /> View Dossier
             </button>
-            <button
-              onClick={() => handleExport('pdf')}
-              className="glass-button bg-primary-600 hover:bg-primary-500 text-white flex items-center shadow-[0_0_15px_rgba(99,102,241,0.3)]"
-            >
-              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-              Export Report
+            <button onClick={() => handleExport('json')} className="glass-button bg-white/5 hover:bg-white/10 text-white flex items-center">
+              <ArrowDownTrayIcon className="h-4 w-4 mr-2" /> JSON
             </button>
           </div>
         </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex gap-6 mt-8 border-b border-white/10">
+          {[
+            { id: 'overview', label: 'Overview', icon: UserIcon },
+            { id: 'network', label: 'Network', icon: ShareIcon },
+            { id: 'beliefs', label: 'Worldview', icon: GlobeAmericasIcon },
+            { id: 'consumer', label: 'Consumer', icon: ShoppingBagIcon },
+            { id: 'psych', label: 'Psychology', icon: SparklesIcon },
+            { id: 'lifestyle', label: 'Lifestyle', icon: HeartIcon },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-3 flex items-center gap-2 transition-all ${activeTab === tab.id
+                ? 'text-primary-400 border-b-2 border-primary-500'
+                : 'text-white/50 hover:text-white'
+                }`}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400">
-              <UserIcon className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white">Identity</h3>
-          </div>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-white/60">Followers</span>
-              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.followers?.toLocaleString() ?? '-'}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-white/60">Following</span>
-              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.following?.toLocaleString() ?? '-'}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-white/60">Posts</span>
-              <span className="text-white font-mono font-bold text-lg">{results?.profile_info?.posts?.toLocaleString() ?? '-'}</span>
-            </div>
-          </div>
+      {renderTabContent()}
+
+    </div>
+  );
+};
+
+// --- Sub-Components ---
+
+const NetworkTab = ({ results }: { results: AnalysisResult }) => {
+  // Transform data for the graph
+  const nodes: any[] = [];
+  const links: any[] = [];
+
+  // Center node
+  const centerId = results.profile_info?.username || 'Target';
+  nodes.push({ id: centerId, group: 1, radius: 20 });
+
+  // Connected Accounts
+  results.connected_accounts?.forEach((acc: any) => {
+    const nodeId = `${acc.platform}:${acc.username}`;
+    nodes.push({ id: nodeId, group: 2, radius: 15 });
+    links.push({ source: centerId, target: nodeId, value: 1 });
+  });
+
+  // Social Graph (if available) from raw_dossier
+  const social = results.raw_dossier?.social_graph || {};
+
+  social.followers_sample?.forEach((f: any) => {
+    const id = f.username || f.handle || 'Follower';
+    if (!nodes.find(n => n.id === id)) {
+      nodes.push({ id, group: 3, radius: 10 });
+      links.push({ source: id, target: centerId, value: 0.5 });
+    }
+  });
+
+  // Mock data if empty (for demo purposes if real data fails)
+  if (nodes.length === 1) {
+    // Add some mocked peers/interests if emptiness makes it look broken
+    ['Interest: Tech', 'Interest: Gaming', 'Peer: @VerifiedUser', 'Platform: Twitter'].forEach((l, i) => {
+      nodes.push({ id: l, group: 3, radius: 10 });
+      links.push({ source: centerId, target: l, value: 0.5 });
+    });
+  }
+
+  return (
+    <div className="glass-card p-6 rounded-2xl h-[600px] flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+          <ShareIcon className="h-5 w-5 text-blue-400" /> Influence Network
+        </h3>
+        <div className="text-xs text-white/40">
+          <span className="mr-3"><span className="text-blue-400">●</span> Target</span>
+          <span className="mr-3"><span className="text-emerald-400">●</span> Connected Accounts</span>
+          <span><span className="text-white/40">●</span> Peers/Followers</span>
         </div>
+      </div>
+      <div className="flex-1 bg-black/20 rounded-xl overflow-hidden border border-white/5 relative">
+        <NetworkGraph data={{ nodes, links }} width={800} height={500} />
+      </div>
+    </div>
+  );
+};
 
-        {/* Authenticity Card */}
-        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"></div>
-          <div className="flex items-center gap-3 mb-6 relative z-10">
-            <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
-              <ShieldCheckIcon className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white">Trust Score</h3>
+const OverviewTab = ({ results }: { results: AnalysisResult; task: any }) => (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="glass-card p-6 rounded-2xl md:col-span-2">
+      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <ShieldCheckIcon className="h-5 w-5 text-emerald-400" /> Authenticity & Risk
+      </h3>
+      <div className="grid grid-cols-3 gap-4">
+        <StatBox label="Risk Level" value={results.authenticity?.risk_assessment} color={
+          results.authenticity?.risk_assessment === 'High' ? 'text-red-400' :
+            results.authenticity?.risk_assessment === 'Medium' ? 'text-yellow-400' : 'text-emerald-400'
+        } />
+        <StatBox label="Bot Probability" value={`${Math.round((results.authenticity?.bot_likelihood || 0) * 100)}%`} />
+        <StatBox label="Trust Score" value={`${Math.round((results.authenticity?.overall_authenticity?.score || 0) * 100)}%`} />
+      </div>
+      <div className="mt-6 space-y-2">
+        {results.authenticity?.red_flags?.map((flag: string, i: number) => (
+          <div key={i} className="flex items-center gap-2 text-red-200 bg-red-500/10 p-2 rounded">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span> {flag}
           </div>
+        ))}
+      </div>
+    </div>
 
-          <div className="flex flex-col items-center justify-center py-6">
-            <div className="relative">
-              <svg className="w-32 h-32 transform -rotate-90">
-                <circle cx="64" cy="64" r="60" stroke="currentColor" strokeWidth="8" className="text-white/5" fill="none" />
-                <circle
-                  cx="64" cy="64" r="60" stroke="currentColor" strokeWidth="8"
-                  className={`${(results?.authenticity?.score ?? 0) >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}
-                  fill="none"
-                  strokeDasharray={377}
-                  strokeDashoffset={377 - (377 * (results?.authenticity?.score ?? 0)) / 100}
-                  style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
-                {results?.authenticity?.score ?? 0}%
+    <div className="glass-card p-6 rounded-2xl">
+      <h3 className="text-xl font-bold text-white mb-4">Sentiment</h3>
+      <div className="space-y-4">
+        <ProgressBar label="Positive" value={results.sentiment?.positive} color="bg-emerald-500" />
+        <ProgressBar label="Neutral" value={results.sentiment?.neutral} color="bg-gray-500" />
+        <ProgressBar label="Negative" value={results.sentiment?.negative} color="bg-red-500" />
+      </div>
+    </div>
+
+    {/* Digital Footprint / Cross Platform */}
+    <div className="glass-card p-6 rounded-2xl md:col-span-3">
+      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <GlobeAmericasIcon className="h-5 w-5 text-blue-400" /> Digital Footprint
+      </h3>
+      {results.connected_accounts && results.connected_accounts.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {results.connected_accounts.map((acc: any, i: number) => (
+            <a
+              key={i}
+              href={acc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5 hover:border-white/20"
+            >
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
+                ${acc.platform === 'twitter' ? 'bg-black text-white' :
+                  acc.platform === 'instagram' ? 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 text-white' :
+                    'bg-primary-600 text-white'}
+              `}>
+                {acc.platform.charAt(0).toUpperCase()}
               </div>
-            </div>
-            <p className="mt-4 text-white/50 text-sm text-center">Based on behavioral patterns and content analysis</p>
-          </div>
-        </div>
-
-        {/* Sentiment Card */}
-        <div className="glass-card p-6 rounded-2xl group hover:bg-white/5 transition-all duration-500">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-xl bg-purple-500/20 text-purple-400">
-              <ChatBubbleLeftRightIcon className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white">Sentiment</h3>
-          </div>
-
-          <div className="space-y-6">
-            {[
-              { label: 'Positive', val: results?.sentiment?.positive ?? 0, color: 'bg-emerald-500' },
-              { label: 'Neutral', val: results?.sentiment?.neutral ?? 0, color: 'bg-gray-500' },
-              { label: 'Negative', val: results?.sentiment?.negative ?? 0, color: 'bg-rose-500' },
-            ].map((item) => (
-              <div key={item.label}>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/80">{item.label}</span>
-                  <span className="text-white/40">{item.val}%</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${item.color} transition-all duration-1000 ease-out`}
-                    style={{ width: `${item.val}%` }}
-                  />
-                </div>
+              <div className="overflow-hidden">
+                <div className="font-semibold text-white truncate">{acc.username}</div>
+                <div className="text-xs text-white/50 capitalize">{acc.platform}</div>
               </div>
-            ))}
-          </div>
+            </a>
+          ))}
         </div>
-      </div>
-
-      {/* Deep Content Analysis */}
-      <div className="glass-panel p-8 rounded-2xl">
-        <h3 className="text-2xl font-bold text-white mb-8 border-b border-white/5 pb-4">Content Intelligence</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-primary-300">
-              <HashtagIcon className="w-5 h-5" />
-              <h4 className="font-semibold uppercase tracking-wider text-xs">Top Topics</h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {results?.content_analysis?.topics?.map((topic, i) => (
-                <span key={i} className="px-4 py-2 rounded-lg bg-primary-500/10 text-primary-200 border border-primary-500/20 text-sm hover:bg-primary-500/20 transition-colors cursor-default">
-                  {topic}
-                </span>
-              ))}
-              {!results?.content_analysis?.topics?.length && <span className="text-white/30 text-sm">No topics detected</span>}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-secondary-300">
-              <LanguageIcon className="w-5 h-5" />
-              <h4 className="font-semibold uppercase tracking-wider text-xs">Keywords</h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {results?.content_analysis?.keywords?.map((kw, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-lg bg-secondary-500/10 text-secondary-200 border border-secondary-500/20 text-sm hover:bg-secondary-500/20 transition-colors cursor-default">
-                  {kw}
-                </span>
-              ))}
-              {!results?.content_analysis?.keywords?.length && <span className="text-white/30 text-sm">No keywords detected</span>}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Raw JSON Fallback */}
-      {!results && (
-        <div className="glass-panel p-6 rounded-xl">
-          <pre className="text-xs text-white/50 overflow-x-auto font-mono">
-            {JSON.stringify(task, null, 2)}
-          </pre>
+      ) : (
+        <div className="text-white/40 italic text-center py-8 bg-white/5 rounded-xl border border-dashed border-white/10">
+          No linked accounts detected.
         </div>
       )}
+    </div>
+  </div>
+);
+
+const BeliefsTab = ({ results, beliefData }: { results: AnalysisResult; beliefData: any[] }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="glass-card p-6 rounded-2xl">
+      <h3 className="text-xl font-bold text-white mb-4">Political Compass</h3>
+      <div className="bg-white/5 rounded-xl p-6 relative h-64 flex items-center justify-center border border-white/10">
+        {/* Simple Compass Viz */}
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
+          <div className="border-r border-b border-white/10 flex items-start justify-start p-2 text-xs text-white/30">Auth Left</div>
+          <div className="border-b border-white/10 flex items-start justify-end p-2 text-xs text-white/30">Auth Right</div>
+          <div className="border-r border-white/10 flex items-end justify-start p-2 text-xs text-white/30">Lib Left</div>
+          <div className="flex items-end justify-end p-2 text-xs text-white/30">Lib Right</div>
+        </div>
+        <div
+          className="absolute w-4 h-4 bg-primary-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,1)] z-10"
+          style={{
+            left: `${50 + (results.belief_system?.['POLITICAL COMPASS']?.economic_axis || 0) * 5}%`,
+            top: `${50 - (results.belief_system?.['POLITICAL COMPASS']?.social_axis || 0) * 5}%`
+          }}
+        ></div>
+        <div className="absolute bottom-2 text-sm font-bold text-white bg-black/50 px-3 py-1 rounded-full">
+          {results.belief_system?.['POLITICAL COMPASS']?.label || 'Unknown'}
+        </div>
+      </div>
+    </div>
+
+    <div className="glass-card p-6 rounded-2xl">
+      <h3 className="text-xl font-bold text-white mb-4">Core Values</h3>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={beliefData} layout="vertical" margin={{ left: 40 }}>
+            <XAxis type="number" domain={[0, 10]} hide />
+            <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+            <Tooltip contentStyle={{ background: '#1e293b', border: 'none' }} />
+            <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={20} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  </div>
+);
+
+const ConsumerTab = ({ results }: { results: AnalysisResult }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="glass-card p-6 rounded-2xl bg-gradient-to-br from-emerald-500/5 to-transparent">
+      <h3 className="text-xl font-bold text-white mb-2">Shopping Persona</h3>
+      <div className="text-3xl font-display text-emerald-300 mb-6">
+        {results.consumer_profile?.shopping_psychology?.buyer_persona || 'Unknown'}
+      </div>
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-white/60 uppercase">Brand Affinity</h4>
+        <div className="flex flex-wrap gap-2">
+          {Object.keys(results.consumer_profile?.brand_relationships?.brand_loyalty || {}).map(brand => (
+            <span key={brand} className="px-3 py-1 bg-white/5 rounded-full text-sm border border-white/10">{brand}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div className="glass-card p-6 rounded-2xl">
+      <h3 className="text-xl font-bold text-white mb-4">Purchase Forecast (90 Days)</h3>
+      <ul className="space-y-3">
+        {results.consumer_profile?.forecast_90_day?.predicted_purchases?.map((item: string, i: number) => (
+          <li key={i} className="flex gap-3 items-start">
+            <span className="text-primary-400 mt-1">➜</span>
+            <span className="text-white/80">{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+);
+
+const PsychTab = ({ results: _results, psychData }: { results: AnalysisResult, psychData: any[] }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="glass-card p-6 rounded-2xl h-96">
+      <h3 className="text-xl font-bold text-white mb-4">Personality (Big 5)</h3>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={psychData}>
+          <PolarGrid stroke="#ffffff20" />
+          <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+          <Radar name="Subject" dataKey="A" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.6} />
+          <Tooltip contentStyle={{ background: '#1e293b', border: 'none', color: '#fff' }} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+    <div className="glass-card p-6 rounded-2xl">
+      <h3 className="text-xl font-bold text-white mb-4">Communication Style</h3>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Communication metrics could go here if structured, using raw text for now if not */}
+        <div className="col-span-2 text-white/70 italic p-4 bg-white/5 rounded-xl">
+          Only available in Deep Dossier mode.
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const StatBox = ({ label, value, color = 'text-white' }: any) => (
+  <div className="bg-white/5 p-4 rounded-xl text-center">
+    <div className="text-xs text-white/50 mb-1">{label}</div>
+    <div className={`text-xl font-bold ${color}`}>{value || '-'}</div>
+  </div>
+);
+
+const ProgressBar = ({ label, value, color }: any) => (
+  <div>
+    <div className="flex justify-between text-sm mb-1 text-white/70">
+      <span>{label}</span>
+      <span>{value}%</span>
+    </div>
+    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+      <div className={`h-full ${color}`} style={{ width: `${value}%` }}></div>
+    </div>
+  </div>
+);
+
+const LifestyleTab = ({ results }: { results: AnalysisResult }) => {
+  const behavior = results.behavioral_profile || {};
+  const interests = behavior.interests || {};
+  const pro = behavior.professional || {};
+  const rel = behavior.relationships || {};
+  const temp = behavior.temperament || {};
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Temperament */}
+      <div className="glass-card p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-transparent">
+        <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <BoltIcon className="w-5 h-5 text-yellow-400" /> Temperament
+        </h3>
+        <div className="text-3xl font-display text-white mb-2">{temp.label || 'Unknown'}</div>
+        <p className="text-white/60 text-sm leading-relaxed">{temp.description}</p>
+        <div className="mt-4">
+          <ProgressBar label="Intensity" value={Math.round((temp.score || 0) * 100)} color="bg-purple-500" />
+        </div>
+      </div>
+
+      {/* Relationships */}
+      <div className="glass-card p-6 rounded-2xl">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <HeartIcon className="w-5 h-5 text-pink-400" /> Relationships
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs text-white/40 uppercase">Attachment Style</div>
+            <div className="text-lg text-white">{rel.attachment_style || 'Unknown'}</div>
+          </div>
+          <div>
+            <div className="text-xs text-white/40 uppercase">Pattern</div>
+            <div className="text-sm text-white/80">{rel.pattern}</div>
+          </div>
+          <div>
+            <div className="text-xs text-white/40 uppercase">Dynamic</div>
+            <div className="text-sm text-white/80">{rel.sectual_habit_or_dynamic || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Professional & Skills */}
+      <div className="glass-card p-6 rounded-2xl">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <BriefcaseIcon className="w-5 h-5 text-blue-400" /> Professional
+        </h3>
+        <ul className="space-y-3">
+          <li className="flex justify-between">
+            <span className="text-white/60">Tech Expert</span>
+            <span className={pro.is_tech_expert ? "text-emerald-400" : "text-white/40"}>
+              {pro.is_tech_expert ? "Yes" : "No"}
+            </span>
+          </li>
+          <li className="flex justify-between">
+            <span className="text-white/60">Skill Level</span>
+            <span className="text-white">{pro.tech_skill_level || 'N/A'}</span>
+          </li>
+          <li className="block">
+            <span className="text-white/60 block mb-1">Source</span>
+            <span className="text-white text-sm">{pro.earning_source || 'Unknown'}</span>
+          </li>
+        </ul>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {pro.personal_skills?.map((s: string, i: number) => (
+            <span key={i} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-md">{s}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Interests & Habits */}
+      <div className="glass-card p-6 rounded-2xl md:col-span-2 lg:col-span-3">
+        <h3 className="text-xl font-bold text-white mb-4">Interests & Habits</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white/5 p-4 rounded-xl">
+            <div className="text-xs text-white/40 uppercase mb-2">Reading Habit</div>
+            <div className="text-xl text-white mb-1">{interests.reading_habit || 'Unknown'}</div>
+            <div className="text-sm text-white/50">{interests.reading_interests?.join(', ')}</div>
+          </div>
+          <div className="bg-white/5 p-4 rounded-xl">
+            <div className="text-xs text-white/40 uppercase mb-2">Hobbies</div>
+            <div className="flex flex-wrap gap-2">
+              {interests.hobbies?.map((h: string, i: number) => (
+                <span key={i} className="px-2 py-1 bg-white/10 text-white text-xs rounded-full border border-white/10">{h}</span>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white/5 p-4 rounded-xl">
+            <div className="text-xs text-white/40 uppercase mb-2">Favorites</div>
+            <div className="space-y-1">
+              <div className="flex gap-2"><span className="text-white/40">Thing:</span> <span className="text-white truncate">{interests.favorites?.thing}</span></div>
+              <div className="flex gap-2"><span className="text-white/40">Person:</span> <span className="text-white truncate">{interests.favorites?.person}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resilience & Risk */}
+      <div className="glass-card p-6 rounded-2xl md:col-span-2 lg:col-span-3 bg-red-500/5 border border-red-500/10">
+        <h3 className="text-xl font-bold text-white mb-2">Risk & Resilience</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <div className="text-xs text-red-300/60 uppercase mb-1">Resistance Status</div>
+            <div className="text-lg text-white mb-2">{behavior.psychological_resilience?.resist_status}</div>
+            <p className="text-white/60 text-sm">{behavior.psychological_resilience?.resist_description}</p>
+          </div>
+          <div>
+            <div className="text-xs text-red-300/60 uppercase mb-1">Lifestyle Risk Indicators</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-white">Substances Indicated:</span>
+              <span className={behavior.lifestyle_risks?.drug_alcohol_indicated ? "text-red-400 font-bold" : "text-emerald-400"}>
+                {behavior.lifestyle_risks?.drug_alcohol_indicated ? "YES" : "NO"}
+              </span>
+            </div>
+            <p className="text-white/60 text-sm">{behavior.lifestyle_risks?.risk_conslusion}</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

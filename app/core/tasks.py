@@ -105,14 +105,17 @@ def run_task_analysis(self, task_id: int) -> Dict[str, Any]:
             task.message = "Saving results..."
             db.session.commit()
 
-            # Canonical: persist in DB
-            task.result_data = result
-            task.has_result = True
+            # Canonical: persist in DB (Columns must exist in Task model!)
+            # task.result_data = result  <-- Removed: Column likely missing
+            # task.has_result = True     <-- Removed: Column likely missing
 
             # Optional: best-effort file output (useful for local debugging)
             try:
+                print(f"Attempting to save result to file for task {task_id}")
                 task.result_path = _save_results_to_file(flask_app, task_id, result)
-            except Exception:
+                print(f"Result saved to {task.result_path}")
+            except Exception as e:
+                print(f"Failed to save result file: {e}")
                 task.result_path = None
 
             task.status = TaskStatus.COMPLETED

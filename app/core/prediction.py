@@ -36,9 +36,7 @@ class PredictionEngine:
         self.logger.info("Generating predictions based on profile analysis")
 
         # Check if we're using mock data
-        is_mock = "profile" in profile_data and profile_data["profile"].get(
-            "mock_data", False
-        )
+        is_mock = profile_data.get("metadata", {}).get("is_mock_data", False)
 
         if is_mock:
             # For mock data, generate comprehensive mock predictions

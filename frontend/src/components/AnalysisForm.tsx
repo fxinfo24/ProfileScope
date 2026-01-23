@@ -21,17 +21,39 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
     profileId: '',
     includeImages: true,
     includePosts: true,
-    postCount: 20
+    postCount: 20,
+    mode: 'deep'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
   const platforms = [
+    // Social
     { id: 'twitter', name: 'Twitter/X', icon: '🐦' },
     { id: 'instagram', name: 'Instagram', icon: '📸' },
-    { id: 'linkedin', name: 'LinkedIn', icon: '💼' },
+    { id: 'facebook', name: 'Facebook', icon: '👥' },
+    { id: 'threads', name: 'Threads', icon: '🧵' },
+    { id: 'bluesky', name: 'Bluesky', icon: '🦋' },
+    { id: 'reddit', name: 'Reddit', icon: '👽' },
+    { id: 'pinterest', name: 'Pinterest', icon: '📌' },
+    { id: 'snapchat', name: 'Snapchat', icon: '👻' },
+    // Video
     { id: 'tiktok', name: 'TikTok', icon: '🎵' },
-    { id: 'facebook', name: 'Facebook', icon: '👥' }
+    { id: 'youtube', name: 'YouTube', icon: '📺' },
+    { id: 'twitch', name: 'Twitch', icon: '🎮' },
+    { id: 'kick', name: 'Kick', icon: '🟢' },
+    // Professional
+    { id: 'linkedin', name: 'LinkedIn', icon: '💼' },
+    { id: 'github', name: 'GitHub', icon: '🐙' },
+    { id: 'google', name: 'Google', icon: '🔍' },
+    // Commerce
+    { id: 'tiktok_shop', name: 'TikTok Shop', icon: '🛍️' },
+    { id: 'amazon_shop', name: 'Amazon Shop', icon: '📦' },
+    // Link In Bio
+    { id: 'linktree', name: 'Linktree', icon: '🌲' },
+    { id: 'komi', name: 'Komi', icon: '📱' },
+    { id: 'pillar', name: 'Pillar', icon: '🏛️' },
+    { id: 'linkbio', name: 'Linkbio', icon: '🔗' },
   ];
 
   const handleProfileIdChange = (value: string) => {
@@ -93,21 +115,21 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
             <label className="block text-sm font-medium text-white/90 mb-3">
               Target Platform
             </label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
               {platforms.map((platform) => (
                 <button
                   key={platform.id}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, platform: platform.id as any }))}
                   className={`
-                    flex items-center justify-center p-4 rounded-xl border transition-all duration-300
+                    flex items-center justify-start p-3 rounded-xl border transition-all duration-300
                     ${formData.platform === platform.id
                       ? 'bg-primary-500/20 border-primary-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]'
                       : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
                     }
                   `}
                 >
-                  <span className="text-xl mr-2">{platform.icon}</span>
+                  <span className="text-xl mr-3">{platform.icon}</span>
                   <span className={`text-sm font-medium ${formData.platform === platform.id ? 'text-white' : 'text-white/70'}`}>
                     {platform.name}
                   </span>
@@ -137,6 +159,30 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisCreated, onClose 
           {/* Analysis Options */}
           <div className="space-y-4 bg-white/5 rounded-xl p-4 border border-white/5">
             <h4 className="text-sm font-medium text-white/80">Analysis Depth</h4>
+
+            {/* Mode Selection */}
+            <div className="flex p-1 bg-black/40 rounded-lg mb-4">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, mode: 'quick' }))}
+                className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-all ${formData.mode === 'quick'
+                  ? 'bg-primary-500 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+                  }`}
+              >
+                ⚡ Quick Scan (10s)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, mode: 'deep' }))}
+                className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-all ${formData.mode === 'deep'
+                  ? 'bg-primary-500 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+                  }`}
+              >
+                🕵️ Deep Dossier (2m)
+              </button>
+            </div>
 
             <div className="flex items-center justify-between">
               <label htmlFor="include-posts" className="flex items-center cursor-pointer">

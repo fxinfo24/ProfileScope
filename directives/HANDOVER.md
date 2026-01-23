@@ -1,134 +1,87 @@
-# ProfileScope - Session Handover Document
+# Vanta (formerly ProfileScope) - Session Handover Document
 
-> **Last Updated**: January 15, 2026  
-> **Purpose**: Complete context for resuming work in a new session
+> **Last Updated**: January 23, 2026 (Local Time)
+> **Purpose**: Complete context for resuming work in a new session (Standardizing on **Vanta**)
 
 ---
 
 ## 📋 Project Summary
 
-**ProfileScope** is an AI-powered social media intelligence platform that analyzes profiles across 10+ platforms (Twitter, Instagram, LinkedIn, TikTok, etc.) using machine learning, NLP, and computer vision.
+**Vanta** is an industry-leading social intelligence platform that provides **Deep Hybrid AI Analysis** across **21+ platforms**. It uses a "Deep Mind" intelligence engine that prioritizes **OpenRouter (Grok 4.1 Fast / GPT-4)** for psychological and semantic analysis, seamlessly falling back to local heuristics if AI services are unavailable. Vanta is built for scholars, researchers, and intelligence professionals.
 
-### Tech Stack
+### Tech Stack (Upgraded)
 | Layer | Technology | Status |
 |-------|------------|--------|
-| **Frontend** | React 18 + TypeScript + Vite + Tailwind | ✅ Deployed on Vercel |
-| **Backend** | Flask + SQLAlchemy + Celery | ⚠️ Needs hosting (Railway trial ended) |
-| **AI** | OpenRouter (Grok 4.1 Fast, GPT-4, Gemini) | ✅ Configured |
-| **Data Collection** | ScrapeCreators API | ✅ Configured |
-| **Database** | SQLite (dev) / PostgreSQL (prod) | ✅ Ready |
+| **Frontend** | React 18 + TypeScript + Vite | ✅ Containerized (Docker) |
+| **Backend** | Python 3.13 + Flask + Celery | ✅ Containerized (Docker) |
+| **Intelligence** | Hybrid Engine (OpenRouter + Heuristic) | ✅ Best-in-Class Implementation |
+| **Data** | Universal ScrapeCreators (20+ Platforms) | ✅ Configured for all platforms |
+| **Infra** | Docker Compose (Full Stack) | ✅ **READY FOR DEPLOYMENT** |
 
 ---
 
 ## 🎨 Current State
 
-### Frontend (Vercel) - ✅ WORKING
-- **URL**: https://profile-scope.vercel.app/
-- **Status**: Deployed with Premium Glassmorphism UI
-- **Features**:
-  - Dark mode enforced
-  - Glass-panel aesthetic with neon accents
-  - SPA routing configured (`vercel.json`)
-  - All components styled (Dashboard, TasksList, AnalysisForm, TaskView, ResultView)
+### Universal Connectivity - ✅ SOLVED
+The entire stack is now containerized and orchestrated via Docker Compose. No more manual terminal juggling.
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:5000
+- **Task Monitor**: http://localhost:5555 (Flower)
 
-### Backend - ⚠️ NEEDS HOSTING
-- **Previous Host**: Railway (trial ended)
-- **Issue**: CORS errors when frontend calls API (no backend running)
-- **Required Environment Variables**:
-  ```bash
-  # Core
-  SECRET_KEY=your-secure-random-key
-  DATABASE_URI=postgresql://... (or sqlite:///data/profilescope.db for dev)
-  
-  # CORS - Must include your frontend URL
-  CORS_ORIGINS=https://profile-scope.vercel.app
-  
-  # AI (OpenRouter with Grok 4.1 Fast)
-  OPENROUTER_API_KEY=sk-or-v1-...
-  
-  # Data Collection
-  SCRAPECREATORS_API_KEY=your-scrapecreators-key
-  
-  # Optional
-  REDIS_URL=redis://localhost:6379/0  # For Celery background tasks
-  FORCE_CELERY=false  # Use threading by default
-  ```
+### Platform Capabilities
+| Category | Supported Platforms |
+| :--- | :--- |
+| **Social** | Twitter/X, Facebook, Instagram, Reddit, Snapchat, Pinterest |
+| **Video** | TikTok, YouTube, Twitch, Kick |
+| **Professional** | LinkedIn, GitHub, Threads, BlueSky |
+| **Commerce** | **TikTok Shop, Amazon Shop**, Google, Linktree |
+| **Intelligence** | Bot Detection, Deepfake Analysis, Commerce Conversion Metrics |
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Structure (Docker Optimized)
 
 ```
 ProfileScope/
 ├── app/
-│   ├── core/           # Analysis engine
-│   │   ├── analyzer.py         # Main orchestrator
-│   │   ├── openrouter_client.py # AI integration (Grok 4.1 Fast)
-│   │   ├── scrape_client.py    # ScrapeCreators API
-│   │   ├── content_analyzer.py # NLP analysis
-│   │   ├── authenticity.py     # Fake account detection
-│   │   └── prediction.py       # Growth forecasting
+│   ├── core/           # Hybrid Intelligence Engine
+│   │   ├── analyzer.py         # Universal Orchestrator (AI -> Heuristic)
+│   │   ├── openrouter_client.py # AI Client (Grok 4.1 Fast / GPT-4)
+│   │   ├── scrape_client.py    # Universal Data Adapter (20+ Platforms)
+│   │   └── ...
 │   ├── web/            # Flask API
-│   │   ├── app.py              # App factory
-│   │   ├── models.py           # SQLAlchemy models
-│   │   └── routes/api.py       # REST endpoints
-│   ├── desktop/        # PyQt5 desktop app
-│   └── enterprise/     # Team/white-label features
+│   └── ...
 ├── frontend/           # React + TypeScript
-│   ├── src/
-│   │   ├── components/         # UI components (Glassmorphism styled)
-│   │   ├── services/api.ts     # API client
-│   │   └── index.css           # Global glass styles
-│   ├── tailwind.config.js      # Dark theme config
-│   └── vercel.json             # SPA routing
-├── directives/         # SOPs (consolidated from docs/)
-│   ├── api.md
-│   ├── setup_guide.md
-│   ├── development.md
-│   └── desktop_mobile.md
-├── mobile/             # React Native + Expo
-├── AGENTS.md           # Core operating principles
-└── README.md           # Project overview
+│   ├── Dockerfile      # Frontend container config
+│   └── ...
+├── docker-compose.yml  # Full stack orchestration (API, Worker, Frontend, Redis)
+├── Dockerfile          # Backend/Worker container config
+├── requirements-full.txt # Python 3.13 dependencies
+└── ...
 ```
 
 ---
 
 ## 🔧 Immediate Next Steps
 
-### Priority 1: Deploy Backend
-Choose ONE of these hosting options:
+### Priority 1: Run with Docker (Recommended)
+This is the single source of truth for running the application.
 
-#### Option A: Render.com (Recommended - Free Tier)
-1. Go to https://render.com
-2. Connect GitHub repo `fxinfo24/ProfileScope`
-3. Create "Web Service" with:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn -b 0.0.0.0:$PORT app.web.app:create_app()`
-4. Add environment variables (see above)
-5. Update Vercel with `VITE_API_BASE_URL=https://your-app.onrender.com/api`
-
-#### Option B: Fly.io (Free Tier)
-1. Install `flyctl`: `brew install flyctl`
-2. Run `fly launch` in project root
-3. Set secrets: `fly secrets set OPENROUTER_API_KEY=...`
-4. Deploy: `fly deploy`
-
-#### Option C: Local Development
 ```bash
-# Terminal 1: Backend
-source venv/bin/activate
-python3 bin/run.py --web
+# 1. Start the entire platform
+docker compose up -d --build
 
-# Terminal 2: Frontend
-cd frontend && npm run dev
+# 2. Monitor logs (optional)
+docker compose logs -f
 ```
 
-### Priority 2: Verify Full Flow
-After backend is deployed:
-1. Open https://profile-scope.vercel.app/
-2. Click "New Analysis"
-3. Enter a Twitter username (e.g., "elonmusk")
-4. Verify task creates and processes successfully
+### Priority 2: Verify Intelligence
+Once running:
+1. Go to http://localhost:5173
+2. Enter a username (e.g., `elonmusk` for Twitter or a product handle for Amazon)
+3. The system will auto-select the **Hybrid Engine**:
+   - Tries OpenRouter AI first.
+   - Falls back to internal Heuristics if offline.
 
 ---
 
@@ -136,91 +89,47 @@ After backend is deployed:
 
 | Task | Status |
 |------|--------|
-| Premium Glassmorphism UI overhaul | ✅ |
-| Fixed SPA routing (vercel.json) | ✅ |
-| Fixed CSS theme conflicts | ✅ |
-| Replaced Claude with Grok 4.1 Fast | ✅ |
-| Consolidated docs/ → directives/ | ✅ |
-| Removed 11 legacy/redundant docs | ✅ |
-| Updated README.md references | ✅ |
-| Updated AGENTS.md references | ✅ |
-| All changes pushed to GitHub | ✅ |
+| **Vanta Rebrand** | ✅ Fully implemented (Logo, Favicon, UI, Naming) |
+| **Deep Mind Intelligence** | ✅ Added TikTok, YouTube, Instagram (Deep Posts) |
+| **Hybrid Intelligence Engine** | ✅ AI-First logic with Heuristic Fallback |
+| **Universal Platform Support** | ✅ Added Amazon, TikTok Shop, Google, Kick, (21+ Total) |
+| **Docker Orchestration** | ✅ Full Stack Healthy |
+| **Premium UI** | ✅ Added **Network Graph** & Deep Dossier Visualization |
+| **Main Bug Fixes** | ✅ Resolved "Stuck in Processing" and "Blank Results" |
 
 ---
 
-## 🐛 Known Issues
+## 🎨 Rebrand Proposal: "Vanta"
 
-1. **Backend Hosting**: Railway trial ended - need alternative hosting
-2. **CORS Errors**: Frontend can't reach backend (because no backend is running)
-3. **Mock Data**: When `SCRAPECREATORS_API_KEY` is not set, returns mock profile data
+*   **Name**: **Vanta** (derived from Vantablack - absorbing all light/data; seeing into the unknown).
+*   **Concept**: Sleek, dark-mode first, "Black Box" intelligence revealed.
+*   **Logo**: Abstract vortex/eye (generated in artifacts).
 
 ---
 
 ## 🔑 API Keys Location
 
-All API keys are in `.env` file (local only, not committed):
-```
-/Volumes/ByteSmith/BuildLab/Python Projects/Profile_Scope_AI/ProfileScope/.env
-```
-
-**Keys configured**:
-- ✅ OPENROUTER_API_KEY (for Grok 4.1 Fast AI)
-- ✅ SCRAPECREATORS_API_KEY (for social media data)
-- ✅ TWITTER_API_KEY (legacy, optional)
+All API keys are in `.env` file. The Docker containers automatically load these.
+- `OPENROUTER_API_KEY`: Required for "Smart" analysis.
+- `SCRAPECREATORS_API_KEY`: Required for "Real" data (system mocks if missing).
 
 ---
 
-## 📚 Key Files to Review
+## 📞 Session Resume Prompt (Vanta Standard)
 
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Core operating principles, 3-layer architecture |
-| `README.md` | Full project documentation |
-| `app/core/openrouter_client.py` | AI integration (Grok models) |
-| `app/web/routes/api.py` | All REST API endpoints |
-| `frontend/src/services/api.ts` | Frontend API client |
-| `frontend/src/components/*.tsx` | UI components |
-
----
-
-## 🚀 Quick Start Commands
-
-```bash
-# Navigate to project
-cd /Volumes/ByteSmith/BuildLab/Python\ Projects/Profile_Scope_AI/ProfileScope
-
-# Activate virtual environment
-source venv/bin/activate
-
-# Run backend locally
-python3 bin/run.py --web
-
-# Run frontend locally
-cd frontend && npm run dev
-
-# Run tests
-python3 bin/run_tests.py --simple
-
-# Build frontend for production
-cd frontend && npm run build
-```
-
----
-
-## 📞 Session Resume Prompt
-
-Copy this to start a new session:
+Copy this to start a new session to ensure NO confusion:
 
 ```
-I'm resuming work on ProfileScope. Please read HANDOVER.md for context.
+I'm resuming work on Vanta (Best-in-Class Social Intelligence). 
+Please read HANDOVER.md and AGENTS.md immediately.
 
 Current status:
-- Frontend: Deployed on Vercel (https://profile-scope.vercel.app/)
-- Backend: Needs hosting (Railway trial ended)
-- UI: Premium Glassmorphism completed
-- AI: Using Grok 4.1 Fast via OpenRouter
+- Infrastructure: Docker Compose (All services healthy)
+- Core: "Deep Mind" profiling (Transcripts/Comments) integrated with OpenRouter Grok 4.1.
+- Fixes: Data schema mismatch resolved; results now populate the Dashboard correctly.
+- Tech: Python 3.13, Flask, React TypeScript, Redis/Celery.
 
-My goal: [describe what you want to do]
+Primary Goal: Continue enhancing Vanta's intelligence/UI.
 ```
 
 ---

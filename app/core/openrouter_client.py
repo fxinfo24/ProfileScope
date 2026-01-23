@@ -15,6 +15,15 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+# Import platform-specific prompts
+from .platform_prompts import (
+    get_platform_context,
+    build_content_analysis_prompt,
+    build_authenticity_prompt,
+    build_prediction_prompt,
+    SUPPORTED_PLATFORMS
+)
+
 class OpenRouterError(Exception):
     """OpenRouter API related errors"""
     pass
@@ -27,7 +36,8 @@ class OpenRouterClient:
         self.base_url = "https://openrouter.ai/api/v1"
         
         if not self.api_key:
-            raise OpenRouterError("OpenRouter API key not found in environment variables")
+            logger.warning("OpenRouter API key not found. LLM features will be disabled.")
+            self.api_key = None
             
         self.session = requests.Session()
         self.session.headers.update({
@@ -58,12 +68,56 @@ class OpenRouterClient:
             "authenticity_analysis": "x-ai/grok-4.1-fast",
             "sentiment_analysis": "x-ai/grok-4-fast",
             "trend_analysis": "x-ai/grok-4-fast",
+            "belief_analysis": "x-ai/grok-4.1-fast",     # New v4.1 logic is great for nuance
+            "consumer_analysis": "x-ai/grok-4.1-fast",   # New v4.1 reasoning for purchase intent
+            "psych": "x-ai/grok-4.1-fast",               # Deep psychological profiling
             "general": "x-ai/grok-4.1-fast"
         }
+    
+    def analyze(self, prompt: str, system_prompt: str = None, model_type: str = "general") -> Dict[str, Any]:
+        """
+        Generic analysis method for external analyzers.
+        Returns parsed JSON response.
+        """
+        if not system_prompt:
+            system_prompt = "You are an expert analyst. Provide output in valid JSON format."
+            
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+        
+        model = self.default_models.get(model_type, self.default_models["general"])
+        
+        try:
+            response = self._make_request(
+                messages=messages,
+                model=model,
+                temperature=0.3, # Low temp for structured data
+                max_tokens=3000
+            )
+            
+            # Auto-clean markdown
+            clean_response = response.strip()
+            if clean_response.startswith("```json"):
+                clean_response = clean_response[7:]
+            if clean_response.startswith("```"):
+                clean_response = clean_response[3:]
+            if clean_response.endswith("```"):
+                clean_response = clean_response[:-3]
+                
+            return json.loads(clean_response)
+            
+        except Exception as e:
+            logger.error(f"Generic analysis failed: {e}")
+            return {"error": str(e), "raw_response": str(e)}
     
     def _make_request(self, messages: List[Dict[str, str]], model: str = None, 
                      temperature: float = 0.7, max_tokens: int = 2000) -> str:
         """Make request to OpenRouter API"""
+        if not self.api_key:
+             raise OpenRouterError("OpenRouter API key not configured")
+
         if not model:
             model = self.default_models["general"]
             
@@ -97,57 +151,31 @@ class OpenRouterClient:
         except (KeyError, IndexError) as e:
             raise OpenRouterError(f"Invalid response format: {str(e)}")
     
-    def analyze_profile_content(self, profile_data: Dict[str, Any], posts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Comprehensive profile content analysis using GPT-4"""
+    def analyze_profile_content(self, profile_data: Dict[str, Any], posts: List[Dict[str, Any]], deep_data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Comprehensive profile content analysis using platform-specific prompts"""
         
-        # Prepare profile summary
-        profile_summary = f"""
-Profile: @{profile_data.get('username', 'unknown')}
-Name: {profile_data.get('display_name', 'N/A')}
-Bio: {profile_data.get('bio', 'No bio')}
-Followers: {profile_data.get('followers_count', 0):,}
-Following: {profile_data.get('following_count', 0):,}
-Posts: {profile_data.get('posts_count', 0):,}
-Verified: {profile_data.get('verified', False)}
-Platform: {profile_data.get('platform', 'unknown')}
-        """.strip()
+        # Get platform from profile data
+        platform = profile_data.get('platform', profile_data.get('metadata', {}).get('platform', 'twitter'))
         
-        # Prepare recent posts
-        recent_posts = "\n".join([
-            f"Post {i+1}: {post.get('text', '')[:200]}..." 
-            for i, post in enumerate(posts[:10])
-        ])
+        # Build platform-optimized prompt
+        user_prompt = build_content_analysis_prompt(platform, profile_data, posts)
+        
+        # Enhanced Vanta Context: Inject Deep Data
+        if deep_data:
+            user_prompt += f"\n\nDEEP ANALYSIS DATA (Transcripts, Comments, Demographics):\n{json.dumps(deep_data, indent=2, default=str)}\n\nUse this deep data to infer psychological traits, audience demographics, and hidden behavioral patterns."
+        ctx = get_platform_context(platform)
         
         messages = [
             {
                 "role": "system",
-                "content": """You are an expert social media analyst specializing in profile analysis. 
-                Analyze the given profile and posts to provide comprehensive insights about content themes, 
-                writing style, personality traits, and engagement patterns. Return your analysis as a 
-                structured JSON object with specific categories."""
+                "content": f"""You are an expert {ctx['name']} analyst and social media forensics specialist.
+You specialize in analyzing profiles on {ctx['name']} and understanding its unique culture, algorithm, and user behaviors.
+You MUST return your analysis as valid JSON only - no markdown, no explanations, just the JSON object.
+Return comprehensive, platform-specific insights that leverage {ctx['name']}'s unique characteristics."""
             },
             {
                 "role": "user", 
-                "content": f"""Analyze this social media profile and recent posts:
-
-PROFILE DATA:
-{profile_summary}
-
-RECENT POSTS:
-{recent_posts}
-
-Please provide a comprehensive analysis in JSON format with these categories:
-1. content_themes: Array of main content themes/topics
-2. writing_style: Object with tone, formality, humor_level, emoji_usage
-3. personality_traits: Object with Big Five personality scores (0-1)
-4. posting_patterns: Object with frequency, timing, consistency insights
-5. audience_engagement: Object with engagement style and community interaction
-6. authenticity_indicators: Object with signs of authentic vs automated behavior
-7. influence_factors: Object with authority indicators and thought leadership
-8. sentiment_analysis: Object with overall emotional tone and positivity
-9. key_insights: Array of 3-5 most important observations
-
-Be thorough but concise. Use numerical scores where applicable (0-1 scale)."""
+                "content": user_prompt
             }
         ]
         
@@ -156,24 +184,36 @@ Be thorough but concise. Use numerical scores where applicable (0-1 scale)."""
                 messages=messages,
                 model=self.default_models["content_analysis"],
                 temperature=0.3,
-                max_tokens=3000
+                max_tokens=3500
             )
             
+            # Clean response if needed (remove markdown code blocks)
+            clean_response = response.strip()
+            if clean_response.startswith("```json"):
+                clean_response = clean_response[7:]
+            if clean_response.startswith("```"):
+                clean_response = clean_response[3:]
+            if clean_response.endswith("```"):
+                clean_response = clean_response[:-3]
+            
             # Parse JSON response
-            analysis = json.loads(response)
+            analysis = json.loads(clean_response.strip())
+            analysis["_platform"] = platform
+            analysis["_model_used"] = self.default_models["content_analysis"]
             return analysis
             
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             # Fallback if JSON parsing fails
-            logger.warning("Failed to parse JSON response, returning text analysis")
+            logger.warning(f"Failed to parse JSON response for {platform}: {e}")
             return {
                 "error": "Failed to parse structured response",
                 "raw_analysis": response,
                 "content_themes": ["analysis_available"],
-                "key_insights": ["Raw analysis available in raw_analysis field"]
+                "key_insights": ["Raw analysis available in raw_analysis field"],
+                "_platform": platform
             }
         except Exception as e:
-            logger.error(f"Content analysis failed: {e}")
+            logger.error(f"Content analysis failed for {platform}: {e}")
             raise OpenRouterError(f"Analysis failed: {str(e)}")
     
     def analyze_authenticity(self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]) -> Dict[str, Any]:

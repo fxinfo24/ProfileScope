@@ -7,61 +7,40 @@ ProfileScope is the most comprehensive AI-powered social media intelligence plat
 ## Features
 
 ### 🌍 Universal Platform Coverage
-- **10+ Major Platforms**: Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, GitHub
-- **Universal Data Collection**: Single API integration via ScrapeCreators
-- **Real-time Processing**: Celery + Redis distributed task processing
-- **Comprehensive Analysis**: Profile data, content analysis, engagement metrics across all platforms
+- **20+ Platforms Supported**:
+  - **Social**: Twitter/X, Facebook, Instagram, Reddit, Snapchat, Pinterest
+  - **Video**: TikTok, YouTube, Twitch, Kick
+  - **Professional**: LinkedIn, GitHub, Threads, BlueSky
+  - **Commerce**: Amazon Shop, TikTok Shop, Google Shopping, Linktree
+- **Hybrid Intelligence**:
+  - **AI-First**: Uses Grok/GPT-4 for deep semantic analysis
+  - **Heuristic Fallback**: Ensures 100% uptime even if AI is offline
+  - **Universal Data**: Single unified adapter for all platforms
 
-### 🤖 Advanced AI Intelligence  
-- **Universal AI Access**: OpenRouter integration (Grok 4.1 Fast, GPT-4, Gemini, Llama-2)
-- **Multi-dimensional Analysis**: Content, authenticity, personality, predictions
-- **Computer Vision**: OpenCV-powered image analysis and authenticity detection
-- **Specialized Models**: Platform-specific analysis optimization
+## Quick Start (Docker)
 
-### 📱 Multi-Interface Access
-- **Web Application**: React + TypeScript with responsive design
-- **Mobile Apps**: React Native + Expo (iOS/Android)
-- **Desktop Application**: PyQt5 native desktop interface
-- **API Access**: RESTful API with comprehensive documentation
+The fastest way to run ProfileScope is via Docker Compose:
 
-### 🏢 Enterprise Features
-- **Team Collaboration**: Role-based access control (Owner/Admin/Analyst/Viewer)
-- **White-label Solution**: Custom branding, domains, and styling
-- **Multi-tenancy**: Secure team workspaces and data isolation
-- **Usage Analytics**: Comprehensive reporting and insights
-
-### 💰 Monetization Platform
-- **4-Tier Pricing**: Free, Basic, Professional, Enterprise
-- **Usage-based Billing**: Transparent cost calculation and tracking
-- **Automated Invoicing**: Stripe-compatible payment processing
-- **Revenue Analytics**: Business intelligence and usage reporting
-
-### ⚡ Real-time Processing
-- **Background Tasks**: Celery worker queues for scalable processing
-- **Live Updates**: WebSocket connections for real-time progress
-- **Monitoring**: Flower dashboard for task management
-- **Auto-scaling**: Dynamic worker allocation based on demand
-
-## Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/fxinfo24/ProfileScope.git
-cd ProfileScope
+# Start the full stack (Frontend + Backend + AI + Database)
+docker compose up -d --build
 ```
 
-2. Create a virtual environment and activate it:
+Access the application:
+- **Web App**: http://localhost:5173
+- **API**: http://localhost:5000/api/health
+- **Task Monitor**: http://localhost:5555
+
+## Manual Installation
+
+If you prefer running without Docker:
+1. **Python 3.13+** is required.
+2. Install dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+python3.13 -m venv venv
+source venv/bin/activate
+pip install -r requirements-full.txt
 ```
-
-3. Install dependencies:
-
-**Requirements Files:**
-- `requirements.txt` - Ultra-minimal for Railway/production (fast build, ~1-2 min)
-- `requirements-railway-medium.txt` - Medium build with some NLP features
-- `requirements-full.txt` - Complete local development environment with ML/AI
 
 ```bash
 # Local development (recommended):
@@ -328,6 +307,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Documentation
 
 ### Directives (SOPs)
+- **Codebase Assessment**: `directives/CODEBASE_ASSESSMENT.md` - Strategic analysis and roadmap
 - **Setup Guide**: `directives/setup_guide.md` - Installation, API configuration, and verification
 - **API Documentation**: `directives/api.md` - Complete REST API reference
 - **Development Guide**: `directives/development.md` - Developer setup and contribution guide  

@@ -1,0 +1,97 @@
+"""
+Consumer Intelligence Analyzer
+Analyzes purchase behavior, brand affinity, and forecasts future spending.
+"""
+
+import json
+import logging
+from typing import Dict, Any, List
+
+logger = logging.getLogger(__name__)
+
+class ConsumerIntelligenceAnalyzer:
+    """
+    Analyzes consumer behavior, brand affinity, and purchase intent.
+    Provides forecasting for future purchases.
+    """
+    
+    def __init__(self, openrouter_client):
+        self.ai = openrouter_client
+
+    def generate_consumer_profile(self, all_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Comprehensive AI-generated consumer intelligence report.
+        """
+        
+        # Extract commerce-specific signals
+        commerce_signals = self._extract_commerce_signals(all_data)
+        
+        system_prompt = """You are a Consumer Psychologist and Marketing Intelligence Expert.
+        Analyze digital footprints to construct high-fidelity consumer profiles and purchase forecasts."""
+        
+        prompt = f"""
+        Analyze this person's complete digital footprint and generate a 
+        comprehensive consumer intelligence profile.
+        
+        DATA SIGNALS:
+        {json.dumps(commerce_signals, indent=2)}
+        
+        Provide analysis in this JSON structure:
+        
+        1. current_usage:
+           - products: List of products confirmed in use
+           - brands: List of brands interacted with
+           
+        2. shopping_psychology:
+           - buyer_persona: "Impulse", "Researcher", "Deal Hunter", "Luxury Connoisseur"
+           - decision_drivers: ["Price", "Aesthetics", "Ethics", "Status"]
+           - adoption_curve: "Innovator", "Early Adopter", "Majority", "Laggard"
+           
+        3. brand_relationships:
+           - brand_loyalty: {{ "Apple": "High", "Nike": "Medium" }}
+           - category_preferences: preferred categories
+           
+        4. purchase_intent:
+           - active_consideration: Products they are currently researching
+           - wishlist: Items saved or mentioned as "want"
+           
+        5. forecast_90_day:
+           - predicted_purchases: List of specific objects likely to be bought
+           - confidence: 0-1 score for each prediction
+           - reasoning: Evidence-based logic
+           
+        6. marketing_profile:
+           - price_sensitivity: "Low", "Medium", "High"
+           - influence_susceptibility: 0-10 (How likely to buy from ad/influencer)
+           
+        Format as pure JSON.
+        """
+        
+        return self.ai.analyze(prompt, system_prompt, model_type="consumer_analysis")
+        
+    def _extract_commerce_signals(self, data: Dict) -> Dict:
+        """Extract data likely to contain purchase signals"""
+        signals = {
+            "shopping_activity": [],
+            "product_mentions": [],
+            "lifestyle_indicators": [] # For inferring budget/class
+        }
+        
+        # 1. Direct Commerce Data (TikTok Shop, Amazon)
+        if data.get('shop_products'):
+            signals['shopping_activity'].extend(data['shop_products'])
+            
+        # 2. Content mentions (Looking for "bought", "review", "unboxing")
+        for item in data.get('content', []):
+            text = (item.get('text') or item.get('caption') or item.get('description') or "").lower()
+            
+            # Simple keyword filter to reduce noise
+            keywords = ['bought', 'buy', 'purchased', 'got this', 'review', 'unboxing', 'haul', 'obsessed with', 'link in bio', 'code']
+            if any(k in text for k in keywords):
+                signals['product_mentions'].append({
+                    "text": text[:500],
+                    "platform": item.get('platform', 'unknown'),
+                    "date": item.get('created_at', 'unknown')
+                })
+                
+        return signals

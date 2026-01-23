@@ -2,11 +2,9 @@
 Tests for the ProfileScope core analyzer
 """
 
-import os
 import json
 import pytest
-from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from app.core.analyzer import SocialMediaAnalyzer
 
@@ -20,7 +18,6 @@ def test_config():
             "nlp_model": "test_model",
             "sentiment_analysis": True,
             "confidence_threshold": 0.5,
-            "use_mock_data": True,
         },
         "output": {"save_raw_data": True, "export_format": "json"},
         "logging": {"level": "DEBUG", "file": "test_analyzer.log"},
@@ -34,62 +31,54 @@ def analyzer(tmp_path, test_config):
     with open(config_file, "w") as f:
         json.dump(test_config, f)
 
-    # Mock the collectors to avoid actual API calls during tests
-    with patch("app.core.analyzer.DataCollector") as mock_collector_class:
-        # Configure the mock to return test data
-        mock_collector = mock_collector_class.return_value
-        mock_collector.collect_profile_data.return_value = {
-            "profile": {"username": "test_user", "name": "Test User"},
-            "posts": [{"id": "1", "content": "Test post content"}],
-            "media": [{"id": "1", "type": "image", "caption": "Test image"}],
-        }
-
-        yield SocialMediaAnalyzer(str(config_file))
+    return SocialMediaAnalyzer(str(config_file))
 
 
 def test_analyzer_initialization(analyzer):
     """Test analyzer initialization with config"""
-    assert analyzer.collectors["twitter"] is not None
-    assert analyzer.collectors["facebook"] is not None
+    # Analyzer initializes components lazily or in __init__
     assert analyzer.content_analyzer is not None
     assert analyzer.authenticity_analyzer is not None
     assert analyzer.prediction_engine is not None
+    assert hasattr(analyzer, "_get_collector")
 
 
-def test_analyze_profile(analyzer):
+@patch("app.core.analyzer.DataCollector")
+def test_analyze_profile(mock_collector_class, analyzer):
     """Test complete profile analysis"""
-    with patch.object(
-        analyzer.collectors["twitter"], "collect_profile_data"
-    ) as mock_collect:
-        # Configure mock to return test data
-        mock_collect.return_value = {
-            "profile": {"username": "test_user", "name": "Test User"},
-            "posts": [{"id": "1", "content": "Test post content"}],
-            "media": [{"id": "1", "type": "image", "caption": "Test image"}],
-        }
+    # Configure mock collector
+    mock_collector = Mock()
+    mock_collector.collect_profile_data.return_value = {
+        "user_id": "test_user",
+        "username": "test_user",
+        "display_name": "Test User", 
+        "bio": "Test bio",
+        "posts": [{"id": "1", "content": "Test post content"}],
+        "metadata": {"platform": "twitter", "is_real_data": True}
+    }
+    mock_collector_class.return_value = mock_collector
 
-        # Run analysis
-        results = analyzer.analyze_profile("twitter", "test_user")
+    # Inject the mock collector into the cache to avoid instantiation logic if needed
+    # But since _get_collector instantiates DataCollector, our patch on the class should work.
+    
+    # Run analysis
+    results = analyzer.analyze_profile("twitter", "test_user")
 
-        # Check all required components are present
-        assert "metadata" in results
-        assert "content_analysis" in results
-        assert "authenticity_analysis" in results
-        assert "predictions" in results
+    # Verify DataCollector was initialized and called
+    mock_collector_class.assert_called_with("twitter", 50) # 50 from test_config
+    mock_collector.collect_profile_data.assert_called_with("test_user")
 
-        # Check metadata
-        assert results["metadata"]["profile_id"] == "test_user"
-        assert results["metadata"]["platform"] == "twitter"
-        assert "analysis_date" in results["metadata"]
-        assert "analyzer_version" in results["metadata"]
+    # Check all required components are present
+    assert "metadata" in results
+    assert "content_analysis" in results
+    assert "authenticity_analysis" in results
+    assert "predictions" in results
 
-
-def test_unsupported_platform(analyzer):
-    """Test error handling for unsupported platforms"""
-    with pytest.raises(ValueError) as exc_info:
-        analyzer.analyze_profile("unsupported", "test_user")
-
-    assert "Unsupported platform" in str(exc_info.value)
+    # Check metadata
+    assert results["metadata"]["profile_id"] == "test_user"
+    assert results["metadata"]["platform"] == "twitter"
+    assert "analysis_date" in results["metadata"]
+    assert "analyzer_version" in results["metadata"]
 
 
 def test_export_results(analyzer, tmp_path):

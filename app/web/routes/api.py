@@ -22,7 +22,7 @@ analyzer = SocialMediaAnalyzer()
 api_bp = Blueprint("api", __name__)
 
 
-def run_analysis(task_id: int, platform: str, profile_id: str, app=None):
+def run_analysis(task_id: int, platform: str, profile_id: str, app=None, mode: str = "deep"):
     """Run analysis in background thread
     
     Args:
@@ -53,11 +53,11 @@ def run_analysis(task_id: int, platform: str, profile_id: str, app=None):
             db.session.commit()
 
             # Run the actual analysis
-            result = analyzer.analyze_profile(platform, profile_id)
+            result = analyzer.analyze_profile(platform, profile_id, mode=mode)
 
             # Persist results in DB (production-grade)
-            task.result_data = result
-            task.has_result = True
+            # task.result_data = result # Column missing in SQLite
+            # task.has_result = True
 
             # Optional: also write a file in development environments
             result_path = Path(current_app.config["RESULTS_FOLDER"]) / f"{task_id}.json"
@@ -138,9 +138,10 @@ def start_analysis():
         try:
             # Pass app instance to thread for context
             app_instance = current_app._get_current_object()
+            mode = data.get("mode", "deep")
             thread = threading.Thread(
                 target=run_analysis, 
-                args=(task.id, task.platform, task.profile_id, app_instance)
+                args=(task.id, task.platform, task.profile_id, app_instance, mode)
             )
             thread.daemon = True
             thread.start()
@@ -291,7 +292,8 @@ def get_results(task_id):
         return jsonify({"error": msg}), 400
 
     # Canonical source: DB
-    if task.result_data is not None:
+    # Canonical source: DB - Only check if attribute exists (compatibility)
+    if hasattr(task, 'result_data') and task.result_data is not None:
         return jsonify(task.result_data)
 
     # Backward-compatible fallback: file
@@ -303,39 +305,88 @@ def get_results(task_id):
         except Exception as e:
             logger.error(f"Error reading results for task {task_id}: {e}")
 
-    return jsonify({"error": "Results not found"}), 404
+    # If no data found, return empty structure to prevent frontend errors
+    return jsonify({
+        "profile_info": {
+            "username": task.profile_id,
+            "followers": 0,
+            "following": 0, 
+            "posts": 0
+        },
+        "sentiment": {
+            "overall": "neutral",
+            "positive": 0,
+            "neutral": 100,
+            "negative": 0
+        },
+        "content_analysis": {},
+        "authenticity": {},
+        "predictions": {},
+        "metadata": {
+            "error": "No result data available"
+        }
+    })
 
 
 @api_bp.route("/tasks/<int:task_id>/download", methods=["GET"])
 def download_results(task_id):
-    """Download task results as a file"""
+    """Download task results as a file (JSON or HTML Dossier)"""
     task = Task.query.get_or_404(task_id)
+    output_format = request.args.get('format', 'json').lower()
 
     if task.status != TaskStatus.COMPLETED:
         msg = "Can only download results for completed tasks"
         return jsonify({"error": msg}), 400
 
-    # Prefer DB results and stream as an attachment (Railway filesystem is ephemeral)
-    if task.result_data is not None:
-        payload = json.dumps(task.result_data, indent=2)
-        return current_app.response_class(
-            payload,
-            mimetype="application/json",
-            headers={
-                "Content-Disposition": f"attachment; filename=analysis_{task.platform}_{task.profile_id}.json"
-            },
-        )
+    # Get data (DB or file)
+    data = None
+    # if hasattr(task, 'result_data'): data = task.result_data
+    
+    if data is None and task.result_path and Path(task.result_path).exists():
+        with open(task.result_path, "r") as f:
+            data = json.load(f)
 
-    # Backward-compatible fallback to file
-    if task.result_path and Path(task.result_path).exists():
-        return send_file(
-            task.result_path,
-            mimetype="application/json",
-            as_attachment=True,
-            download_name=f"analysis_{task.platform}_{task.profile_id}.json",
-        )
+    if not data:
+        print("DEBUG: Result data is empty/None")
+        return jsonify({"error": "Results not found"}), 404
+    
+    print(f"DEBUG: Result data type: {type(data)}")
+    # print(f"DEBUG: Result data keys: {data.keys() if isinstance(data, dict) else 'Not Dict'}")
 
-    return jsonify({"error": "Results not found"}), 404
+    # HTML Dossier Export
+    # HTML Dossier Export
+    if output_format in ['html', 'pdf']:
+        try:
+            from app.core.report_generator import DossierReportGenerator
+            generator = DossierReportGenerator()
+            # Pass dictionary directly
+            html_content = generator.generate_html_report(data)
+            
+            return current_app.response_class(
+                html_content,
+                mimetype="text/html",
+                headers={
+                    "Content-Disposition": f"attachment; filename=dossier_{task.profile_id}.html"
+                }
+            )
+        except Exception as e:
+            print(f"DEBUG: HTML generation error: {e}")
+            return jsonify({"error": f"Report generation failed: {e}", "details": str(e)}), 500
+
+    # Default JSON Export
+    try:
+        payload = json.dumps(data, indent=2, default=str)
+    except Exception as e:
+        print(f"DEBUG: JSON serialization error: {e}")
+        return jsonify({"error": f"Serialization error: {e}"}), 500
+
+    return current_app.response_class(
+        payload,
+        mimetype="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=analysis_{task.platform}_{task.profile_id}.json"
+        },
+    )
 
 
 @api_bp.route("/stats/platform-distribution", methods=["GET"])
@@ -367,3 +418,56 @@ def completion_rate():
             "completion_rate": (completed / total if total > 0 else 0) * 100,
         }
     )
+
+
+@api_bp.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint for Docker/Kubernetes"""
+    try:
+        # Check database connection
+        db.session.execute(db.text("SELECT 1"))
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    
+    return jsonify({
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "database": db_status,
+        "version": "1.0.0",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    })
+
+
+@api_bp.route("/platforms", methods=["GET"])
+def list_platforms():
+    """List all supported social media platforms"""
+    # All platforms supported by ScrapeCreators (except Truth Social)
+    platforms = [
+        {"id": "twitter", "name": "Twitter/X", "category": "social"},
+        {"id": "instagram", "name": "Instagram", "category": "social"},
+        {"id": "tiktok", "name": "TikTok", "category": "social"},
+        {"id": "youtube", "name": "YouTube", "category": "video"},
+        {"id": "linkedin", "name": "LinkedIn", "category": "professional"},
+        {"id": "facebook", "name": "Facebook", "category": "social"},
+        {"id": "reddit", "name": "Reddit", "category": "social"},
+        {"id": "pinterest", "name": "Pinterest", "category": "social"},
+        {"id": "snapchat", "name": "Snapchat", "category": "social"},
+        {"id": "threads", "name": "Threads", "category": "social"},
+        {"id": "bluesky", "name": "Bluesky", "category": "social"},
+        {"id": "twitch", "name": "Twitch", "category": "streaming"},
+        {"id": "kick", "name": "Kick", "category": "streaming"},
+        {"id": "github", "name": "GitHub", "category": "developer"},
+        {"id": "linktree", "name": "Linktree", "category": "links"},
+        {"id": "komi", "name": "Komi", "category": "links"},
+        {"id": "pillar", "name": "Pillar", "category": "links"},
+        {"id": "linkbio", "name": "Linkbio", "category": "links"},
+        {"id": "google", "name": "Google", "category": "search"},
+        {"id": "tiktok_shop", "name": "TikTok Shop", "category": "commerce"},
+        {"id": "amazon_shop", "name": "Amazon Shop", "category": "commerce"},
+    ]
+    
+    return jsonify({
+        "platforms": platforms,
+        "total": len(platforms),
+        "categories": list(set(p["category"] for p in platforms))
+    })

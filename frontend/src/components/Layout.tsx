@@ -27,13 +27,15 @@ const Layout: React.FC = () => {
           {/* Logo Area */}
           <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => navigate('/')}>
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
-              <div className="relative h-10 w-10 bg-black/40 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/10 text-white font-bold text-xl group-hover:scale-105 transition-transform duration-300">
-                P
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
+              <img
+                src="/logo.png"
+                alt="Vanta Logo"
+                className="relative h-10 w-10 rounded-full object-cover border border-white/10 group-hover:scale-105 transition-transform duration-300 shadow-lg"
+              />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-tight font-display">
-              ProfileScope
+              Vanta
             </span>
           </div>
 

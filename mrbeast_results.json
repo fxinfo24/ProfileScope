@@ -1,0 +1,114 @@
+{
+  "authenticity": {},
+  "belief_system": {
+    "error": "Insufficient data for belief analysis"
+  },
+  "connected_accounts": [],
+  "consumer_profile": {
+    "brand_relationships": {
+      "brand_loyalty": {},
+      "category_preferences": []
+    },
+    "current_usage": {
+      "brands": [],
+      "products": []
+    },
+    "forecast_90_day": {
+      "confidence": [],
+      "predicted_purchases": [],
+      "reasoning": "No shopping activity, product mentions, or lifestyle indicators provided. Complete absence of digital footprint prevents any meaningful purchase predictions or consumer behavior inference."
+    },
+    "marketing_profile": {
+      "influence_susceptibility": 0,
+      "price_sensitivity": "Unknown"
+    },
+    "purchase_intent": {
+      "active_consideration": [],
+      "wishlist": []
+    },
+    "shopping_psychology": {
+      "adoption_curve": "Unknown",
+      "buyer_persona": "Unknown",
+      "decision_drivers": []
+    }
+  },
+  "content_analysis": {},
+  "executive_summary": "Summary generation failed",
+  "metadata": {
+    "analysis_date": "2026-01-23T09:55:05.422026",
+    "analyzer_version": "2.0.0 (Vanta Deep Intelligence)",
+    "collection_mode": "deep",
+    "platform": "youtube",
+    "profile_id": "MrBeast"
+  },
+  "predictions": {},
+  "profile_info": {
+    "bio": null,
+    "display_name": null,
+    "followers": 0,
+    "following": 0,
+    "is_verified": false,
+    "location": null,
+    "posts": 0,
+    "profile_image_url": null,
+    "username": "MrBeast",
+    "website": null
+  },
+  "raw_dossier": {
+    "additional_data": {
+      "channel_details": {}
+    },
+    "collected_at": "2026-01-23T09:54:27.902718",
+    "collection_mode": "deep_dossier",
+    "collection_time_seconds": 4.83,
+    "comments_analysis": {
+      "sample_comments": [],
+      "total_comments_collected": 0
+    },
+    "connected_accounts": [],
+    "content": [],
+    "cross_platform_discovery": {
+      "collection_time_seconds": 0.82,
+      "discovered_accounts": {
+        "youtube": {
+          "confidence": 0.0,
+          "found": false,
+          "profile": null
+        }
+      },
+      "link_bio_accounts": [],
+      "potential_matches": [],
+      "search_username": "MrBeast"
+    },
+    "demographics": null,
+    "errors": [
+      "Profile error: Profile not found"
+    ],
+    "platform": "youtube",
+    "profile": null,
+    "social_graph": {
+      "followers_sample": [],
+      "following_sample": []
+    },
+    "statistics": {
+      "api_calls_made": 3,
+      "comments_collected": 0,
+      "content_items_collected": 0,
+      "transcripts_collected": 0
+    },
+    "transcripts": [],
+    "username": "MrBeast"
+  },
+  "raw_stats": {
+    "api_calls_made": 3,
+    "comments_collected": 0,
+    "content_items_collected": 0,
+    "transcripts_collected": 0
+  },
+  "sentiment": {
+    "negative": 0,
+    "neutral": 100,
+    "overall": "neutral",
+    "positive": 0
+  }
+}

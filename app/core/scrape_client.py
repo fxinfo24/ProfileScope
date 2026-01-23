@@ -38,7 +38,7 @@ class ScrapeCreatorsClient:
         self.session.headers.update({
             "x-api-key": self.api_key,  # Correct header per ScrapeCreators docs
             "Content-Type": "application/json",
-            "User-Agent": "ProfileScope/1.0"
+            "User-Agent": "Vanta/1.0"
         })
         
         # Rate limiting

@@ -1,5 +1,5 @@
 """
-ProfileScope setup configuration
+Vanta setup configuration
 """
 
 from setuptools import setup, find_packages
@@ -13,13 +13,13 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     ]
 
 setup(
-    name="profilescope",
+    name="vanta",
     version="1.0.0",
-    author="ProfileScope Team",
+    author="Vanta Team",
     description="A comprehensive social media profile analysis tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/profilescope",
+    url="https://github.com/yourusername/vanta",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -38,12 +38,12 @@ setup(
     entry_points={
         "console_scripts": [
             # CLI entrypoint (importable package module)
-            "profilescope=app:main",
+            "vanta=app:main",
         ],
     },
     include_package_data=True,
     package_data={
-        "profilescope": [
+        "vanta": [
             "app/web/static/*",
             "app/web/templates/*",
             "app/desktop/assets/*/*",

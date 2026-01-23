@@ -1,5 +1,5 @@
 """
-ProfileScope: Core Analyzer Module
+Vanta: Core Analyzer Module
 Main orchestrator for social media profile analysis
 """
 
@@ -25,7 +25,7 @@ class SocialMediaAnalyzer:
             config_path: Path to configuration file
         """
         self.config = self._load_config(config_path)
-        self.logger = setup_logger("ProfileScope.Analyzer", self.config["logging"])
+        self.logger = setup_logger("Vanta.Analyzer", self.config["logging"])
 
         # Collectors are now initialized dynamically per platform
         self._collector_cache = {}
@@ -179,7 +179,7 @@ class SocialMediaAnalyzer:
                 "confidence_threshold": 0.65,
             },
             "output": {"save_raw_data": True, "export_format": "json"},
-            "logging": {"level": "INFO", "file": "logs/profilescope.log"},
+            "logging": {"level": "INFO", "file": "logs/vanta.log"},
         }
 
         if not config_path:

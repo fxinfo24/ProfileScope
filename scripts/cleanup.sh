@@ -1,7 +1,7 @@
 #!/bin/bash
 # File: scripts/cleanup.sh
 # Created: 2024-04-15 18:30:00
-# ProfileScope Cleanup Script - Handles logs, caches and temporary files
+# Vanta Cleanup Script - Handles logs, caches and temporary files
 
 # Color codes for output
 RED='\033[0;31m'
@@ -76,7 +76,7 @@ handle_error() {
 # Register error handler
 trap 'handle_error ${LINENO} "${BASH_COMMAND}"' ERR
 
-# Define directories and files to clean for ProfileScope
+# Define directories and files to clean for Vanta
 DIRS_TO_CLEAN=(
     "data/logs"
     "data/cache"
@@ -106,7 +106,7 @@ FILES_TO_CLEAN=(
     "Thumbs.db"
     "test_*.log"
     "test_analyzer.log"
-    "profilescope_web.log"
+    "vanta_web.log"
     "test_log.log"
     "pytest_*.xml"
 )
@@ -247,7 +247,7 @@ generate_cleanup_report() {
     mkdir -p "${REPORT_DIR}"
 
     {
-        echo "ProfileScope Cleanup Report - $(date)"
+        echo "Vanta Cleanup Report - $(date)"
         echo "=================================="
         echo "Script Version: $SCRIPT_VERSION"
         echo "Duration: ${duration}s"
@@ -326,7 +326,7 @@ perform_final_cleanup() {
 
 # Main execution flow
 main() {
-    log_message "INFO" "Starting ProfileScope cleanup process (v$SCRIPT_VERSION)"
+    log_message "INFO" "Starting Vanta cleanup process (v$SCRIPT_VERSION)"
 
     # Create required directories
     mkdir -p "${LOG_DIR}" "${REPORT_DIR}" "${BACKUP_DIR}"
@@ -343,7 +343,7 @@ main() {
     collect_performance_metrics
     perform_final_cleanup
 
-    log_message "SUCCESS" "ProfileScope cleanup completed successfully"
+    log_message "SUCCESS" "Vanta cleanup completed successfully"
 }
 
 # Execute main function

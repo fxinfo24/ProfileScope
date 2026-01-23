@@ -1,6 +1,6 @@
 """
-ProfileScope Web Application
-Flask web interface for the ProfileScope analyzer
+Vanta Web Application
+Flask web interface for the Vanta analyzer
 """
 
 import os
@@ -15,7 +15,7 @@ logs_dir = os.path.join(os.getcwd(), "logs")
 if os.path.exists(logs_dir) or os.access(os.getcwd(), os.W_OK):
     try:
         os.makedirs(logs_dir, exist_ok=True)
-        log_file = os.path.join(logs_dir, "profilescope_web.log")
+        log_file = os.path.join(logs_dir, "vanta_web.log")
     except (OSError, PermissionError):
         # If we can't create logs directory, log to stdout
         pass
@@ -25,7 +25,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     filename=log_file,  # None means log to stdout
 )
-logger = logging.getLogger("ProfileScope.Web")
+logger = logging.getLogger("Vanta.Web")
 
 # Import db from models (shared SQLAlchemy instance)
 from app.web.models import db
@@ -44,7 +44,7 @@ def create_app(test_config=None):
     # Create data directory if it doesn't exist
     data_dir = os.path.join(os.getcwd(), "data")
     os.makedirs(data_dir, exist_ok=True)
-    db_path = os.path.join(data_dir, "profilescope.db")
+    db_path = os.path.join(data_dir, "vanta.db")
     
     # Load default configuration
     app.config.from_mapping(

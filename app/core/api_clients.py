@@ -1,5 +1,5 @@
 """
-ProfileScope: Social Media API Clients
+Vanta: Social Media API Clients
 Handles authentication and API calls to various social media platforms
 """
 
@@ -33,7 +33,7 @@ except ImportError:
     class FacebookRequestError(Exception):
         pass
 
-logger = logging.getLogger("ProfileScope.APIClients")
+logger = logging.getLogger("Vanta.APIClients")
 
 
 class RateLimitExceededError(Exception):

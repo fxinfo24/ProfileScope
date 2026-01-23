@@ -1,5 +1,5 @@
 """
-White-label and Customization Features for ProfileScope
+White-label and Customization Features for Vanta
 Custom branding and domain management for enterprise clients
 """
 
@@ -193,7 +193,7 @@ class WhitelabelService:
             
             # Check for TXT record with verification token
             try:
-                answers = dns.resolver.resolve(f"_profilescope-verify.{domain}", "TXT")
+                answers = dns.resolver.resolve(f"_vanta-verify.{domain}", "TXT")
                 for answer in answers:
                     if custom_domain.verification_token in str(answer):
                         custom_domain.dns_verified = True
@@ -227,7 +227,7 @@ class WhitelabelService:
     def generate_custom_css(config: WhitelabelConfig) -> str:
         """Generate custom CSS based on branding configuration"""
         css_template = f"""
-        /* Custom ProfileScope Branding */
+        /* Custom Vanta Branding */
         :root {{
             --primary-color: {config.primary_color};
             --secondary-color: {config.secondary_color};

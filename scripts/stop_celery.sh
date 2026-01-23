@@ -1,7 +1,7 @@
 #!/bin/bash
 # Stop Celery Worker and Flower Monitoring
 
-echo "🛑 Stopping ProfileScope Real-Time Processing Pipeline"
+echo "🛑 Stopping Vanta Real-Time Processing Pipeline"
 echo "===================================================="
 
 # Stop Celery workers

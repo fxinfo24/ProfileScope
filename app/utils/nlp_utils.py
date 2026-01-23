@@ -1,5 +1,5 @@
 """
-NLP utilities for ProfileScope
+NLP utilities for Vanta
 Provides natural language processing functions for text analysis
 """
 
@@ -10,7 +10,7 @@ from typing import Dict, List, Any, Tuple, Set
 from collections import Counter
 import warnings
 
-logger = logging.getLogger("ProfileScope.NLPUtils")
+logger = logging.getLogger("Vanta.NLPUtils")
 
 # Try importing optional dependencies
 try:

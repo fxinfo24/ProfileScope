@@ -1,4 +1,4 @@
-# ProfileScope Requirements - Railway Production (Minimal)
+# Vanta Requirements - Railway Production (Minimal)
 # This file is used by Railway for production deployment
 # Includes only essential packages for running the web API
 # For local development, use requirements-full.txt instead

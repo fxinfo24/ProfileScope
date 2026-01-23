@@ -1,5 +1,5 @@
 """
-ProfileScope Core Module
+Vanta Core Module
 Contains the main functionality for analyzing social media profiles
 """
 

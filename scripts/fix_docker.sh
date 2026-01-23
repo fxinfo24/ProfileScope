@@ -4,7 +4,7 @@
 
 echo "🚑 Starting Emergency Docker Fix..."
 
-# 1. Stop all ProfileScope containers
+# 1. Stop all Vanta containers
 echo "🛑 Stopping existing containers..."
 docker compose down --remove-orphans
 

@@ -1,5 +1,5 @@
 """
-Tests for the web routes of the ProfileScope application
+Tests for the web routes of the Vanta application
 """
 
 import pytest
@@ -54,7 +54,7 @@ def test_home_page(client):
     """Test the home page loads correctly"""
     response = client.get("/")
     assert response.status_code == 200
-    assert b"ProfileScope" in response.data
+    assert b"Vanta" in response.data
     assert b"Start New Analysis" in response.data
 
 

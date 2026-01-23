@@ -1,5 +1,5 @@
 """
-ProfileScope: Utility Helper Functions
+Vanta: Utility Helper Functions
 Common utility functions used across the application
 """
 

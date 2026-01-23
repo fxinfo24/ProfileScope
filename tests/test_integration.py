@@ -1,5 +1,5 @@
 """
-Integration tests for ProfileScope
+Integration tests for Vanta
 """
 
 import json

@@ -75,7 +75,7 @@ Be pragmatic. Be reliable. Self-anneal.
 Copy this to start a new session:
 
 ```
-I'm resuming work on the "Best in Class" social intelligence platform, Vanta (formerly ProfileScope). Please read HANDOVER.md and AGENTS.md immediately.
+I'm resuming work on the "Best in Class" social intelligence platform, Vanta (formerly Vanta). Please read HANDOVER.md and AGENTS.md immediately.
 
 Current status:
 - Infrastructure: Docker Compose (Full Stack - Verified Healthy)
@@ -89,7 +89,7 @@ My goal: [describe what you want to do]
 
 ## 🌌 The Vanta Evolution (Best in Class)
 
-ProfileScope has evolved into **Vanta**—the industry's most advanced social intelligence platform.
+Vanta has evolved into **Vanta**—the industry's most advanced social intelligence platform.
 
 ### 🌌 Vanta Design Language
 - **Brand**: Vanta (Total data absorption, stealth intelligence).
@@ -174,7 +174,7 @@ Here’s how I want you to respond:
 
 ## Project overview
 
-- **Name**: ProfileScope
+- **Name**: Vanta
 - **Purpose**: AI-powered social media profile intelligence/analysis across 10+ platforms.
 - **Primary language**: Python
 - **Key backend frameworks/libraries**:
@@ -219,7 +219,7 @@ Here’s how I want you to respond:
 
 - App factory (current): `app/web/app.py:create_app(test_config=None)`
 - Typical URL: `http://127.0.0.1:5000`
-- SQLite is used by default in development; the app ensures `data/` exists and creates `data/profilescope.db`.
+- SQLite is used by default in development; the app ensures `data/` exists and creates `data/vanta.db`.
 
 ### Desktop app (PyQt)
 
@@ -335,7 +335,7 @@ Here’s how I want you to respond:
 - Web startup/config issues:
   - `app/web/app.py`
   - `app/web/models.py`, `app/web/database.py`
-  - logs: `logs/profilescope_web.log` and `data/logs/profilescope.log`
+  - logs: `logs/vanta_web.log` and `data/logs/vanta.log`
 - Analysis logic:
   - `app/core/analyzer.py`, `app/core/content_analyzer.py`, `app/core/authenticity.py`
 - Task processing:

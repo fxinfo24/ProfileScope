@@ -1,4 +1,4 @@
-# ProfileScope Docker Requirements (Optimized)
+# Vanta Docker Requirements (Optimized)
 # Lightweight production build relying on OpenRouter AI
 # Excludes heavy local ML libraries (Torch, Transformers) for speed
 

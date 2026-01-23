@@ -1,5 +1,5 @@
 """
-ProfileScope: Platform-Specific AI Prompts
+Vanta: Platform-Specific AI Prompts
 Optimized Grok 4.1 prompts for each platform's unique characteristics
 """
 

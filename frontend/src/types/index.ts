@@ -1,4 +1,4 @@
-// ProfileScope Frontend Types
+// Vanta Frontend Types
 export interface User {
   id: number;
   email: string;

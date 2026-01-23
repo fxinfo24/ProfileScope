@@ -1,5 +1,5 @@
 """
-ProfileScope Web Routes Package
+Vanta Web Routes Package
 """
 
 from flask import Blueprint

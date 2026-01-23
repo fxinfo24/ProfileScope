@@ -1,4 +1,4 @@
-// Analysis Form Component for ProfileScope
+// Analysis Form Component for Vanta
 import React, { useState } from 'react';
 import {
   MagnifyingGlassIcon,

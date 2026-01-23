@@ -1,5 +1,5 @@
 """
-ProfileScope: Prediction Engine
+Vanta: Prediction Engine
 Generates predictions about user traits and behaviors
 """
 
@@ -18,7 +18,7 @@ class PredictionEngine:
             confidence_threshold: Minimum confidence level for predictions
         """
         self.confidence_threshold = confidence_threshold
-        self.logger = logging.getLogger("ProfileScope.PredictionEngine")
+        self.logger = logging.getLogger("Vanta.PredictionEngine")
 
     def generate_predictions(
         self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]

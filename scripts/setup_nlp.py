@@ -29,7 +29,7 @@ def check_python_version():
     if current_version.major < 3 or (
         current_version.major == 3 and current_version.minor < 8
     ):
-        logger.warning("Python 3.8 or higher is recommended for ProfileScope")
+        logger.warning("Python 3.8 or higher is recommended for Vanta")
         return False
 
     if current_version.major == 3 and current_version.minor >= 12:
@@ -117,7 +117,7 @@ def install_dependencies():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Setup NLP dependencies for ProfileScope"
+        description="Setup NLP dependencies for Vanta"
     )
     parser.add_argument(
         "--skip-deps", action="store_true", help="Skip installing dependencies"

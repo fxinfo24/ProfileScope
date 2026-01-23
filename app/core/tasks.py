@@ -1,4 +1,4 @@
-"""ProfileScope Celery tasks.
+"""Vanta Celery tasks.
 
 This module is the CANONICAL Celery configuration and task entrypoint.
 Used by `scripts/start_celery.sh` locally and Railway worker service in production.
@@ -41,7 +41,7 @@ from app.web.models import db, Task, TaskStatus
 
 # Celery application
 celery_app = Celery(
-    "profilescope",
+    "vanta",
     broker=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
     backend=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
 )

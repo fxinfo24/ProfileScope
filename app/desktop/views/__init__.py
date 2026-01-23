@@ -1,5 +1,5 @@
 """
-ProfileScope Desktop Views Package
+Vanta Desktop Views Package
 """
 
 from .main_view import MainView

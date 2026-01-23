@@ -1,9 +1,9 @@
 #!/bin/bash
-# Start Celery Worker and Flower Monitoring for ProfileScope
+# Start Celery Worker and Flower Monitoring for Vanta
 # This script is for LOCAL DEVELOPMENT only
 # For Railway production, workers are deployed as separate services
 
-echo "🚀 Starting ProfileScope Real-Time Processing Pipeline"
+echo "🚀 Starting Vanta Real-Time Processing Pipeline"
 echo "====================================================="
 
 # Load environment variables

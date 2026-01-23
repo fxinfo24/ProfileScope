@@ -1,7 +1,7 @@
 #!/bin/bash
-# Setup script for ProfileScope environment
+# Setup script for Vanta environment
 
-echo "Setting up ProfileScope environment..."
+echo "Setting up Vanta environment..."
 
 # Activate virtual environment if not already activated
 if [[ "$VIRTUAL_ENV" == "" ]]; then
@@ -33,4 +33,4 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
 python -c "import spacy; print('spaCy version:', spacy.__version__)"
 python -c "import nltk; print('NLTK data path:', nltk.data.path)"
 
-echo "Setup complete. You can now run ProfileScope."
+echo "Setup complete. You can now run Vanta."

@@ -1,5 +1,5 @@
 """
-Tests for the ProfileScope core analyzer
+Tests for the Vanta core analyzer
 """
 
 import json

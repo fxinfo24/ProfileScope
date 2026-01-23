@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple test runner for ProfileScope without HTML reports
+Simple test runner for Vanta without HTML reports
 Use this script if you're experiencing issues with pytest-html
 """
 

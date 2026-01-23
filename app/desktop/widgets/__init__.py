@@ -1,5 +1,5 @@
 """
-ProfileScope Desktop Widgets Package
+Vanta Desktop Widgets Package
 """
 
 from .charts import ChartWidget

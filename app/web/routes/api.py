@@ -1,6 +1,6 @@
 # app/web/routes/api.py
 """
-ProfileScope API Routes
+Vanta API Routes
 Handles API endpoints for tasks and analysis results
 """
 from flask import Blueprint, jsonify, request, current_app, send_file

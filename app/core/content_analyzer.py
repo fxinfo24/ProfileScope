@@ -1,4 +1,4 @@
-# ProfileScope: Social Media Profile Analyzer
+# Vanta: Social Media Profile Analyzer
 # A comprehensive framework for analyzing public social media profiles
 
 import os
@@ -24,7 +24,7 @@ class ContentAnalyzer:
         """
         self.nlp_model = nlp_model
         self.use_sentiment = sentiment_analyzer
-        self.logger = logging.getLogger("ProfileScope.ContentAnalyzer")
+        self.logger = logging.getLogger("Vanta.ContentAnalyzer")
         # TODO: Load actual NLP models based on configuration
 
     def analyze_profile(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:

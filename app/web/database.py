@@ -1,5 +1,5 @@
 """
-ProfileScope Database Configuration
+Vanta Database Configuration
 Enhanced database setup with SQLAlchemy for production use
 """
 
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database URL from environment or default to SQLite
-DATABASE_URL = os.getenv("DATABASE_URI", "sqlite:///data/profilescope.db")
+DATABASE_URL = os.getenv("DATABASE_URI", "sqlite:///data/vanta.db")
 
 # Create engine
 if DATABASE_URL.startswith("sqlite"):

@@ -1,6 +1,6 @@
-# ProfileScope
+# Vanta
 
-ProfileScope is the most comprehensive AI-powered social media intelligence platform, providing advanced analysis across 10+ major social platforms including Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, and GitHub. Using cutting-edge machine learning, universal data collection, and real-time processing, ProfileScope delivers immediate insights into profile authenticity, engagement patterns, content analysis, and predictive analytics.
+Vanta is the most comprehensive AI-powered social media intelligence platform, providing advanced analysis across 10+ major social platforms including Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, and GitHub. Using cutting-edge machine learning, universal data collection, and real-time processing, Vanta delivers immediate insights into profile authenticity, engagement patterns, content analysis, and predictive analytics.
 
 **🚀 Transformational Platform**: Industry-leading coverage with 333% more platforms than competitors, real-time processing infrastructure, mobile-first design, and complete enterprise features including team collaboration and white-labeling.
 
@@ -19,7 +19,7 @@ ProfileScope is the most comprehensive AI-powered social media intelligence plat
 
 ## Quick Start (Docker)
 
-The fastest way to run ProfileScope is via Docker Compose:
+The fastest way to run Vanta is via Docker Compose:
 
 ```bash
 # Start the full stack (Frontend + Backend + AI + Database)
@@ -128,7 +128,7 @@ flask db upgrade
 
 ### Architecture Overview
 
-ProfileScope uses a **split deployment**:
+Vanta uses a **split deployment**:
 - **Frontend**: Vercel (React/TypeScript static site)
 - **Backend**: Any Python-capable hosting (Flask API)
 
@@ -151,7 +151,7 @@ Choose ONE of the following options for hosting the Flask backend:
    CORS_ORIGINS=https://profile-scope.vercel.app
    OPENROUTER_API_KEY=your-openrouter-key
    SCRAPECREATORS_API_KEY=your-scrapecreators-key
-   DATABASE_URI=sqlite:///data/profilescope.db
+   DATABASE_URI=sqlite:///data/vanta.db
    ```
 5. **Deploy** and note your backend URL
 
@@ -192,7 +192,7 @@ cd frontend && npm run dev
 
 ### Frontend Setup (Vercel)
 
-1. **Connect Repository**: Import `fxinfo24/ProfileScope` to Vercel
+1. **Connect Repository**: Import `fxinfo24/Vanta` to Vercel
 2. **Configure**:
    - Framework: Vite
    - Root Directory: `frontend`

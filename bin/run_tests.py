@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test runner script for ProfileScope
+Test runner script for Vanta
 """
 
 import os
@@ -166,7 +166,7 @@ def test_simple():
 
 def main():
     """Main function"""
-    parser = argparse.ArgumentParser(description="Test runner for ProfileScope")
+    parser = argparse.ArgumentParser(description="Test runner for Vanta")
     parser.add_argument(
         "--simple",
         action="store_true",

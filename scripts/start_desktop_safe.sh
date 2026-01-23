@@ -1,6 +1,6 @@
 #!/bin/bash
-# ProfileScope Desktop Application Launcher - Safe Mode
-echo "🖥️  Starting ProfileScope Desktop Application (Safe Mode)..."
+# Vanta Desktop Application Launcher - Safe Mode
+echo "🖥️  Starting Vanta Desktop Application (Safe Mode)..."
 
 # Set environment variables to avoid conflicts
 export QT_API=tkinter

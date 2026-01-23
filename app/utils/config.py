@@ -1,5 +1,5 @@
 """
-ProfileScope: Configuration Utilities
+Vanta: Configuration Utilities
 Handles loading and validation of configuration settings
 """
 
@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from dotenv import load_dotenv
 
-logger = logging.getLogger("ProfileScope.Config")
+logger = logging.getLogger("Vanta.Config")
 
 
 class ConfigError(Exception):
@@ -80,8 +80,8 @@ def get_config_path() -> Path:
     common_locations = [
         Path("config.json"),  # Current directory
         Path("../config.json"),  # Parent directory
-        Path.home() / ".profilescope/config.json",  # User home directory
-        Path("/etc/profilescope/config.json"),  # System-wide configuration
+        Path.home() / ".vanta/config.json",  # User home directory
+        Path("/etc/vanta/config.json"),  # System-wide configuration
     ]
 
     for path in common_locations:

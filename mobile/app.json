@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ProfileScope",
-    "slug": "profilescope",
+    "name": "Vanta",
+    "slug": "vanta",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,14 +16,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.profilescope.app"
+      "bundleIdentifier": "com.vanta.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.profilescope.app"
+      "package": "com.vanta.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -36,7 +36,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "https://api.profilescope.com",
+      "apiUrl": "https://api.vanta.com",
       "environment": "production"
     }
   }

@@ -1,1 +1,1 @@
-# Enterprise Features for ProfileScope
+# Enterprise Features for Vanta

@@ -1,9 +1,9 @@
 # Desktop & Mobile Applications
 
-ProfileScope provides both desktop and mobile interfaces for comprehensive social media analysis across all supported platforms.
+Vanta provides both desktop and mobile interfaces for comprehensive social media analysis across all supported platforms.
 
 ## Desktop Application
-ProfileScope Desktop is a PyQt5-based application that provides a native desktop interface for social media analysis with advanced visualization capabilities.
+Vanta Desktop is a PyQt5-based application that provides a native desktop interface for social media analysis with advanced visualization capabilities.
 
 ### Features
 - **Multi-platform Analysis**: Support for all 10+ social platforms
@@ -27,7 +27,7 @@ python3 bin/run.py --desktop
 - 1GB disk space for data and exports
 
 ## Mobile Applications  
-ProfileScope Mobile is built with React Native and Expo, providing cross-platform iOS and Android applications with touch-optimized interfaces for on-the-go analysis.
+Vanta Mobile is built with React Native and Expo, providing cross-platform iOS and Android applications with touch-optimized interfaces for on-the-go analysis.
 
 ### Features
 - **Touch-Optimized Interface**: Designed for mobile interaction
@@ -56,7 +56,7 @@ npx expo start --android
 #### Production
 - iOS: Available on App Store (pending deployment)
 - Android: Available on Google Play (pending deployment)
-- Web: Progressive Web App at app.profilescope.com
+- Web: Progressive Web App at app.vanta.com
 
 ### Mobile-Specific Features
 - **Quick Scan**: Fast profile analysis with essential metrics
@@ -95,7 +95,7 @@ npx expo start --android
 
 ### Mobile Quick Start
 1. Download from app store (or use Expo)
-2. Sign in with ProfileScope account
+2. Sign in with Vanta account
 3. Tap "New Analysis"
 4. Select platform and enter username
 5. View results and share insights
@@ -105,7 +105,7 @@ npx expo start --android
 ### Desktop Advanced
 - **Batch Processing**: CSV upload for multiple profiles
 - **Custom Reports**: Template-based report generation
-- **API Integration**: Direct access to ProfileScope API
+- **API Integration**: Direct access to Vanta API
 - **Plugin System**: Extensible analysis modules
 - **Database Export**: Direct database connectivity
 
@@ -120,6 +120,6 @@ npx expo start --android
 
 - **Desktop Help**: Press F1 or Help → Documentation
 - **Mobile Support**: Shake device for support options
-- **Online Docs**: docs.profilescope.com
+- **Online Docs**: docs.vanta.com
 - **Video Tutorials**: Available in app help sections
-- **Community**: community.profilescope.com
+- **Community**: community.vanta.com

@@ -1,5 +1,5 @@
 """
-Computer Vision Analysis for ProfileScope
+Computer Vision Analysis for Vanta
 Profile image and visual content analysis using OpenCV and PIL
 """
 

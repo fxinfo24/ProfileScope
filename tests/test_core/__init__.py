@@ -1,5 +1,5 @@
 """
-ProfileScope Core Component Tests
+Vanta Core Component Tests
 """
 
 import pytest

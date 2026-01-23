@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ProfileScope Desktop App - Minimal Version
+Vanta Desktop App - Minimal Version
 Pure tkinter implementation without heavy ML dependencies
 """
 
@@ -17,13 +17,13 @@ from tkinter import ttk, messagebox, filedialog
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class MinimalAnalyzerApp(tk.Tk):
-    """Minimal ProfileScope Desktop Application"""
+    """Minimal Vanta Desktop Application"""
     
     def __init__(self):
         super().__init__()
         
         # Basic window setup
-        self.title("ProfileScope - Social Media Analyzer")
+        self.title("Vanta - Social Media Analyzer")
         self.geometry("1000x700")
         self.minsize(800, 600)
         
@@ -52,7 +52,7 @@ class MinimalAnalyzerApp(tk.Tk):
         
         title_label = ttk.Label(
             header_frame, 
-            text="ProfileScope - Social Media Profile Analyzer",
+            text="Vanta - Social Media Profile Analyzer",
             font=("Arial", 16, "bold")
         )
         title_label.pack()
@@ -156,7 +156,7 @@ class MinimalAnalyzerApp(tk.Tk):
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         
         # Welcome message
-        self.append_to_results("🎉 ProfileScope Desktop Application Started Successfully!\n")
+        self.append_to_results("🎉 Vanta Desktop Application Started Successfully!\n")
         self.append_to_results("✅ Minimal mode - All dependencies loaded correctly\n")
         self.append_to_results("ℹ️  Enter a social media profile to analyze\n\n")
         
@@ -207,7 +207,7 @@ class MinimalAnalyzerApp(tk.Tk):
 def main():
     """Main function"""
     try:
-        print("🖥️  Starting ProfileScope Minimal Desktop App...")
+        print("🖥️  Starting Vanta Minimal Desktop App...")
         app = MinimalAnalyzerApp()
         print("✅ Application initialized successfully")
         app.mainloop()

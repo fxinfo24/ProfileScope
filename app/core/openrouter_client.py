@@ -1,5 +1,5 @@
 """
-OpenRouter LLM Client for ProfileScope
+OpenRouter LLM Client for Vanta
 Universal Large Language Model integration using OpenRouter API
 """
 
@@ -43,8 +43,8 @@ class OpenRouterClient:
         self.session.headers.update({
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/fxinfo24/ProfileScope",
-            "X-Title": "ProfileScope Social Media Analysis"
+            "HTTP-Referer": "https://github.com/fxinfo24/Vanta",
+            "X-Title": "Vanta Social Media Analysis"
         })
         
         # Available models through OpenRouter

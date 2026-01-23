@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for ProfileScope environment
+Setup script for Vanta environment
 Installs required packages and sets up dependencies
 """
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 def setup_environment():
     """Set up the development environment"""
-    print("Setting up ProfileScope development environment...")
+    print("Setting up Vanta development environment...")
 
     # Install setuptools first (needed for package builds)
     print("Installing setuptools...")
@@ -70,7 +70,7 @@ def setup_environment():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Set up ProfileScope environment")
+    parser = argparse.ArgumentParser(description="Set up Vanta environment")
     args = parser.parse_args()
 
     setup_environment()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ProfileScope Main Entry Point
+Vanta Main Entry Point
 Starts either the web interface or the desktop application
 """
 
@@ -12,7 +12,7 @@ import os
 def main():
     """Main entry point for the application"""
     parser = argparse.ArgumentParser(
-        description="ProfileScope: Social Media Profile Analysis Tool"
+        description="Vanta: Social Media Profile Analysis Tool"
     )
     parser.add_argument("--web", action="store_true", help="Run web interface")
     parser.add_argument(
@@ -30,13 +30,13 @@ def main():
 
     if args.desktop:
         # Run the desktop application
-        print("Starting ProfileScope desktop application")
+        print("Starting Vanta desktop application")
         from app.desktop.app import main as desktop_main
 
         desktop_main()
     elif args.web:
         # Run the web interface
-        print(f"Starting ProfileScope web interface on {args.host}:{args.port}")
+        print(f"Starting Vanta web interface on {args.host}:{args.port}")
         from app.web.app import create_app
 
         app = create_app()

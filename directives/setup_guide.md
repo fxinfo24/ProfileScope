@@ -1,4 +1,4 @@
-# ProfileScope Setup Guide
+# Vanta Setup Guide
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ pip install -r requirements-full.txt  # For local development
 ### 2. Universal API Configuration
 
 #### ScrapeCreators Setup (Primary - 10+ Platforms)
-ProfileScope uses ScrapeCreators for universal access to 10+ social media platforms:
+Vanta uses ScrapeCreators for universal access to 10+ social media platforms:
 
 1. **Configuration Required**: Add your ScrapeCreators API key to .env file
 2. **Supported Platforms**: Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, GitHub
@@ -31,7 +31,7 @@ ProfileScope uses ScrapeCreators for universal access to 10+ social media platfo
    ```
 
 #### OpenRouter AI Setup (Universal AI Access)
-ProfileScope uses OpenRouter for access to multiple AI models:
+Vanta uses OpenRouter for access to multiple AI models:
 
 1. **Configuration Required**: Add your OpenRouter API key to .env file
 2. **Available Models**: Grok 4.1 Fast, GPT-4, Gemini, Llama-2, Mixtral
@@ -90,7 +90,7 @@ The following critical issues have been resolved:
 
 ### Component Architecture
 ```
-ProfileScope/
+Vanta/
 ├── app/
 │   ├── core/           # Universal API integration & analysis engine
 │   ├── web/            # Flask API + database models
@@ -148,7 +148,7 @@ Choose ONE of the following options for hosting the Flask backend:
    CORS_ORIGINS=https://profile-scope.vercel.app
    OPENROUTER_API_KEY=your-openrouter-key
    SCRAPECREATORS_API_KEY=your-scrapecreators-key
-   DATABASE_URI=sqlite:///data/profilescope.db
+   DATABASE_URI=sqlite:///data/vanta.db
    ```
 5. Deploy and note your backend URL
 
@@ -205,7 +205,7 @@ flask db upgrade
 2. **Missing NLTK Data**: Run the NLTK download commands in the setup
 3. **API Errors**: Check your API credentials in the .env file
 4. **Database Issues**:
-   - SQLite (dev): delete `data/profilescope.db` and restart
+   - SQLite (dev): delete `data/vanta.db` and restart
    - Postgres (prod): run `flask db upgrade` and verify `DATABASE_URI`
 5. **CORS Errors**: Ensure `CORS_ORIGINS` includes your exact frontend URL
 
@@ -215,5 +215,5 @@ flask db upgrade
 python3 bin/run.py --web --debug
 
 # Check logs
-tail -f data/logs/profilescope.log
+tail -f data/logs/vanta.log
 ```

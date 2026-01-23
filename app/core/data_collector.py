@@ -1,5 +1,5 @@
 """
-ProfileScope: Data Collection Module
+Vanta: Data Collection Module
 Handles collecting profile data from various social media platforms
 """
 
@@ -29,7 +29,7 @@ from ..utils.config import load_config, ConfigError
 from .scrape_client import get_scrape_client
 
 # Setup module logger
-logger = logging.getLogger("ProfileScope.DataCollector")
+logger = logging.getLogger("Vanta.DataCollector")
 
 
 class DataCollectionError(Exception):
@@ -83,7 +83,7 @@ class DataCollector:
         self.rate_limit = rate_limit
         self.last_request_time = 0
         self.use_mock_data = use_mock_data
-        self.logger = logging.getLogger(f"ProfileScope.DataCollector.{platform}")
+        self.logger = logging.getLogger(f"Vanta.DataCollector.{platform}")
         self.error_messages = []
 
         # Initialize Universal ScrapeCreators client

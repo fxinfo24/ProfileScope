@@ -1,5 +1,5 @@
 """
-API Monetization Platform for ProfileScope
+API Monetization Platform for Vanta
 Usage-based pricing and billing system
 """
 

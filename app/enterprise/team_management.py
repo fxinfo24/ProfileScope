@@ -1,5 +1,5 @@
 """
-Enterprise Team Management for ProfileScope
+Enterprise Team Management for Vanta
 Multi-user collaboration and team features
 """
 

@@ -1,4 +1,4 @@
-# ProfileScope Testing Guide
+# Vanta Testing Guide
 
 ## Installation
 

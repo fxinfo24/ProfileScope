@@ -1,5 +1,5 @@
 """
-ProfileScope: Profile Authenticity Analyzer
+Vanta: Profile Authenticity Analyzer
 Evaluates profile authenticity based on various signals
 """
 
@@ -14,7 +14,7 @@ class ProfileAuthenticityAnalyzer:
 
     def __init__(self):
         """Initialize the authenticity analyzer"""
-        self.logger = logging.getLogger("ProfileScope.AuthenticityAnalyzer")
+        self.logger = logging.getLogger("Vanta.AuthenticityAnalyzer")
 
     def analyze_authenticity(
         self, profile_data: Dict[str, Any], content_analysis: Dict[str, Any]

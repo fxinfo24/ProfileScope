@@ -1,4 +1,4 @@
-// ProfileScope Web Interface JavaScript
+// Vanta Web Interface JavaScript
 
 // Utility functions
 const formatDateTime = (isoString) => {

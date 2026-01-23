@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-// API Service for ProfileScope Frontend
+// API Service for Vanta Frontend
 import axios, { AxiosInstance } from 'axios';
 import { AnalysisRequest, ApiResponse } from '@/types';
 

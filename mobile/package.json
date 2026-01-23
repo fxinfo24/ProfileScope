@@ -1,8 +1,8 @@
 {
-  "name": "profilescope-mobile",
+  "name": "vanta-mobile",
   "version": "1.0.0",
   "main": "expo-router/entry",
-  "description": "ProfileScope Mobile App - AI-Powered Social Media Analysis",
+  "description": "Vanta Mobile App - AI-Powered Social Media Analysis",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

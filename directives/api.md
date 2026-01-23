@@ -1,7 +1,7 @@
-# ProfileScope API Documentation
+# Vanta API Documentation
 
 ## Overview
-ProfileScope provides a comprehensive RESTful API for social media profile analysis across 10+ major platforms. The API leverages universal data collection through ScrapeCreators and advanced AI analysis via OpenRouter, enabling real-time insights from Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, and GitHub.
+Vanta provides a comprehensive RESTful API for social media profile analysis across 10+ major platforms. The API leverages universal data collection through ScrapeCreators and advanced AI analysis via OpenRouter, enabling real-time insights from Twitter/X, Instagram, LinkedIn, TikTok, Facebook, YouTube, Snapchat, Pinterest, Reddit, and GitHub.
 
 ## Supported Platforms
 

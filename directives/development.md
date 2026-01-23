@@ -1,4 +1,4 @@
-# ProfileScope Development Guide
+# Vanta Development Guide
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@
 The project is organized into comprehensive components:
 
 ```
-ProfileScope/
+Vanta/
 ├── app/
 │   ├── core/           # Universal API integration & analysis engine
 │   ├── web/            # Flask API & database models
@@ -59,8 +59,8 @@ ProfileScope/
 ### Backend Development
 1. Clone the repository:
 ```bash
-git clone https://github.com/fxinfo24/ProfileScope.git
-cd ProfileScope
+git clone https://github.com/fxinfo24/Vanta.git
+cd Vanta
 ```
 
 2. Set up Python environment:
@@ -156,7 +156,7 @@ from app.core.openrouter_client import openrouter_client
 ### Production Database
 ```bash
 # Set up PostgreSQL
-createdb profilescope
+createdb vanta
 # Update DATABASE_URI in .env
 ```
 

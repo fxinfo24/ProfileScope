@@ -1,4 +1,4 @@
-# ProfileScope Requirements - Full Development Environment
+# Vanta Requirements - Full Development Environment
 # This file includes ALL dependencies for local development
 # Includes ML libraries, testing tools, and development utilities
 # Use this for local development: pip install -r requirements-full.txt

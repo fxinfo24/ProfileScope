@@ -1,5 +1,5 @@
 """
-ProfileScope: Logging Utility Module
+Vanta: Logging Utility Module
 Provides standardized logging for the application
 """
 

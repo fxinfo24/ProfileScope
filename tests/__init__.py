@@ -1,5 +1,5 @@
 """
-ProfileScope Test Suite
+Vanta Test Suite
 """
 
 import os

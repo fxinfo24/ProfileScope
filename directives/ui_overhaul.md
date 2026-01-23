@@ -1,7 +1,7 @@
 # UI/UX Overhaul Directive
 
 ## Goal
-Transform the ProfileScope frontend into a premium, award-winning styling implementation using Glassmorphism, Deep Dark Mode, and Vibrant Gradients.
+Transform the Vanta frontend into a premium, award-winning styling implementation using Glassmorphism, Deep Dark Mode, and Vibrant Gradients.
 
 ## Inspiration
 - **Style**: Modern Glassmorphism (Apple Vision Pro OS style / Linear.app style).

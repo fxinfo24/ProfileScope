@@ -1,6 +1,6 @@
 #!/bin/bash
-# ProfileScope Desktop Application - Minimal Version (Pure Tkinter)
-echo "🖥️  Starting ProfileScope Desktop Application (Minimal Mode)..."
+# Vanta Desktop Application - Minimal Version (Pure Tkinter)
+echo "🖥️  Starting Vanta Desktop Application (Minimal Mode)..."
 echo "✅ Avoiding problematic ML dependencies..."
 
 # Run minimal version that doesn't import heavy libraries

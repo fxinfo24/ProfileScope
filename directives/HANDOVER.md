@@ -1,4 +1,4 @@
-# Vanta (formerly ProfileScope) - Session Handover Document
+# Vanta (formerly Vanta) - Session Handover Document
 
 > **Last Updated**: January 23, 2026 (Local Time)
 > **Purpose**: Complete context for resuming work in a new session (Standardizing on **Vanta**)
@@ -42,7 +42,7 @@ The entire stack is now containerized and orchestrated via Docker Compose. No mo
 ## 📂 Project Structure (Docker Optimized)
 
 ```
-ProfileScope/
+Vanta/
 ├── app/
 │   ├── core/           # Hybrid Intelligence Engine
 │   │   ├── analyzer.py         # Universal Orchestrator (AI -> Heuristic)
@@ -120,16 +120,21 @@ All API keys are in `.env` file. The Docker containers automatically load these.
 Copy this to start a new session to ensure NO confusion:
 
 ```
-I'm resuming work on Vanta (Best-in-Class Social Intelligence). 
-Please read HANDOVER.md and AGENTS.md immediately.
+I'm resuming work on **Vanta** (formerly ProfileScope).
+This is a Vanta Deep Intelligence System session.
 
-Current status:
-- Infrastructure: Docker Compose (All services healthy)
-- Core: "Deep Mind" profiling (Transcripts/Comments) integrated with OpenRouter Grok 4.1.
-- Fixes: Data schema mismatch resolved; results now populate the Dashboard correctly.
-- Tech: Python 3.13, Flask, React TypeScript, Redis/Celery.
+CRITICAL:
+1. The Repo URL is now: https://github.com/fxinfo24/Vanta.git
+2. Read `directives/HANDOVER.md` and `AGENTS.md` immediately for context.
+3. The system runs via Docker Compose (`docker compose up -d`).
 
-Primary Goal: Continue enhancing Vanta's intelligence/UI.
+Current State:
+- Architecture: Dockerized Full-Stack (Flask + React + Redis).
+- Core: Deep Intelligence Engine with Self-Healing Identity Resolution.
+- Status: Fully operational (Deep Analysis, Network Graphs, Dossier Downloads verified).
+- Tech Stack: Python 3.13, Flask, React TypeScript, SQLite (Dev).
+
+Goal: Continue enhancing the Vanta platform.
 ```
 
 ---

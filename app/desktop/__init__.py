@@ -1,5 +1,5 @@
 """
-ProfileScope Desktop Application Package
+Vanta Desktop Application Package
 """
 
 from .app import AnalyzerApp

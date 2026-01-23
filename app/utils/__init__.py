@@ -1,5 +1,5 @@
 """
-ProfileScope: Utility modules
+Vanta: Utility modules
 """
 
 from .config import load_config, ConfigError

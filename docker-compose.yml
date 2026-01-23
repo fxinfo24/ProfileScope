@@ -1,4 +1,4 @@
-# ProfileScope Docker Compose
+# Vanta Docker Compose
 # Full stack: Backend API + Redis (for caching/sessions)
 
 services:
@@ -7,13 +7,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: profilescope-api
+    container_name: vanta-api
     ports:
       - "5000:5000"
     environment:
       # Core Settings
-      - SECRET_KEY=${SECRET_KEY:-ProfileScope2024SecureKey}
-      - DATABASE_URI=sqlite:////app/data/profilescope.db
+      - SECRET_KEY=${SECRET_KEY:-Vanta2024SecureKey}
+      - DATABASE_URI=sqlite:////app/data/vanta.db
       - FLASK_ENV=development
       - FLASK_DEBUG=true
 
@@ -43,7 +43,7 @@ services:
   # Redis for caching and background tasks
   redis:
     image: redis:7-alpine
-    container_name: profilescope-redis
+    container_name: vanta-redis
     ports:
       - "6379:6379"
     volumes:
@@ -65,11 +65,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: profilescope-worker
+    container_name: vanta-worker
     command: celery -A app.core.tasks worker --loglevel=info --queues=analysis
     environment:
-      - SECRET_KEY=${SECRET_KEY:-ProfileScope2024SecureKey}
-      - DATABASE_URI=sqlite:////app/data/profilescope.db
+      - SECRET_KEY=${SECRET_KEY:-Vanta2024SecureKey}
+      - DATABASE_URI=sqlite:////app/data/vanta.db
       - REDIS_URL=redis://redis:6379/0
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SCRAPECREATORS_API_KEY=${SCRAPECREATORS_API_KEY}
@@ -91,7 +91,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: profilescope-flower
+    container_name: vanta-flower
     command: celery -A app.core.tasks flower --port=5555
     ports:
       - "5555:5555"
@@ -112,7 +112,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: profilescope-frontend
+    container_name: vanta-frontend
     ports:
       - "5173:5173"
     environment:

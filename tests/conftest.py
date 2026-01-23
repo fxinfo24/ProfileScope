@@ -31,7 +31,7 @@ def pytest_configure(config):
     """Configure pytest and run cleanup script"""
     # Configure metadata
     config._metadata = {
-        "Project": "ProfileScope",
+        "Project": "Vanta",
         "Version": "1.0.0",
         "Python": sys.version,
         "Platform": sys.platform,
@@ -206,19 +206,19 @@ def client(app):
 def pytest_configure(config):
     """Register optional plugins/hooks."""
     if config.pluginmanager.hasplugin("html"):
-        config.pluginmanager.register(_ProfileScopePytestHtmlHooks(), "profilescope-pytest-html-hooks")
+        config.pluginmanager.register(_VantaPytestHtmlHooks(), "vanta-pytest-html-hooks")
 
 
-class _ProfileScopePytestHtmlHooks:
+class _VantaPytestHtmlHooks:
     def pytest_html_report_title(self, report):
         """Set the title for the HTML report"""
-        report.title = "ProfileScope Test Report"
+        report.title = "Vanta Test Report"
 
     def pytest_html_results_summary(self, prefix, summary, postfix):
         """Add custom summary information to the HTML report"""
         prefix.extend(
             [
-                "<p>ProfileScope test results. Failures must be addressed before deployment.</p>",
+                "<p>Vanta test results. Failures must be addressed before deployment.</p>",
             ]
         )
 

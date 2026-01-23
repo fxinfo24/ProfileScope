@@ -1,5 +1,5 @@
 """
-ProfileScope Authentication System
+Vanta Authentication System
 JWT-based authentication with role-based access control
 """
 
@@ -18,7 +18,7 @@ from .models.user import User, UserRole
 load_dotenv()
 
 # JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "ProfileScope2024SecureTokenKey")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "Vanta2024SecureTokenKey")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 

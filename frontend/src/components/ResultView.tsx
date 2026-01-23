@@ -179,7 +179,7 @@ const NetworkTab = ({ results }: { results: AnalysisResult }) => {
   // Mock data if empty (for demo purposes if real data fails)
   if (nodes.length === 1) {
     // Add some mocked peers/interests if emptiness makes it look broken
-    ['Interest: Tech', 'Interest: Gaming', 'Peer: @VerifiedUser', 'Platform: Twitter'].forEach((l, i) => {
+    ['Interest: Tech', 'Interest: Gaming', 'Peer: @VerifiedUser', 'Platform: Twitter'].forEach((l) => {
       nodes.push({ id: l, group: 3, radius: 10 });
       links.push({ source: centerId, target: l, value: 0.5 });
     });
